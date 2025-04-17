@@ -48,25 +48,41 @@ void dependency_graph_t::export_dot(const std::string &filename) const
     ofs << "    rankdir=LR;\n";
     ofs << "    node [shape=box, style=filled, fillcolor=lightgray];\n";
 
-    // Optional: make signal nodes visually distinct
-    for (const auto &[signal, _] : signal_producers) {
-        ofs << "    \"" << signal->get_name() << "\" [shape=ellipse, style=filled, fillcolor=lightblue";
-        if (signal->get_delay()) {
-            ofs << ", label=\"" << signal->get_name() << "\\n(delay=" << signal->get_delay() << ")\"";
+    std::unordered_set<const isignal_t *> all_signals;
+    for (const auto &[signal_if, _] : signal_producers) {
+        if (auto signal = signal_if->get_bound_signal()) {
+            all_signals.insert(signal);
         }
-        ofs << "];\n";
+    }
+    for (const auto &[signal_if, _] : signal_consumers) {
+        if (auto signal = signal_if->get_bound_signal()) {
+            all_signals.insert(signal);
+        }
+    }
+    for (const isignal_t *signal : all_signals) {
+        ofs << "    \"" << signal->get_name() << "\" [shape=ellipse, style=filled, fillcolor=lightblue";
+        ofs << ", label=\"" << signal->get_name() << "\\n(type=" << signal->get_type_name() << ")";
+        if (signal->get_delay() > 0) {
+            ofs << "\\n(delay=" << signal->get_delay() << ")";
+        }
+        ofs << "\"];\n";
     }
 
-    // Draw producer edges with delay
-    for (const auto &[signal, info] : signal_producers) {
-        ofs << "    \"" << info.module->get_name() << "\" -> \"" << signal->get_name() << "\" [label=\"produces\"];\n";
+    // Producer edges: module -> module.signal
+    for (const auto &[signal_if, producer_info] : signal_producers) {
+        if (auto signal = signal_if->get_bound_signal()) {
+            ofs << "    \"" << producer_info.module->get_name() << "\" -> \"" << signal->get_name()
+                << "\" [label=\"produces\"];\n";
+        }
     }
 
-    // Draw consumer edges
-    for (const auto &[signal, consumers] : signal_consumers) {
-        for (const auto &info : consumers) {
-            ofs << "    \"" << signal->get_name() << "\" -> \"" << info.module->get_name()
-                << "\" [label=\"consumed by\"];\n";
+    // Consumer edges: module.signal -> consuming module
+    for (const auto &[signal_if, consumer_list] : signal_consumers) {
+        if (auto signal = signal_if->get_bound_signal()) {
+            for (const auto &consumer_info : consumer_list) {
+                ofs << "    \"" << signal->get_name() << "\" -> \"" << consumer_info.module->get_name()
+                    << "\" [label=\"consumed by\"];\n";
+            }
         }
     }
 

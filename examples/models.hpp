@@ -23,10 +23,10 @@ public:
 
     Mux2to1(const std::string &_name)
         : digsim::module_t(_name)
-        , a(_name + "_a")
-        , b(_name + "_b")
-        , sel(_name + "_sel")
-        , out(_name + "_out")
+        , a("a")
+        , b("b")
+        , sel("sel")
+        , out("out")
     {
         add_sensitivity(&Mux2to1::evaluate, a, b, sel);
         add_produces(&Mux2to1::evaluate, out);
@@ -62,11 +62,11 @@ public:
 
     FullAdder(const std::string &_name)
         : digsim::module_t(_name)
-        , a(_name + "_a")
-        , b(_name + "_b")
-        , cin(_name + "_cin")
-        , sum(_name + "_sum")
-        , cout(_name + "_cout")
+        , a("a")
+        , b("b")
+        , cin("cin")
+        , sum("sum")
+        , cout("cout")
     {
         add_sensitivity(&FullAdder::evaluate, a, b, cin);
         add_produces(&FullAdder::evaluate, sum, cout);
@@ -110,8 +110,8 @@ public:
 
     NotGate(const std::string &_name)
         : digsim::module_t(_name)
-        , in(_name + "_in")
-        , out(_name + "_out")
+        , in("in")
+        , out("out")
     {
         add_sensitivity(&NotGate::evaluate, in);
         add_produces(&NotGate::evaluate, out);
@@ -142,9 +142,9 @@ public:
 
     AndGate(const std::string &_name)
         : digsim::module_t(_name)
-        , a(_name + "_a")
-        , b(_name + "_b")
-        , out(_name + "_out")
+        , a("a")
+        , b("b")
+        , out("out")
     {
         add_sensitivity(&AndGate::evaluate, a, b);
         add_produces(&AndGate::evaluate, out);
@@ -175,9 +175,9 @@ public:
 
     OrGate(const std::string &_name)
         : digsim::module_t(_name)
-        , a(_name + "_a")
-        , b(_name + "_b")
-        , out(_name + "_out")
+        , a("a")
+        , b("b")
+        , out("out")
     {
         add_sensitivity(&OrGate::evaluate, a, b);
         add_produces(&OrGate::evaluate, out);
@@ -208,9 +208,9 @@ public:
 
     XorGate(const std::string &_name)
         : digsim::module_t(_name)
-        , a(_name + "_a")
-        , b(_name + "_b")
-        , out(_name + "_out")
+        , a("a")
+        , b("b")
+        , out("out")
     {
         add_sensitivity(&XorGate::evaluate, a, b);
         add_produces(&XorGate::evaluate, out);
@@ -241,9 +241,9 @@ public:
 
     NandGate(const std::string &_name)
         : digsim::module_t(_name)
-        , a(_name + "_a")
-        , b(_name + "_b")
-        , out(_name + "_out")
+        , a("a")
+        , b("b")
+        , out("out")
     {
         add_sensitivity(&NandGate::evaluate, a, b);
         add_produces(&NandGate::evaluate, out);
@@ -277,12 +277,12 @@ public:
 
     DFlipFlop(const std::string &_name)
         : digsim::module_t(_name)
-        , clk(_name + "_clk")
-        , d(_name + "_d")
-        , enable(_name + "_enable")
-        , reset(_name + "_reset")
-        , q(_name + "_q")
-        , q_not(_name + "_q_not")
+        , clk("clk")
+        , d("d")
+        , enable("enable")
+        , reset("reset")
+        , q("q")
+        , q_not("q_not")
     {
         add_sensitivity(&DFlipFlop::evaluate, clk, d, enable, reset);
         add_produces(&DFlipFlop::evaluate, q, q_not);

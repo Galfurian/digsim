@@ -14,7 +14,7 @@ namespace digsim
 template <typename T>
 probe_t<T>::probe_t(const std::string &_name, std::function<void(const digsim::input_t<T> &)> _callback)
     : module_t(_name)
-    , in(_name + "_in")
+    , in("in")
     , callback(std::move(_callback))
 {
     add_sensitivity(&probe_t::evaluate, in);

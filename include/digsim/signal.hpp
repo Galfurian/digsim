@@ -19,6 +19,10 @@
 namespace digsim
 {
 
+template <typename T> class signal_t;
+template <typename T> class input_t;
+template <typename T> class output_t;
+
 /// @brief Abstract base interface for all signals (type-erased).
 class isignal_t : public named_object_t
 {
@@ -33,15 +37,25 @@ public:
 
     virtual ~isignal_t() = default;
 
-    /// @brief Returns the default delay of this signal.
+    /// @brief Checks if this input or output is bound to a signal.
+    /// @return true if this input or output is bound to a signal, false otherwise.
+    virtual bool bound() const = 0;
+
+    /// @brief Binds this output to a signal.
+    /// @param signal the signal to bind this output to.
+    virtual void operator()(isignal_t &signal) = 0;
+
+    /// @brief Gets the default delay for this signal.
+    /// @return the default delay for this signal.
     virtual discrete_time_t get_delay() const = 0;
+
+    /// @brief Gets the signal this input or output is bound to.
+    /// @return the signal this input or output is bound to.
+    virtual const isignal_t *get_bound_signal() const = 0;
 
     /// @brief Returns the type name of the signal (e.g., "bool", "int").
     virtual const char *get_type_name() const = 0;
 };
-
-template <typename T> class input_t;
-template <typename T> class output_t;
 
 /// @brief The signal_t class represents a signal in a digital simulation.
 /// @tparam T the type of the signal value.
@@ -51,17 +65,16 @@ public:
     /// @brief Constructor for the signal_t class.
     /// @param _name the name of the signal.
     /// @param _initial the initial value of the signal, defaulting to T{}.
-    /// @param _default_delay the default propagation delay for this signal.
-    signal_t(const std::string &_name, T _initial = T{}, discrete_time_t _default_delay = 0);
+    /// @param _delay the default delay for this signal, defaulting to 0.
+    signal_t(const std::string &_name, T _initial = T{}, discrete_time_t _delay = 0);
 
-    /// @brief Registers a process to be notified when the signal changes.
-    /// @param process a shared pointer to the process that should be notified.
-    void on_change(std::shared_ptr<process_t> process);
+    /// @brief Initializes the signal with a value.
+    /// @param _value the value to initialize the signal with.
+    void initialize(T _value);
 
     /// @brief Sets the value of the signal.
     /// @param new_value the new value to set the signal to.
-    /// @param delay the delay before the value is set, defaulting to 0.
-    void set(T new_value, std::optional<discrete_time_t> delay = 0);
+    void set(T new_value);
 
     /// @brief Gets the current value of the signal.
     /// @return the current value of the signal.
@@ -71,12 +84,14 @@ public:
     /// @return true if the signal has changed, false otherwise.
     bool has_changed() const;
 
-    /// @brief Gets the default delay for this signal.
-    /// @return the default delay for this signal.
+    void operator()(isignal_t &_signal) override;
+
     discrete_time_t get_delay() const override;
 
-    /// @brief Gets the type name of the signal (e.g., "bool", "int").
-    /// @return the type name of the signal.
+    virtual bool bound() const override;
+
+    const isignal_t *get_bound_signal() const override;
+
     const char *get_type_name() const override;
 
 private:
@@ -86,8 +101,8 @@ private:
 
     /// @brief Sets the value of the signal after a delay.
     /// @param new_value the new value to set the signal to.
-    /// @param delay the delay before the value is set.
-    void set_delayed(T new_value, discrete_time_t delay);
+    /// @param _delay the delay before the value is set.
+    void set_delayed(T new_value, discrete_time_t _delay);
 
     /// @brief Applies the stored value to the signal.
     void apply_stored();
@@ -99,11 +114,12 @@ private:
     /// @brief The value to be stored for delayed application.
     T stored_value;
     /// @brief The default delay for this signal.
-    discrete_time_t default_delay;
+    discrete_time_t delay;
     /// @brief A set of processes that are registered to be notified when the signal changes.
     std::unordered_set<std::shared_ptr<process_t>> processes;
 
     friend class input_t<T>;
+    friend class output_t<T>;
 };
 
 template <typename T> class output_t : public isignal_t
@@ -111,56 +127,33 @@ template <typename T> class output_t : public isignal_t
 public:
     output_t(const std::string &_name);
 
-    /// @brief Checks if this input is bound to a signal.
-    /// @return true if this input is bound to a signal, false otherwise.
-    /// @return false if this input is not bound to any signal.
-    inline bool bound() const { return bound_signal != nullptr; }
-
-    /// @brief Binds this output to a signal.
-    /// @param signal the signal to bind this output to.
-    void bind(signal_t<T> &signal);
-
     /// @brief Sets the value of the signal.
     /// @param new_value the new value to set the signal to.
-    /// @param delay the delay before the value is set, defaulting to 0.
-    void set(T new_value, std::optional<discrete_time_t> delay = 0);
+    void set(T new_value);
 
     /// @brief Gets the current value of the signal.
     /// @return the current value of the signal.
     T get() const;
 
-    /// @brief Gets the default delay for this signal.
-    /// @return the default delay for this signal.
+    void operator()(isignal_t &_signal) override;
+
     discrete_time_t get_delay() const override;
 
-    /// @brief Gets the type name of the signal (e.g., "bool", "int").
-    /// @return the type name of the signal.
+    bool bound() const override;
+
+    const isignal_t *get_bound_signal() const override;
+
     const char *get_type_name() const override;
 
 private:
-    signal_t<T> *bound_signal;
-    inline static const std::string unnamed = "<unbound output>";
-
-    friend class input_t<T>;
+    /// @brief The signal this input or output is bound to.
+    signal_t<T> *bound_signal = nullptr;
 };
 
 template <typename T> class input_t : public isignal_t
 {
 public:
     input_t(const std::string &_name);
-
-    /// @brief Checks if this input is bound to a signal.
-    /// @return true if this input is bound to a signal, false otherwise.
-    /// @return false if this input is not bound to any signal.
-    inline bool bound() const { return bound_signal != nullptr; }
-
-    /// @brief Binds this input to a signal.
-    /// @param signal the signal to bind this input to.
-    void bind(signal_t<T> &signal);
-
-    /// @brief Binds this input to a signal.
-    /// @param signal the signal to bind this input to.
-    void bind(output_t<T> &output);
 
     /// @brief Gets the current value of the signal.
     /// @return the current value of the signal.
@@ -170,16 +163,21 @@ public:
     /// @param process a shared pointer to the process that should be notified.
     void on_change(std::shared_ptr<process_t> process);
 
-    /// @brief Gets the default delay for this signal.
-    /// @return the default delay for this signal.
+    void operator()(isignal_t &_signal) override;
+
     discrete_time_t get_delay() const override;
 
-    /// @brief Gets the type name of the signal (e.g., "bool", "int").
-    /// @return the type name of the signal.
+    bool bound() const override;
+
+    const isignal_t *get_bound_signal() const override;
+
     const char *get_type_name() const override;
 
 private:
-    signal_t<T> *bound_signal;
+    /// @brief The signal this input or output is bound to.
+    signal_t<T> *bound_signal = nullptr;
+    /// @brief A set of processes that are registered to be notified when the signal changes.
+    std::unordered_set<std::shared_ptr<process_t>> processes;
 };
 
 } // namespace digsim
