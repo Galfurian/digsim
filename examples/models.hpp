@@ -22,24 +22,22 @@ public:
     digsim::signal_t<bool> out;
 
     Mux2to1(
-        const std::string &name,
+        const std::string &_name,
         digsim::signal_t<bool> &a_in,
         digsim::signal_t<bool> &b_in,
         digsim::signal_t<bool> &sel_in,
         digsim::discrete_time_t _delay = 0)
-        : digsim::module_t(name)
+        : digsim::module_t(_name)
         , a(a_in)
         , b(b_in)
         , sel(sel_in)
-        , out(name + "_out")
-        , delay(_delay)
+        , out(_name + "_out", false, _delay)
     {
         add_sensitivity(&Mux2to1::evaluate, a, b, sel);
+        add_produces(&Mux2to1::evaluate, out);
     }
 
 private:
-    digsim::discrete_time_t delay;
-
     void evaluate()
     {
         bool result = sel.get() ? b.get() : a.get();
@@ -49,12 +47,12 @@ private:
         ss << "b:" << std::setw(1) << b.get() << ", ";
         ss << "sel:" << std::setw(1) << sel.get() << " -> ";
         ss << "out:" << std::setw(1) << result;
-        if (delay > 0) {
-            ss << " (delayed by " << std::setw(1) << delay << ")";
+        if (out.get_delay() > 0) {
+            ss << " (delayed by " << std::setw(1) << out.get_delay() << ")";
         }
         digsim::info(get_name(), ss.str());
 
-        out.set(result, delay);
+        out.set(result);
     }
 };
 
@@ -68,27 +66,24 @@ public:
     digsim::signal_t<bool> cout;
 
     FullAdder(
-        const std::string &name,
+        const std::string &_name,
         digsim::signal_t<bool> &a_in,
         digsim::signal_t<bool> &b_in,
         digsim::signal_t<bool> &cin_in,
         digsim::discrete_time_t _sum_delay  = 0,
         digsim::discrete_time_t _cout_delay = 0)
-        : digsim::module_t(name)
+        : digsim::module_t(_name)
         , a(a_in)
         , b(b_in)
         , cin(cin_in)
-        , sum(name + "_sum")
-        , cout(name + "_cout")
-        , sum_delay(_sum_delay)
-        , cout_delay(_cout_delay)
+        , sum(_name + "_sum", false, _sum_delay)
+        , cout(_name + "_cout", false, _cout_delay)
     {
         add_sensitivity(&FullAdder::evaluate, a, b, cin);
+        add_produces(&FullAdder::evaluate, sum, cout);
     }
 
 private:
-    digsim::discrete_time_t sum_delay;
-    digsim::discrete_time_t cout_delay;
     void evaluate()
     {
         bool aval   = a.get();
@@ -103,18 +98,18 @@ private:
         ss << "b:" << std::setw(1) << bval << ", ";
         ss << "cin:" << std::setw(1) << cinval << " -> ";
         ss << "sum:" << std::setw(1) << s;
-        if (sum_delay > 0) {
-            ss << " (delayed by " << std::setw(1) << sum_delay << ")";
+        if (sum.get_delay() > 0) {
+            ss << " (delayed by " << std::setw(1) << sum.get_delay() << ")";
         }
         ss << ", ";
         ss << "cout:" << std::setw(1) << c;
-        if (cout_delay > 0) {
-            ss << " (delayed by " << std::setw(1) << cout_delay << ")";
+        if (cout.get_delay() > 0) {
+            ss << " (delayed by " << std::setw(1) << cout.get_delay() << ")";
         }
         digsim::info(get_name(), ss.str());
 
-        sum.set(s, sum_delay);
-        cout.set(c, cout_delay);
+        sum.set(s);
+        cout.set(c);
     }
 };
 
@@ -124,17 +119,14 @@ public:
     digsim::signal_t<bool> &input;
     digsim::signal_t<bool> output;
 
-    NotGate(const std::string &name, digsim::signal_t<bool> &input_in, digsim::discrete_time_t _delay = 0)
-        : digsim::module_t(name)
+    NotGate(const std::string &_name, digsim::signal_t<bool> &input_in, digsim::discrete_time_t _delay = 0)
+        : digsim::module_t(_name)
         , input(input_in)
-        , output(name + "_out")
-        , delay(_delay)
+        , output(_name + "_out", false, _delay)
     {
         add_sensitivity(&NotGate::evaluate, input);
+        add_produces(&NotGate::evaluate, output);
     }
-
-private:
-    digsim::discrete_time_t delay;
 
     void evaluate()
     {
@@ -143,12 +135,12 @@ private:
         std::stringstream ss;
         ss << "input:" << std::setw(1) << input.get() << " -> ";
         ss << "output:" << std::setw(1) << inv;
-        if (delay > 0) {
-            ss << " (delayed by " << std::setw(1) << delay << ")";
+        if (output.get_delay() > 0) {
+            ss << " (delayed by " << std::setw(1) << output.get_delay() << ")";
         }
         digsim::info(get_name(), ss.str());
 
-        output.set(inv, delay);
+        output.set(inv);
     }
 };
 
@@ -159,33 +151,32 @@ public:
     digsim::signal_t<bool> out;
 
     AndGate(
-        const std::string &name,
+        const std::string &_name,
         digsim::signal_t<bool> &a_in,
         digsim::signal_t<bool> &b_in,
         digsim::discrete_time_t _delay = 0)
-        : digsim::module_t(name)
+        : digsim::module_t(_name)
         , a(a_in)
         , b(b_in)
-        , out(name + "_out")
-        , delay(_delay)
+        , out(_name + "_out", false, _delay)
     {
         add_sensitivity(&AndGate::evaluate, a, b);
+        add_produces(&AndGate::evaluate, out);
     }
 
 private:
-    digsim::discrete_time_t delay;
     void evaluate()
     {
         bool result = a.get() && b.get();
 
         std::stringstream ss;
         ss << "a:" << a.get() << ", b:" << b.get() << " -> out:" << result;
-        if (delay > 0) {
-            ss << " (delayed by " << delay << ")";
+        if (out.get_delay() > 0) {
+            ss << " (delayed by " << out.get_delay() << ")";
         }
         digsim::info(get_name(), ss.str());
 
-        out.set(result, delay);
+        out.set(result);
     }
 };
 
@@ -196,33 +187,32 @@ public:
     digsim::signal_t<bool> out;
 
     OrGate(
-        const std::string &name,
+        const std::string &_name,
         digsim::signal_t<bool> &a_in,
         digsim::signal_t<bool> &b_in,
         digsim::discrete_time_t _delay = 0)
-        : digsim::module_t(name)
+        : digsim::module_t(_name)
         , a(a_in)
         , b(b_in)
-        , out(name + "_out")
-        , delay(_delay)
+        , out(_name + "_out", false, _delay)
     {
         add_sensitivity(&OrGate::evaluate, a, b);
+        add_produces(&OrGate::evaluate, out);
     }
 
 private:
-    digsim::discrete_time_t delay;
     void evaluate()
     {
         bool result = a.get() || b.get();
 
         std::stringstream ss;
         ss << "a:" << a.get() << ", b:" << b.get() << " -> out:" << result;
-        if (delay > 0) {
-            ss << " (delayed by " << delay << ")";
+        if (out.get_delay() > 0) {
+            ss << " (delayed by " << out.get_delay() << ")";
         }
         digsim::info(get_name(), ss.str());
 
-        out.set(result, delay);
+        out.set(result);
     }
 };
 
@@ -233,33 +223,32 @@ public:
     digsim::signal_t<bool> out;
 
     XorGate(
-        const std::string &name,
+        const std::string &_name,
         digsim::signal_t<bool> &a_in,
         digsim::signal_t<bool> &b_in,
         digsim::discrete_time_t _delay = 0)
-        : digsim::module_t(name)
+        : digsim::module_t(_name)
         , a(a_in)
         , b(b_in)
-        , out(name + "_out")
-        , delay(_delay)
+        , out(_name + "_out", false, _delay)
     {
         add_sensitivity(&XorGate::evaluate, a, b);
+        add_produces(&XorGate::evaluate, out);
     }
 
 private:
-    digsim::discrete_time_t delay;
     void evaluate()
     {
         bool result = a.get() ^ b.get();
 
         std::stringstream ss;
         ss << "a:" << a.get() << ", b:" << b.get() << " -> out:" << result;
-        if (delay > 0) {
-            ss << " (delayed by " << delay << ")";
+        if (out.get_delay() > 0) {
+            ss << " (delayed by " << out.get_delay() << ")";
         }
         digsim::info(get_name(), ss.str());
 
-        out.set(result, delay);
+        out.set(result);
     }
 };
 
@@ -270,33 +259,32 @@ public:
     digsim::signal_t<bool> out;
 
     NandGate(
-        const std::string &name,
+        const std::string &_name,
         digsim::signal_t<bool> &a_in,
         digsim::signal_t<bool> &b_in,
         digsim::discrete_time_t _delay = 0)
-        : digsim::module_t(name)
+        : digsim::module_t(_name)
         , a(a_in)
         , b(b_in)
-        , out(name + "_out")
-        , delay(_delay)
+        , out(_name + "_out", false, _delay)
     {
         add_sensitivity(&NandGate::evaluate, a, b);
+        add_produces(&NandGate::evaluate, out);
     }
 
 private:
-    digsim::discrete_time_t delay;
     void evaluate()
     {
         bool result = !(a.get() && b.get());
 
         std::stringstream ss;
         ss << "a:" << a.get() << ", b:" << b.get() << " -> out:" << result;
-        if (delay > 0) {
-            ss << " (delayed by " << delay << ")";
+        if (out.get_delay() > 0) {
+            ss << " (delayed by " << out.get_delay() << ")";
         }
         digsim::info(get_name(), ss.str());
 
-        out.set(result, delay);
+        out.set(result);
     }
 };
 
@@ -313,18 +301,18 @@ public:
     digsim::signal_t<bool> *reset  = nullptr;
 
     DFlipFlop(
-        const std::string &name,
+        const std::string &_name,
         digsim::signal_t<bool> &clk_in,
         digsim::signal_t<bool> &d_in,
         digsim::discrete_time_t _delay = 0)
-        : digsim::module_t(name)
+        : digsim::module_t(_name)
         , clk(clk_in)
         , d(d_in)
-        , q(name + "_q")
-        , q_not(name + "_q_not")
-        , delay(_delay)
+        , q(_name + "_q", false, _delay)
+        , q_not(_name + "_q_not", false, _delay)
     {
         add_sensitivity(&DFlipFlop::evaluate, clk);
+        add_produces(&DFlipFlop::evaluate, q, q_not);
         prev_clk = clk.get();
     }
 
@@ -342,7 +330,6 @@ public:
     }
 
 private:
-    digsim::discrete_time_t delay;
     bool prev_clk;
 
     void evaluate()
@@ -370,13 +357,13 @@ private:
             } else {
                 ss << "d:" << d.get() << " -> q:" << next_q;
             }
-            if (delay > 0) {
-                ss << " (delayed by " << delay << ")";
+            if (q.get_delay() > 0) {
+                ss << " (delayed by " << q.get_delay() << ")";
             }
             digsim::info(get_name(), ss.str());
 
-            q.set(next_q, delay);
-            q_not.set(!next_q, delay);
+            q.set(next_q);
+            q_not.set(!next_q);
         }
 
         prev_clk = current;
@@ -389,24 +376,24 @@ public:
     digsim::signal_t<bool> q0, q1, q2, q3; // Outputs (LSB to MSB)
 
     Counter4BitRipple(
-        const std::string &name,
+        const std::string &_name,
         digsim::signal_t<bool> &clk,
         digsim::signal_t<bool> &enable,
         digsim::signal_t<bool> &reset,
         digsim::discrete_time_t delay = 1)
-        : digsim::module_t(name)
-        , q0(name + "_q0")
-        , q1(name + "_q1")
-        , q2(name + "_q2")
-        , q3(name + "_q3")
-        , d0(name + "_d0")
-        , d1(name + "_d1")
-        , d2(name + "_d2")
-        , d3(name + "_d3")
-        , dff0(name + "_dff0", clk, d0, delay)
-        , dff1(name + "_dff1", dff0.q, d1, delay)
-        , dff2(name + "_dff2", dff1.q, d2, delay)
-        , dff3(name + "_dff3", dff2.q, d3, delay)
+        : digsim::module_t(_name)
+        , q0(_name + "_q0")
+        , q1(_name + "_q1")
+        , q2(_name + "_q2")
+        , q3(_name + "_q3")
+        , d0(_name + "_d0")
+        , d1(_name + "_d1")
+        , d2(_name + "_d2")
+        , d3(_name + "_d3")
+        , dff0(_name + "_dff0", clk, d0, delay)
+        , dff1(_name + "_dff1", dff0.q, d1, delay)
+        , dff2(_name + "_dff2", dff1.q, d2, delay)
+        , dff3(_name + "_dff3", dff2.q, d3, delay)
     {
         dff0.connect_enable(enable);
         dff1.connect_enable(enable);
@@ -425,6 +412,7 @@ public:
         d3.set(dff3.q_not.get());
 
         add_sensitivity(&Counter4BitRipple::evaluate, dff0.q, dff1.q, dff2.q, dff3.q);
+        add_produces(&Counter4BitRipple::evaluate, q0, q1, q2, q3);
         evaluate();
     }
 

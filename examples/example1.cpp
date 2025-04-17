@@ -39,6 +39,8 @@ int main()
         digsim::info("Main", "cout = " + std::to_string(signal.get()));
     };
 
+    digsim::dependency_graph.export_dot("example1.dot");
+
     digsim::info("Main", "=== Initialize simulation ===");
 
     digsim::scheduler.initialize();

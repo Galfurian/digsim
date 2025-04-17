@@ -19,20 +19,42 @@
 namespace digsim
 {
 
+/// @brief Abstract base interface for all signals (type-erased).
+class isignal_t : public named_object_t
+{
+public:
+    /// @brief Constructor for the isignal_t class.
+    /// @param _name the name of the signal.
+    isignal_t(const std::string &_name)
+        : named_object_t(_name)
+    {
+        // Nothing to do here.
+    }
+
+    virtual ~isignal_t() = default;
+
+    /// @brief Returns the default delay of this signal.
+    virtual discrete_time_t get_delay() const = 0;
+
+    /// @brief Returns the type name of the signal (e.g., "bool", "int").
+    virtual const char *get_type_name() const = 0;
+};
+
 /// @brief The signal_t class represents a signal in a digital simulation.
 /// @tparam T the type of the signal value.
-template <typename T> class signal_t : public named_object_t
+template <typename T> class signal_t : public isignal_t
 {
 public:
     /// @brief Constructor for the signal_t class.
     /// @param _name the name of the signal.
-    /// @param initial the initial value of the signal, defaulting to T{}.
-    signal_t(const std::string &_name, T initial = T{});
+    /// @param _initial the initial value of the signal, defaulting to T{}.
+    /// @param _default_delay the default propagation delay for this signal.
+    signal_t(const std::string &_name, T _initial = T{}, discrete_time_t _default_delay = 0);
 
     /// @brief Sets the value of the signal.
     /// @param new_value the new value to set the signal to.
     /// @param delay the delay before the value is set, defaulting to 0.
-    void set(T new_value, discrete_time_t delay = 0);
+    void set(T new_value, std::optional<discrete_time_t> delay = 0);
 
     /// @brief Gets the current value of the signal.
     /// @return the current value of the signal.
@@ -45,6 +67,12 @@ public:
     /// @brief Checks if the signal has changed since the last time it was checked.
     /// @return true if the signal has changed, false otherwise.
     bool has_changed() const;
+
+    /// @brief Gets the default delay for this signal.
+    /// @return the default delay for this signal.
+    discrete_time_t get_delay() const override;
+
+    const char *get_type_name() const override;
 
 private:
     /// @brief Sets the value of the signal immediately.
@@ -65,6 +93,8 @@ private:
     T last_value;
     /// @brief The value to be stored for delayed application.
     T stored_value;
+    /// @brief The default delay for this signal.
+    discrete_time_t default_delay;
     /// @brief A set of processes that are registered to be notified when the signal changes.
     std::unordered_set<std::shared_ptr<process_t>> processes;
 };

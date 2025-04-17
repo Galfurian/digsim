@@ -34,6 +34,26 @@ template <typename T> void module_t::add_sensitivity(std::shared_ptr<process_t> 
 {
     signal.on_change(process);
     scheduler.register_initializer(process);
+
+    // Register in dependency graph.
+    dependency_graph.register_signal_consumer(&signal, process, this);
+}
+
+template <typename Module, typename T> void module_t::add_produces(void (Module::*method)(), signal_t<T> &signal)
+{
+    add_produces(digsim::get_or_create_process<Module>(static_cast<Module *>(this), method), signal);
+}
+
+template <typename Module, typename T, typename... Signals>
+void module_t::add_produces(void (Module::*method)(), signal_t<T> &first, Signals &...rest)
+{
+    add_produces(method, first);
+    (add_produces(method, rest), ...);
+}
+
+template <typename T> void module_t::add_produces(std::shared_ptr<process_t> process, signal_t<T> &signal)
+{
+    dependency_graph.register_signal_producer(&signal, process, this);
 }
 
 } // namespace digsim

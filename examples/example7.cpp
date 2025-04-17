@@ -17,8 +17,8 @@ public:
     digsim::signal_t<bool> &trigger;
     digsim::signal_t<bool> &clk;
 
-    ping_module(const std::string &name, digsim::signal_t<bool> &trigger_in, digsim::signal_t<bool> &clk_in)
-        : digsim::module_t(name)
+    ping_module(const std::string &_name, digsim::signal_t<bool> &trigger_in, digsim::signal_t<bool> &clk_in)
+        : digsim::module_t(_name)
         , trigger(trigger_in)
         , clk(clk_in)
         , waiting(false)
@@ -72,6 +72,8 @@ int main()
     };
 
     ping.set(true);
+
+    digsim::dependency_graph.export_dot("example7.dot");
 
     // Initialize simulation state
     digsim::scheduler.initialize();

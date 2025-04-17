@@ -19,6 +19,7 @@ enum : unsigned char {
 #include "digsim/logger.hpp"
 
 // Core simulation classes
+#include "digsim/dependency_graph.hpp"
 #include "digsim/module.hpp"
 #include "digsim/scheduler.hpp"
 #include "digsim/signal.hpp"

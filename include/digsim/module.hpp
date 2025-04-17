@@ -38,12 +38,19 @@ public:
     template <typename Module, typename T, typename... Signals>
     void add_sensitivity(void (Module::*method)(), signal_t<T> &first, Signals &...rest);
 
+    template <typename Module, typename T> void add_produces(void (Module::*method)(), signal_t<T> &signal);
+
+    template <typename Module, typename T, typename... Signals>
+    void add_produces(void (Module::*method)(), signal_t<T> &first, Signals &...rest);
+
 protected:
     /// @brief Add the signal to the process sensitivity list.
     /// @tparam T the type of the signal.
     /// @param process the process that is going to be triggered by the signal.
     /// @param signal the signal that is going to trigger the process.
     template <typename T> void add_sensitivity(std::shared_ptr<process_t> process, signal_t<T> &signal);
+
+    template <typename T> void add_produces(std::shared_ptr<process_t> process, signal_t<T> &signal);
 };
 
 } // namespace digsim

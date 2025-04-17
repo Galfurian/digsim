@@ -48,6 +48,8 @@ int main()
 
     digsim::scheduler.run(20); // simulate 20ns
 
+    digsim::dependency_graph.export_dot("example5.dot");
+
     digsim::info("Main", "=== Running simulation ===");
     // Initialize state
     en.set(1);  // enable counting

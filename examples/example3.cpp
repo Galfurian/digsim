@@ -32,6 +32,8 @@ int main()
     };
 
     d.set(1); // preload D
+    
+    digsim::dependency_graph.export_dot("example3.dot");
 
     digsim::info("Main", "=== Running simulation ===");
 

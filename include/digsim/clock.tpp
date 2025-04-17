@@ -12,13 +12,13 @@ namespace digsim
 {
 
 clock_t::clock_t(
-    const std::string &name,
+    const std::string &clk_name,
     discrete_time_t clk_period,
     double clk_duty_cycle,
     discrete_time_t clk_start_time,
     bool clk_posedge_first)
-    : module_t(name)
-    , out(name + "_clk", clk_posedge_first)
+    : module_t(clk_name)
+    , out(clk_name + "_clk", clk_posedge_first)
     , period(clk_period)
     , duty_cycle(clk_duty_cycle)
 {
@@ -26,6 +26,7 @@ clock_t::clock_t(
                                       clk_posedge_first ? static_cast<double>(period) * duty_cycle
                                                         : static_cast<double>(period) * (1 - duty_cycle));
     scheduler.schedule_after(digsim::get_or_create_process(this, &clock_t::evaluate), delay, get_name() + "_start");
+    add_produces(&clock_t::evaluate, out);
 }
 
 void clock_t::evaluate()

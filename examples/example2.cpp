@@ -32,6 +32,8 @@ int main()
         digsim::info("Main", "output = " + std::to_string(signal.get()));
     };
 
+    digsim::dependency_graph.export_dot("example2.dot");
+
     digsim::info("Main", "=== Running simulation ===");
 
     a.set(0);

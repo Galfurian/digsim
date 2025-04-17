@@ -41,6 +41,8 @@ int main()
     d.set(1);   // preload D with 1
     en.set(0);  // disabled initially
     rst.set(0); // reset inactive
+    
+    digsim::dependency_graph.export_dot("example4.dot");
 
     digsim::info("Main", "=== Running simulation ===");
 

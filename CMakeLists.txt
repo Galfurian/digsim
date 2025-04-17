@@ -140,6 +140,9 @@ if(BUILD_EXAMPLES)
     
     add_executable(${PROJECT_NAME}_example7 ${PROJECT_SOURCE_DIR}/examples/example7.cpp)
     target_link_libraries(${PROJECT_NAME}_example7 PUBLIC ${PROJECT_NAME})
+    
+    add_executable(${PROJECT_NAME}_example8 ${PROJECT_SOURCE_DIR}/examples/example8.cpp)
+    target_link_libraries(${PROJECT_NAME}_example8 PUBLIC ${PROJECT_NAME})
 
 endif()
 

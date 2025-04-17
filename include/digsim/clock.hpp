@@ -19,13 +19,13 @@ public:
     signal_t<bool> out;
 
     /// @brief Constructor for the clock module.
-    /// @param name the name of the module.
+    /// @param clk_name the name of the module.
     /// @param clk_period the period of the clock signal in discrete time units.
     /// @param clk_duty_cycle the duty cycle of the clock signal, as a fraction of the period.
     /// @param clk_start_time the time at which the clock starts generating signals.
     /// @param clk_posedge_first determines if the clock should start with a positive edge first.
     clock_t(
-        const std::string &name,
+        const std::string &clk_name,
         discrete_time_t clk_period     = 2,
         double clk_duty_cycle          = 0.5,
         discrete_time_t clk_start_time = 0,

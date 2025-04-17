@@ -23,11 +23,12 @@ int main()
 
     NotGate gate_not("not_gate", x);
 
+    digsim::dependency_graph.export_dot("example6.dot");
 
     digsim::info("Main", "=== Begin gate test ===");
 
     digsim::scheduler.initialize();
-    
+
     // Test all combinations for AND gate
     a.set(false);
     b.set(false);
