@@ -16,7 +16,7 @@ class clock_t : public module_t
 {
 public:
     /// @brief Output signal representing the clock.
-    signal_t<bool> out;
+    output_t<bool> out;
 
     /// @brief Constructor for the clock module.
     /// @param clk_name the name of the module.

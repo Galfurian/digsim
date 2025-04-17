@@ -17,18 +17,16 @@ template <typename T> class probe_t : public module_t
 {
 public:
     /// @brief A reference to the input signal.
-    digsim::signal_t<T> &input;
+    digsim::input_t<T> in;
+
     /// @brief The callback function to call when the input signal changes.s
-    std::function<void(const digsim::signal_t<T> &)> callback;
+    std::function<void(const digsim::input_t<T> &)> callback;
 
     /// @brief Constructor for the probe module.
     /// @param _name the name of the module.
     /// @param _input the input signal to probe.
     /// @param _callback the callback function to call when the input signal changes.
-    probe_t(
-        const std::string &_name,
-        digsim::signal_t<T> &_input,
-        std::function<void(const digsim::signal_t<T> &)> _callback = nullptr);
+    probe_t(const std::string &_name, std::function<void(const digsim::input_t<T> &)> _callback = nullptr);
 
 private:
     /// @brief Evaluate the input signal and call the callback if it has changed.

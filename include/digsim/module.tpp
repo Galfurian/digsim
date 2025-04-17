@@ -18,19 +18,19 @@ module_t::module_t(const std::string &_name)
     // Nothing to do here.
 }
 
-template <typename Module, typename T> void module_t::add_sensitivity(void (Module::*method)(), signal_t<T> &signal)
+template <typename Module, typename T> void module_t::add_sensitivity(void (Module::*method)(), input_t<T> &signal)
 {
     add_sensitivity(digsim::get_or_create_process<Module>(static_cast<Module *>(this), method), signal);
 }
 
 template <typename Module, typename T, typename... Signals>
-void module_t::add_sensitivity(void (Module::*method)(), signal_t<T> &first, Signals &...rest)
+void module_t::add_sensitivity(void (Module::*method)(), input_t<T> &first, Signals &...rest)
 {
     add_sensitivity(method, first);
     (add_sensitivity(method, rest), ...);
 }
 
-template <typename T> void module_t::add_sensitivity(std::shared_ptr<process_t> process, signal_t<T> &signal)
+template <typename T> void module_t::add_sensitivity(std::shared_ptr<process_t> process, input_t<T> &signal)
 {
     signal.on_change(process);
     scheduler.register_initializer(process);
@@ -39,19 +39,19 @@ template <typename T> void module_t::add_sensitivity(std::shared_ptr<process_t> 
     dependency_graph.register_signal_consumer(&signal, process, this);
 }
 
-template <typename Module, typename T> void module_t::add_produces(void (Module::*method)(), signal_t<T> &signal)
+template <typename Module, typename T> void module_t::add_produces(void (Module::*method)(), output_t<T> &signal)
 {
     add_produces(digsim::get_or_create_process<Module>(static_cast<Module *>(this), method), signal);
 }
 
 template <typename Module, typename T, typename... Signals>
-void module_t::add_produces(void (Module::*method)(), signal_t<T> &first, Signals &...rest)
+void module_t::add_produces(void (Module::*method)(), output_t<T> &first, Signals &...rest)
 {
     add_produces(method, first);
     (add_produces(method, rest), ...);
 }
 
-template <typename T> void module_t::add_produces(std::shared_ptr<process_t> process, signal_t<T> &signal)
+template <typename T> void module_t::add_produces(std::shared_ptr<process_t> process, output_t<T> &signal)
 {
     dependency_graph.register_signal_producer(&signal, process, this);
 }

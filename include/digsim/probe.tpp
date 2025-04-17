@@ -12,23 +12,18 @@ namespace digsim
 {
 
 template <typename T>
-probe_t<T>::probe_t(
-    const std::string &_name,
-    digsim::signal_t<T> &_input,
-    std::function<void(const digsim::signal_t<T> &)> _callback)
+probe_t<T>::probe_t(const std::string &_name, std::function<void(const digsim::input_t<T> &)> _callback)
     : module_t(_name)
-    , input(_input)
+    , in(_name + "_in")
     , callback(std::move(_callback))
 {
-    add_sensitivity(&probe_t::evaluate, input);
+    add_sensitivity(&probe_t::evaluate, in);
 }
 
 template <typename T> void probe_t<T>::evaluate()
 {
-    if (input.has_changed()) {
-        if (callback) {
-            callback(input);
-        }
+    if (callback) {
+        callback(in);
     }
 }
 

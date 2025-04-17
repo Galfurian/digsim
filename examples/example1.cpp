@@ -21,24 +21,40 @@ int main()
     digsim::signal_t<bool> cin("cin");
 
     // Full Adder
-    FullAdder fa("fa", a, b, cin);
-    // Delay chain: sum → inv1 → inv2
-    NotGate inv_sum_1("sum_inv1", fa.sum, 1);
-    NotGate inv_sum_2("sum_inv2", inv_sum_1.output, 1);
-    // Delay chain: cout → inv1 → inv2
-    NotGate inv_cout_1("cout_inv1", fa.cout, 1);
-    NotGate inv_cout_2("cout_inv2", inv_cout_1.output, 1);
-    // Output probes.
-    digsim::probe_t p1("sum", inv_sum_2.output);
-    digsim::probe_t p2("cout", inv_cout_2.output);
+    FullAdder fa("fa");
+    fa.a.bind(a);
+    fa.b.bind(b);
+    fa.cin.bind(cin);
 
-    p1.callback = [](const digsim::signal_t<bool> &signal) {
+    // Delay chain: sum → inv1 → inv2
+    NotGate inv_sum_1("sum_inv1");
+    inv_sum_1.in.bind(fa.sum);
+
+    NotGate inv_sum_2("sum_inv2");
+    inv_sum_2.in.bind(inv_sum_1.out);
+
+    // Delay chain: cout → inv1 → inv2
+    NotGate inv_cout_1("cout_inv1");
+    inv_cout_1.in.bind(fa.cout);
+
+    NotGate inv_cout_2("cout_inv2");
+    inv_cout_2.in.bind(inv_cout_1.out);
+
+    // Output probes
+    digsim::probe_t<bool> p1("sum");
+    p1.in.bind(inv_sum_2.out);
+
+    digsim::probe_t<bool> p2("cout");
+    p2.in.bind(inv_cout_2.out);
+
+    p1.callback = [](const digsim::input_t<bool> &signal) {
         digsim::info("Main", "sum = " + std::to_string(signal.get()));
     };
-    p2.callback = [](const digsim::signal_t<bool> &signal) {
+    p2.callback = [](const digsim::input_t<bool> &signal) {
         digsim::info("Main", "cout = " + std::to_string(signal.get()));
     };
 
+    // Export graph
     digsim::dependency_graph.export_dot("example1.dot");
 
     digsim::info("Main", "=== Initialize simulation ===");
