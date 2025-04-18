@@ -14,13 +14,13 @@
 class ping_module : public digsim::module_t
 {
 public:
-    digsim::signal_t<bool> &trigger;
-    digsim::signal_t<bool> &clk;
+    digsim::input_t<bool> trigger;
+    digsim::input_t<bool> clk;
 
-    ping_module(const std::string &_name, digsim::signal_t<bool> &trigger_in, digsim::signal_t<bool> &clk_in)
+    ping_module(const std::string &_name)
         : digsim::module_t(_name)
-        , trigger(trigger_in)
-        , clk(clk_in)
+        , trigger(_name + ".trigger")
+        , clk(_name + ".clk")
         , waiting(false)
         , counter(0)
     {
@@ -35,24 +35,31 @@ private:
 
     void on_trigger()
     {
-        if (waiting)
+        if (waiting) {
+            digsim::info(get_name(), "Already waiting for a trigger, ignoring new one.");
             return;
+        }
 
         trigger_value = trigger.get();
         waiting       = true;
         counter       = 0;
 
-        digsim::info(get_name(), "Trigger received, will report after 5 clock cycles...");
+        digsim::info(get_name(), "Trigger {} received, will report after 5 clock cycles...", trigger_value);
     }
 
     void on_clock()
     {
-        if (clk.get() && waiting)
+        if (!waiting) {
+            digsim::info(get_name(), "Received clock signal but not waiting for a trigger.");
+            return;
+        }
+        if (clk.get()) {
             if (counter++ == 5) {
                 digsim::info(
                     get_name(), "Wake up after wait (value that triggered " + std::to_string(trigger_value) + ")!");
                 waiting = false;
             }
+        }
     }
 };
 
@@ -60,29 +67,32 @@ int main()
 {
     digsim::logger.set_level(digsim::log_level_t::info);
 
-    digsim::signal_t<bool> ping("ping");
+    // === Signals ===
+    digsim::signal_t<bool> trigger("trigger");
+    digsim::signal_t<bool> clk_out("clk_out");
 
-    digsim::clock_t clock("clock", 2, 0.5, 0, false);
+    // === Modules ===
+    digsim::clock_t clock("clock");
+    clock.out(clk_out);
 
-    ping_module pinger("pinger", ping, clock.out);
-    digsim::probe_t clk_probe("clk", clock.out);
+    ping_module pinger("pinger");
+    pinger.trigger(trigger);
+    pinger.clk(clk_out);
 
-    clk_probe.callback = [](const digsim::signal_t<bool> &signal) {
-        digsim::info("Main", "clk = " + std::to_string(signal.get()));
-    };
+    digsim::probe_t<bool> clk_probe("clk");
+    clk_probe.in(clk_out);
 
-    ping.set(true);
+    // === Stimuli ===
+    trigger.set(true);
 
+    // === Output Graph ===
     digsim::dependency_graph.export_dot("example7.dot");
 
-    // Initialize simulation state
     digsim::scheduler.initialize();
 
     digsim::info("Main", "=== Begin wait_for test ===");
 
-    digsim::info("Main", "Test printing int {}", 42);
-
-    digsim::scheduler.run(20); // Run for enough time to see 5 clock cycles
+    digsim::scheduler.run(20); // Enough time to see all events
 
     digsim::info("Main", "=== Simulation finished ===");
 

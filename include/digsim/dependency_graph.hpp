@@ -26,6 +26,11 @@ public:
     void export_dot(const std::string &filename = "dependency_graph.dot") const;
 
 private:
+    /// @brief Generates a random ID of the specified length.
+    /// @param length the length of the random ID to generate (default is 8).
+    /// @return a random ID as a string.
+    std::string random_id(size_t length = 8) const;
+
     struct process_info_t {
         std::shared_ptr<process_t> process;
         module_t *module;

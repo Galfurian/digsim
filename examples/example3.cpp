@@ -15,28 +15,37 @@ int main()
 {
     digsim::logger.set_level(digsim::log_level_t::info);
 
-    // Initial state
     digsim::info("Main", "=== Initializing simulation ===");
 
     // Signals
+    digsim::signal_t<bool> clk_out("clk_out");
     digsim::signal_t<bool> d("d");
+    digsim::signal_t<bool> q("q");
+    digsim::signal_t<bool> q_not("q_not");
+
     // Clock with 2ns period (1ns high, 1ns low)
     digsim::clock_t clk("clk", 2, 1);
-    // D Flip-Flop with 1ns delay
-    DFlipFlop dff("dff", clk.out, d, 1);
-    // Probe output
-    digsim::probe_t probe("probe", dff.q);
+    clk.out(clk_out);
 
-    probe.callback = [](const digsim::signal_t<bool> &signal) {
-        digsim::info("Main", "output = " + std::to_string(signal.get()));
-    };
+    // D Flip-Flop with 1ns delay
+    DFlipFlop dff("dff");
+    dff.clk(clk_out);
+    dff.d(d);
+    dff.q(q);
+    dff.q_not(q_not);
+    q.set_delay(1); // Set propagation delay for Q output
+
+    // Probe output with default callback
+    digsim::probe_t<bool> probe("probe");
+    probe.in(q);
 
     d.set(1); // preload D
-    
+
     digsim::dependency_graph.export_dot("example3.dot");
 
     digsim::info("Main", "=== Running simulation ===");
 
+    digsim::scheduler.initialize();
     digsim::scheduler.run(4);
 
     digsim::info("Main", "=== Simulation finished ===");

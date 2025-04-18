@@ -25,14 +25,14 @@ inline void scheduler_t::schedule(const event_t &event) { event_queue.push(event
 
 inline void scheduler_t::schedule_now(std::shared_ptr<process_t> process, const std::string &name)
 {
-    digsim::debug("Scheduler", "Scheduling process `" + name + "` to run now.");
+    digsim::trace("Scheduler", "Scheduling process `" + name + "` to run now.");
     schedule(event_t{now, process, name});
 }
 
 inline void
 scheduler_t::schedule_after(std::shared_ptr<process_t> process, discrete_time_t delay, const std::string &name)
 {
-    digsim::debug("Scheduler", "Scheduling process `" + name + "` after " + std::to_string(delay) + " time units.");
+    digsim::trace("Scheduler", "Scheduling process `" + name + "` after " + std::to_string(delay) + " time units.");
     schedule(event_t{now + delay, process, name});
 }
 

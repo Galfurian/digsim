@@ -19,32 +19,40 @@ int main()
     digsim::info("Main", "=== Initializing simulation ===");
 
     // Signals
+    digsim::signal_t<bool> clk_out("clk_out");
     digsim::signal_t<bool> d("d");
     digsim::signal_t<bool> en("en");
     digsim::signal_t<bool> rst("rst");
+    digsim::signal_t<bool> q("q");
+    digsim::signal_t<bool> qn("q_not");
 
     // Clock with 2ns period (1ns high, 1ns low)
-    digsim::clock_t clk("clk", 2, 1);
+    digsim::clock_t clk("clk");
+    clk.out(clk_out);
+
     // D Flip-Flop with 1ns delay
-    DFlipFlop dff("dff", clk.out, d, 1);
+    DFlipFlop dff("dff");
+    dff.clk(clk_out);
+    dff.d(d);
+    dff.q(q);
+    dff.q_not(qn);
+    dff.bind_enable(en);
+    dff.bind_reset(rst);
+
     // Probe output
-    digsim::probe_t probe("q", dff.q);
+    digsim::probe_t<bool> probe("probe");
+    probe.in(q); // Automatically uses default callback
 
-    probe.callback = [](const digsim::signal_t<bool> &signal) {
-        digsim::info("Main", "output = " + std::to_string(signal.get()));
-    };
+    digsim::dependency_graph.export_dot("example4.dot");
 
-    dff.connect_enable(en);
-    dff.connect_reset(rst);
+    digsim::info("Main", "=== Running simulation ===");
 
     // Initial state
     d.set(1);   // preload D with 1
     en.set(0);  // disabled initially
     rst.set(0); // reset inactive
-    
-    digsim::dependency_graph.export_dot("example4.dot");
 
-    digsim::info("Main", "=== Running simulation ===");
+    digsim::scheduler.initialize();
 
     // Run to t=2 (disabled, rising edge ignored)
     digsim::scheduler.run(2);

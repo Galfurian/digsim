@@ -12,23 +12,32 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::info);
+    digsim::logger.set_level(digsim::log_level_t::trace);
 
     // Create signal for loop
-    digsim::signal_t<bool> signal_a("a");
+    digsim::signal_t<bool> not1_out("not1_out");
+    digsim::signal_t<bool> not2_out("not2_out");
 
-    // Inverters in loop: second one breaks loop with delay
-    NotGate not1("not1", signal_a);
-    NotGate not2("not2", not1.output, 1);
+    // Create inverters
+    NotGate not1("not1");
+    not1.in(not2_out);
+    not1.out(not1_out);
 
-    signal_a.on_change(digsim::get_or_create_process(&not1, &NotGate::evaluate));
+    NotGate not2("not2");
+    not2.in(not1_out);
+    not2.out(not2_out);
+    not2_out.set_delay(1);
 
-    digsim::info("Main", "=== Running loop-breaking delay test ===");
+    digsim::dependency_graph.export_dot("example8.dot");
+
+    digsim::info("Main", "=== Initializing simulation ===");
 
     digsim::scheduler.initialize();
+
+    digsim::info("Main", "=== Running simulation ===");
+
     digsim::scheduler.run(20);
 
     digsim::info("Main", "=== Simulation finished ===");
     return 0;
 }
-

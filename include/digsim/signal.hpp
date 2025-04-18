@@ -72,6 +72,10 @@ public:
     /// @param _value the value to initialize the signal with.
     void initialize(T _value);
 
+    /// @brief Sets the default delay for this signal.
+    /// @param _delay the default delay to set for this signal.
+    void set_delay(discrete_time_t _delay);
+
     /// @brief Sets the value of the signal.
     /// @param new_value the new value to set the signal to.
     void set(T new_value);

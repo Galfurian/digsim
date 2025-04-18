@@ -123,26 +123,26 @@ if(BUILD_EXAMPLES)
     add_executable(${PROJECT_NAME}_example1 ${PROJECT_SOURCE_DIR}/examples/example1.cpp)
     target_link_libraries(${PROJECT_NAME}_example1 PUBLIC ${PROJECT_NAME})
     
-    # add_executable(${PROJECT_NAME}_example2 ${PROJECT_SOURCE_DIR}/examples/example2.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example2 PUBLIC ${PROJECT_NAME})
+    add_executable(${PROJECT_NAME}_example2 ${PROJECT_SOURCE_DIR}/examples/example2.cpp)
+    target_link_libraries(${PROJECT_NAME}_example2 PUBLIC ${PROJECT_NAME})
     
-    # add_executable(${PROJECT_NAME}_example3 ${PROJECT_SOURCE_DIR}/examples/example3.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example3 PUBLIC ${PROJECT_NAME})
+    add_executable(${PROJECT_NAME}_example3 ${PROJECT_SOURCE_DIR}/examples/example3.cpp)
+    target_link_libraries(${PROJECT_NAME}_example3 PUBLIC ${PROJECT_NAME})
     
-    # add_executable(${PROJECT_NAME}_example4 ${PROJECT_SOURCE_DIR}/examples/example4.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example4 PUBLIC ${PROJECT_NAME})
+    add_executable(${PROJECT_NAME}_example4 ${PROJECT_SOURCE_DIR}/examples/example4.cpp)
+    target_link_libraries(${PROJECT_NAME}_example4 PUBLIC ${PROJECT_NAME})
     
-    # add_executable(${PROJECT_NAME}_example5 ${PROJECT_SOURCE_DIR}/examples/example5.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example5 PUBLIC ${PROJECT_NAME})
+    add_executable(${PROJECT_NAME}_example5 ${PROJECT_SOURCE_DIR}/examples/example5.cpp)
+    target_link_libraries(${PROJECT_NAME}_example5 PUBLIC ${PROJECT_NAME})
     
-    # add_executable(${PROJECT_NAME}_example6 ${PROJECT_SOURCE_DIR}/examples/example6.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example6 PUBLIC ${PROJECT_NAME})
+    add_executable(${PROJECT_NAME}_example6 ${PROJECT_SOURCE_DIR}/examples/example6.cpp)
+    target_link_libraries(${PROJECT_NAME}_example6 PUBLIC ${PROJECT_NAME})
     
-    # add_executable(${PROJECT_NAME}_example7 ${PROJECT_SOURCE_DIR}/examples/example7.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example7 PUBLIC ${PROJECT_NAME})
+    add_executable(${PROJECT_NAME}_example7 ${PROJECT_SOURCE_DIR}/examples/example7.cpp)
+    target_link_libraries(${PROJECT_NAME}_example7 PUBLIC ${PROJECT_NAME})
     
-    # add_executable(${PROJECT_NAME}_example8 ${PROJECT_SOURCE_DIR}/examples/example8.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example8 PUBLIC ${PROJECT_NAME})
+    add_executable(${PROJECT_NAME}_example8 ${PROJECT_SOURCE_DIR}/examples/example8.cpp)
+    target_link_libraries(${PROJECT_NAME}_example8 PUBLIC ${PROJECT_NAME})
 
 endif()
 

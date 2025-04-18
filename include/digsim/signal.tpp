@@ -30,6 +30,8 @@ template <typename T> inline void signal_t<T>::initialize(T _value)
     stored_value = T{};
 }
 
+template <typename T> inline void signal_t<T>::set_delay(discrete_time_t _delay) { delay = _delay; }
+
 template <typename T> inline void signal_t<T>::set(T new_value)
 {
     if (delay > 0) {
@@ -61,10 +63,14 @@ template <typename T> inline const char *signal_t<T>::get_type_name() const { re
 
 template <typename T> inline void signal_t<T>::set_now(T new_value)
 {
-    if (new_value != value) {
+    if (new_value == value) {
+        digsim::trace("Signal", "No change for signal `{}`: {} == {}", get_name(), value, new_value);
+    } else {
+        digsim::trace("Signal", "Setting new value for signal `{}`: {} -> {}", get_name(), value, new_value);
         last_value = value;
         value      = new_value;
         for (auto &process : processes) {
+            digsim::trace("Signal", "Triggering process for `{}`", get_name());
             digsim::scheduler.schedule_now(process, get_name() + "_now");
         }
     }
@@ -72,6 +78,8 @@ template <typename T> inline void signal_t<T>::set_now(T new_value)
 
 template <typename T> inline void signal_t<T>::set_delayed(T new_value, discrete_time_t _delay)
 {
+    digsim::trace(
+        "Signal", "Setting delayed value for signal `{}`: {} -> {} (delay: {})", get_name(), value, new_value, _delay);
     stored_value = new_value;
     auto process = digsim::get_or_create_process(this, &signal_t::apply_stored);
     digsim::scheduler.schedule_after(process, _delay, get_name() + "_delayed");
@@ -115,6 +123,7 @@ template <typename T> void output_t<T>::operator()(isignal_t &_signal)
     if (!signal) {
         throw std::runtime_error("Output `" + get_name() + "` not bound to a signal.");
     }
+    digsim::trace("output_t", "Binding output `{}` to signal `{}`", get_name(), signal->get_name());
     // Set the bound signal to the provided signal.
     bound_signal = signal;
 }
@@ -158,7 +167,18 @@ template <typename T> T input_t<T>::get() const
 
 template <typename T> inline void input_t<T>::on_change(std::shared_ptr<process_t> process)
 {
+    if (!process) {
+        throw std::runtime_error("Cannot register a null process to input `" + get_name() + "`.");
+    }
+    if (processes.find(process) != processes.end()) {
+        digsim::trace("input_t", "Process already registered for input `{}`", get_name());
+        return;
+    }
+    digsim::trace("input_t", "Registering process for input `{}`", get_name());
     processes.insert(process);
+    if (bound_signal) {
+        bound_signal->processes.insert(process);
+    }
 }
 
 template <typename T> void input_t<T>::operator()(isignal_t &_signal)
@@ -167,10 +187,11 @@ template <typename T> void input_t<T>::operator()(isignal_t &_signal)
     if (!signal) {
         throw std::runtime_error("Input `" + get_name() + "` not bound to a signal.");
     }
+    digsim::trace("input_t", "Binding input `{}` to signal `{}`", get_name(), signal->get_name());
     // Set the bound signal to the provided signal.
-    bound_signal      = signal;
-    // Set the processes to the signal's processes.
-    signal->processes = processes;
+    bound_signal = signal;
+    // Add to the list of processes that should be notified when the signal changes.
+    bound_signal->processes.insert(processes.begin(), processes.end());
 }
 
 template <typename T> discrete_time_t input_t<T>::get_delay() const

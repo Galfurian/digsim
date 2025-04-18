@@ -31,6 +31,8 @@ public:
 private:
     /// @brief Evaluate the input signal and call the callback if it has changed.
     void evaluate();
+
+    void default_callback(const digsim::input_t<T> &_in) const;
 };
 
 } // namespace digsim

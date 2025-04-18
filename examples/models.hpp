@@ -284,9 +284,20 @@ public:
         , q("q")
         , q_not("q_not")
     {
-        add_sensitivity(&DFlipFlop::evaluate, clk, d, enable, reset);
+        add_sensitivity(&DFlipFlop::evaluate, clk, d);
         add_produces(&DFlipFlop::evaluate, q, q_not);
-        prev_clk = clk.get();
+    }
+
+    void bind_reset(digsim::signal_t<bool> &reset_signal)
+    {
+        reset(reset_signal);
+        add_sensitivity(&DFlipFlop::evaluate, reset);
+    }
+
+    void bind_enable(digsim::signal_t<bool> &enable_signal)
+    {
+        enable(enable_signal);
+        add_sensitivity(&DFlipFlop::evaluate, enable);
     }
 
 private:
