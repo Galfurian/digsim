@@ -13,7 +13,7 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    digsim::logger.set_level(digsim::log_level_t::trace);
 
     // Inputs
     digsim::signal_t<bool> a("a");
@@ -62,13 +62,6 @@ int main()
 
     digsim::probe_t<bool> p2("p2");
     p2.in(cout_out);
-
-    p1.callback = [](const digsim::input_t<bool> &signal) {
-        digsim::info("Main", "sum = " + std::to_string(signal.get()));
-    };
-    p2.callback = [](const digsim::input_t<bool> &signal) {
-        digsim::info("Main", "cout = " + std::to_string(signal.get()));
-    };
 
     // Export graph
     digsim::dependency_graph.export_dot("example1.dot");

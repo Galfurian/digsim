@@ -120,7 +120,7 @@ private:
     /// @brief The default delay for this signal.
     discrete_time_t delay;
     /// @brief A set of processes that are registered to be notified when the signal changes.
-    std::unordered_set<std::shared_ptr<process_t>> processes;
+    std::unordered_set<process_info_t, process_info_hash, process_info_equal> processes;
 
     friend class input_t<T>;
     friend class output_t<T>;
@@ -164,8 +164,8 @@ public:
     T get() const;
 
     /// @brief Registers a process to be notified when the signal changes.
-    /// @param process a shared pointer to the process that should be notified.
-    void on_change(std::shared_ptr<process_t> process);
+    /// @param proc_info the process information containing the process to be executed when the signal changes.
+    void on_change(const process_info_t &proc_info);
 
     void operator()(isignal_t &_signal) override;
 
@@ -181,7 +181,7 @@ private:
     /// @brief The signal this input or output is bound to.
     signal_t<T> *bound_signal = nullptr;
     /// @brief A set of processes that are registered to be notified when the signal changes.
-    std::unordered_set<std::shared_ptr<process_t>> processes;
+    std::unordered_set<process_info_t, process_info_hash, process_info_equal> processes;
 };
 
 } // namespace digsim

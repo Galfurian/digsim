@@ -64,14 +64,19 @@ template <typename T> inline const char *signal_t<T>::get_type_name() const { re
 template <typename T> inline void signal_t<T>::set_now(T new_value)
 {
     if (new_value == value) {
-        digsim::trace("Signal", "No change for signal `{}`: {} == {}", get_name(), value, new_value);
+        digsim::trace("signal_t", "No change for signal `{}`: {} == {}", get_name(), value, new_value);
     } else {
-        digsim::trace("Signal", "Setting new value for signal `{}`: {} -> {}", get_name(), value, new_value);
+        digsim::trace("signal_t", "Setting new value for signal `{}`: {} -> {}", get_name(), value, new_value);
+        // Update the last value to the current value before changing it.
         last_value = value;
+        // Update the value to the new value.
         value      = new_value;
-        for (auto &process : processes) {
-            digsim::trace("Signal", "Triggering process for `{}`", get_name());
-            digsim::scheduler.schedule_now(process, get_name() + "_now");
+        for (auto &proc_info : processes) {
+            digsim::trace(
+                "signal_t", "Signal `{}` is scheduling process `{}` to run immediately.", get_name(),
+                proc_info.to_string());
+            // Schedule the process to be executed immediately.
+            digsim::scheduler.schedule_now(proc_info);
         }
     }
 }
@@ -79,10 +84,14 @@ template <typename T> inline void signal_t<T>::set_now(T new_value)
 template <typename T> inline void signal_t<T>::set_delayed(T new_value, discrete_time_t _delay)
 {
     digsim::trace(
-        "Signal", "Setting delayed value for signal `{}`: {} -> {} (delay: {})", get_name(), value, new_value, _delay);
+        "signal_t", "Signal `{}` is scheduling a change from {} to {} after {} time units.", get_name(), value,
+        new_value, _delay);
+    // Store the new value to be applied after the delay.
     stored_value = new_value;
-    auto process = digsim::get_or_create_process(this, &signal_t::apply_stored);
-    digsim::scheduler.schedule_after(process, _delay, get_name() + "_delayed");
+    // Create a process that will apply the stored value after the delay.
+    auto process = digsim::get_or_create_process(this, &signal_t::apply_stored, "delayed");
+    // Schedule the process to be executed after the specified delay.
+    digsim::scheduler.schedule_after(process, _delay);
 }
 
 template <typename T> inline void signal_t<T>::apply_stored() { this->set_now(stored_value); }
@@ -165,19 +174,22 @@ template <typename T> T input_t<T>::get() const
     return signal->get();
 }
 
-template <typename T> inline void input_t<T>::on_change(std::shared_ptr<process_t> process)
+template <typename T> inline void input_t<T>::on_change(const process_info_t &proc_info)
 {
-    if (!process) {
-        throw std::runtime_error("Cannot register a null process to input `" + get_name() + "`.");
+    if (!proc_info.process) {
+        throw std::runtime_error("Cannot register an invalid process to input `" + get_name() + "`.");
     }
-    if (processes.find(process) != processes.end()) {
+    if (!proc_info.key) {
+        throw std::runtime_error("Cannot register a process with a null key to input `" + get_name() + "`.");
+    }
+    if (processes.find(proc_info) != processes.end()) {
         digsim::trace("input_t", "Process already registered for input `{}`", get_name());
         return;
     }
-    digsim::trace("input_t", "Registering process for input `{}`", get_name());
-    processes.insert(process);
+    digsim::trace("input_t", "Registering process `{}` for input `{}`", proc_info.to_string(), get_name());
+    processes.insert(proc_info);
     if (bound_signal) {
-        bound_signal->processes.insert(process);
+        bound_signal->processes.insert(proc_info);
     }
 }
 

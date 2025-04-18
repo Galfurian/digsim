@@ -24,7 +24,7 @@ probe_t<T>::probe_t(const std::string &_name, std::function<void(const digsim::i
         callback = [this](const digsim::input_t<T> &sig) { this->default_callback(sig); };
     }
 
-    add_sensitivity(&probe_t::evaluate, in);
+    ADD_SENSITIVITY(probe_t, evaluate, in);
 }
 
 template <typename T> void probe_t<T>::evaluate()

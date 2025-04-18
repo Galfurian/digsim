@@ -15,6 +15,7 @@
 #include <set>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace digsim
@@ -24,10 +25,8 @@ namespace digsim
 struct event_t {
     /// @brief The time at which the event occurs.
     discrete_time_t time;
-    /// @brief The function to call when the event occurs.
-    std::shared_ptr<process_t> callback;
-    /// @brief The name of the event, used for debugging and logging.
-    std::string name;
+    /// @brief Information about the process to be executed at this event.
+    process_info_t process_info;
 
     /// @brief Comparisong operator for events, used to order them in the priority queue.
     /// @param other The other event to compare with.
@@ -56,19 +55,17 @@ public:
     void schedule(const event_t &event);
 
     /// @brief Schedule a process to be executed immediately.
-    /// @param process A shared pointer to the process to execute.
-    /// @param name The name of the process, used for debugging and logging.
-    void schedule_now(std::shared_ptr<process_t> process, const std::string &name = "");
+    /// @param proc_info Information about the process to be executed.
+    void schedule_now(const process_info_t &proc_info);
 
     /// @brief Schedule a process to be executed after a specified delay.
-    /// @param process the process to schedule.
+    /// @param proc_info Information about the process to be executed.
     /// @param delay the delay after which the process should be executed.
-    /// @param name the name of the process, used for debugging and logging.
-    void schedule_after(std::shared_ptr<process_t> process, discrete_time_t delay, const std::string &name = "");
+    void schedule_after(const process_info_t &proc_info, discrete_time_t delay);
 
     /// @brief Registers a process to be initialized at the start of the simulation.
-    /// @param process A shared pointer to the process to register for initialization.
-    void register_initializer(std::shared_ptr<process_t> process);
+    /// @param proc_info Information about the process to be executed.
+    void register_initializer(const process_info_t &proc_info);
 
     /// @brief Initializes the scheduler and all registered processes.
     void initialize();
@@ -93,7 +90,7 @@ private:
     /// @brief The priority queue of events, ordered by their scheduled time.
     std::priority_queue<event_t, std::vector<event_t>, std::greater<>> event_queue;
     /// @brief The list of function to call during initialization.
-    std::set<std::shared_ptr<process_t>> initializer_queue;
+    std::unordered_set<process_info_t, process_info_hash, process_info_equal> initializer_queue;
 };
 
 /// @brief A reference to the singleton instance of the scheduler, for convenience.

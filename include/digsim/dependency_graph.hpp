@@ -20,8 +20,8 @@ class dependency_graph_t
 public:
     static dependency_graph_t &instance();
 
-    void register_signal_producer(const isignal_t *signal, std::shared_ptr<process_t> process, module_t *module);
-    void register_signal_consumer(const isignal_t *signal, std::shared_ptr<process_t> process, module_t *module);
+    void register_signal_producer(const isignal_t *signal, const process_info_t &proc_info);
+    void register_signal_consumer(const isignal_t *signal, const process_info_t &proc_info);
 
     void export_dot(const std::string &filename = "dependency_graph.dot") const;
 
@@ -30,11 +30,6 @@ private:
     /// @param length the length of the random ID to generate (default is 8).
     /// @return a random ID as a string.
     std::string random_id(size_t length = 8) const;
-
-    struct process_info_t {
-        std::shared_ptr<process_t> process;
-        module_t *module;
-    };
 
     dependency_graph_t()                                      = default;
     ~dependency_graph_t()                                     = default;

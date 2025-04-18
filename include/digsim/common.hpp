@@ -11,8 +11,6 @@
 #include <memory>
 #include <string>
 
-#include <iostream>
-
 namespace digsim
 {
 
@@ -22,63 +20,62 @@ using discrete_time_t = uint64_t;
 /// @brief The types of the processes.
 using process_t = std::function<void()>;
 
+class named_object_t;
+
+/// @brief A class that holds a reference to a named object.
+struct object_ref_t {
+    /// @brief A pointer to a named object.
+    const named_object_t *ptr = nullptr;
+
+    inline std::string name() const;
+
+    inline bool valid() const;
+};
+
+/// @brief Stores detailed information about a scheduled process.
+struct process_info_t {
+    std::shared_ptr<process_t> process; ///< The process to be executed.
+    void const *key;                    ///< A unique key for the process.
+    object_ref_t owner;                 ///< The object instance that contains the method to be executed.
+    std::string name;                   ///< The name of the process, typically in the format "obj.method".
+
+    /// @brief Returns a string representation of the process information.
+    /// @return A string containing the object's address, method name, and process name.
+    std::string to_string() const;
+
+    bool operator<(const process_info_t &other) const { return key < other.key; }
+
+    bool operator==(const process_info_t &other) const { return key == other.key; }
+
+    bool validate() const { return (process != nullptr) && (key != nullptr); }
+};
+
+// Custom hasher
+struct process_info_hash {
+    std::size_t operator()(const process_info_t &info) const noexcept { return std::hash<const void *>{}(info.key); }
+};
+
+// Custom equality comparator
+struct process_info_equal {
+    bool operator()(const process_info_t &lhs, const process_info_t &rhs) const noexcept { return lhs.key == rhs.key; }
+};
+
 /// @brief Generates a unique key for a method of an object.
-/// @tparam T the type of the object.
+/// @tparam Object the type of the object.
 /// @param obj the object instance.
 /// @param method the pointer to the method of the object.
 /// @return a unique key that combines the object's address and the method's address.
-template <typename T> static inline void *get_method_key(T *obj, void (T::*method)())
-{
-    // The union is used to safely cast the method pointer to a void pointer.
-    union {
-        void (T::*method_ptr)();
-        void *ptr;
-    } caster;
-    // Ensure the object pointer is not null.
-    if (!obj) {
-        std::cerr << "Error: Object pointer is null." << std::endl;
-        return nullptr;
-    }
-    // Ensure the method pointer is not null.
-    if (!method) {
-        std::cerr << "Error: Method pointer is null." << std::endl;
-        return nullptr;
-    }
-    // Set the method pointer in the union.
-    caster.method_ptr  = method;
-    // Combine the object's address and the method's address into a unique key.
-    uintptr_t combined = reinterpret_cast<uintptr_t>(obj) ^ reinterpret_cast<uintptr_t>(caster.ptr);
-    // Return the combined address as a void pointer.
-    return reinterpret_cast<void *>(combined);
-}
+template <typename Object> void *get_method_key(Object *obj, void (Object::*method)());
 
 /// @brief Retrieves or creates a process for a given method of an object.
-/// @tparam Module the type of the object.
+/// @tparam Object the type of the object.
 /// @param obj the object instance.
 /// @param method the pointer to the method of the object.
-/// @return a shared pointer to the process associated with the method.
-template <typename Module>
-static inline std::shared_ptr<process_t> get_or_create_process(Module *obj, void (Module::*method)())
-{
-    // Stores the processes in a static map to avoid recreating them.
-    static std::unordered_map<void const *, std::shared_ptr<process_t>> method_cache;
-    // Generate a unique key for the method.
-    void *key = digsim::get_method_key(obj, method);
-    if (!key) {
-        std::cerr << "Error: Failed to generate method key." << std::endl;
-        return nullptr;
-    }
-    // Check if the process already exists in the cache.
-    auto it = method_cache.find(key);
-    if (it != method_cache.end()) {
-        return it->second;
-    }
-    // If not found, create a new process and store it in the cache.
-    auto process      = std::make_shared<process_t>([obj, method]() { (obj->*method)(); });
-    // Store the new process in the cache.
-    method_cache[key] = process;
-    // Return the newly created process.
-    return process;
-}
+/// @param name an optional name for the process, used for debugging and logging.
+/// @return A process_info_t structure containing the process information.
+template <typename Object>
+process_info_t get_or_create_process(Object *obj, void (Object::*method)(), const std::string &name = "");
 
 } // namespace digsim
+
+#include "common.tpp"

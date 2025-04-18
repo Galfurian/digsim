@@ -23,34 +23,33 @@ inline discrete_time_t scheduler_t::time() const { return now; }
 
 inline void scheduler_t::schedule(const event_t &event) { event_queue.push(event); }
 
-inline void scheduler_t::schedule_now(std::shared_ptr<process_t> process, const std::string &name)
+inline void scheduler_t::schedule_now(const process_info_t &proc_info)
 {
-    digsim::trace("Scheduler", "Scheduling process `" + name + "` to run now.");
-    schedule(event_t{now, process, name});
+    digsim::trace("scheduler_t", "Scheduling process `{}` to run immediately.", proc_info.to_string());
+    schedule(event_t{now, proc_info});
 }
 
-inline void
-scheduler_t::schedule_after(std::shared_ptr<process_t> process, discrete_time_t delay, const std::string &name)
+inline void scheduler_t::schedule_after(const process_info_t &proc_info, discrete_time_t delay)
 {
-    digsim::trace("Scheduler", "Scheduling process `" + name + "` after " + std::to_string(delay) + " time units.");
-    schedule(event_t{now + delay, process, name});
+    digsim::trace("scheduler_t", "Scheduling process `{}` to run after {} time units.", proc_info.to_string(), delay);
+    schedule(event_t{now + delay, proc_info});
 }
 
-inline void scheduler_t::register_initializer(std::shared_ptr<process_t> process) { initializer_queue.insert(process); }
+inline void scheduler_t::register_initializer(const process_info_t &proc_info) { initializer_queue.insert(proc_info); }
 
 inline void scheduler_t::initialize()
 {
     // Run all initialization callbacks.
     if (!initializer_queue.empty()) {
-        digsim::debug("Scheduler", "0.1. Running initializers");
-        digsim::debug("Scheduler", "    Initializer queue size: " + std::to_string(initializer_queue.size()));
-        digsim::debug("Scheduler", ">>>");
+        digsim::debug("scheduler_t", "0.1. Running initializers");
+        digsim::debug("scheduler_t", "    Initializer queue size: " + std::to_string(initializer_queue.size()));
+        digsim::debug("scheduler_t", ">>>");
         // Run all initializers.
         for (const auto &initializer : initializer_queue) {
-            (*initializer)();
+            (*initializer.process)();
         }
-        digsim::debug("Scheduler", "<<<");
-        digsim::debug("Scheduler", "");
+        digsim::debug("scheduler_t", "<<<");
+        digsim::debug("scheduler_t", "");
 
         // Clear the initializer queue.
         initializer_queue.clear();
@@ -59,7 +58,7 @@ inline void scheduler_t::initialize()
 
 inline void scheduler_t::stabilize()
 {
-    digsim::debug("Scheduler", "0.2. Stabilizing the circuit");
+    digsim::debug("scheduler_t", "0.2. Stabilizing the circuit");
     while (!event_queue.empty()) {
         auto next_time = event_queue.top().time;
         if (next_time > now)
@@ -68,7 +67,7 @@ inline void scheduler_t::stabilize()
         std::set<std::shared_ptr<process_t>> batch;
         while (!event_queue.empty() && event_queue.top().time == now) {
             auto &ev = event_queue.top();
-            batch.insert(ev.callback);
+            batch.insert(ev.process_info.process);
             event_queue.pop();
         }
         for (auto &cb : batch) {
@@ -76,8 +75,8 @@ inline void scheduler_t::stabilize()
         }
     }
     print_event_queue();
-    digsim::debug("Scheduler", "");
-    digsim::debug("Scheduler", "");
+    digsim::debug("scheduler_t", "");
+    digsim::debug("scheduler_t", "");
 }
 
 inline void scheduler_t::run(discrete_time_t simulation_time)
@@ -95,9 +94,9 @@ inline void scheduler_t::run(discrete_time_t simulation_time)
             break;
         }
 
-        digsim::debug("Scheduler", "1. Extracting all events...");
-        digsim::debug("Scheduler", "    Current time     : " + std::to_string(current_time));
-        digsim::debug("Scheduler", "    Event queue size : " + std::to_string(event_queue.size()));
+        digsim::debug("scheduler_t", "1. Extracting all events...");
+        digsim::debug("scheduler_t", "    Current time     : {}", std::to_string(current_time));
+        digsim::debug("scheduler_t", "    Event queue size : {}", std::to_string(event_queue.size()));
 
         // Update the current time.
         now = current_time;
@@ -107,26 +106,27 @@ inline void scheduler_t::run(discrete_time_t simulation_time)
 
         // Extract all callbacks scheduled for this time
         while (!event_queue.empty() && event_queue.top().time == current_time) {
-            if (batch.insert(event_queue.top().callback).second) {
-                digsim::debug("Scheduler", "        Queuing for execution: " + event_queue.top().name);
+            if (batch.insert(event_queue.top().process_info.process).second) {
+                digsim::debug(
+                    "scheduler_t", "        Queuing for execution: {}", event_queue.top().process_info.to_string());
             }
             event_queue.pop();
         }
-        digsim::debug("Scheduler", "");
+        digsim::debug("scheduler_t", "");
 
         // Now run the batch
         if (!batch.empty()) {
-            digsim::debug("Scheduler", "2. Running batch of callbacks...");
-            digsim::debug("Scheduler", ">>>");
+            digsim::debug("scheduler_t", "2. Running batch of callbacks...");
+            digsim::debug("scheduler_t", ">>>");
             for (auto &callback : batch) {
                 (*callback)();
             }
-            digsim::debug("Scheduler", "<<<");
-            digsim::debug("Scheduler", "");
+            digsim::debug("scheduler_t", "<<<");
+            digsim::debug("scheduler_t", "");
         }
         print_event_queue();
-        digsim::debug("Scheduler", "");
-        digsim::debug("Scheduler", "");
+        digsim::debug("scheduler_t", "");
+        digsim::debug("scheduler_t", "");
     }
 }
 
@@ -138,23 +138,23 @@ inline void scheduler_t::print_event_queue() const
 
     while (!copy.empty()) {
         const auto &ev = copy.top();
-        time_buckets[ev.time].push_back(ev.name.empty() ? "<unnamed>" : ev.name);
+        time_buckets[ev.time].push_back(ev.process_info.to_string());
         copy.pop();
     }
 
     if (!time_buckets.empty()) {
-        digsim::debug("Scheduler", "3. Event queue snapshot:");
+        digsim::debug("scheduler_t", "3. Event queue snapshot:");
         for (const auto &[t, names] : time_buckets) {
             std::stringstream ss;
-            ss << "    Queue: [ ";
+            ss << "    Queue [" << std::right << std::setw(3) << t << "] : [ ";
             for (const auto &n : names) {
                 ss << n << " ";
             }
             ss << "]";
-            digsim::debug("Scheduler", ss.str());
+            digsim::debug("scheduler_t", ss.str());
         }
     } else {
-        digsim::debug("Scheduler", "3. Event queue empty.");
+        digsim::debug("scheduler_t", "3. Event queue empty.");
     }
 }
 

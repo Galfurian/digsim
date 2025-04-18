@@ -28,7 +28,7 @@ public:
     }
 
     /// @brief Default constructor for named_object_t.
-    ~named_object_t() = default;
+    virtual ~named_object_t() = default;
 
     /// @brief Get the name of the object.
     /// @return The name of the object.

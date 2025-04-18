@@ -24,8 +24,8 @@ public:
         , waiting(false)
         , counter(0)
     {
-        add_sensitivity(&ping_module::on_trigger, trigger);
-        add_sensitivity(&ping_module::on_clock, clk);
+        ADD_SENSITIVITY(ping_module, on_trigger, trigger);
+        ADD_SENSITIVITY(ping_module, on_clock, clk);
     }
 
 private:

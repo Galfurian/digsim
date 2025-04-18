@@ -21,20 +21,14 @@ dependency_graph_t &dependency_graph_t::instance()
     return instance;
 }
 
-void dependency_graph_t::register_signal_producer(
-    const isignal_t *signal,
-    std::shared_ptr<process_t> process,
-    module_t *module)
+void dependency_graph_t::register_signal_producer(const isignal_t *signal, const process_info_t &proc_info)
 {
-    signal_producers[signal] = {process, module};
+    signal_producers[signal] = proc_info;
 }
 
-void dependency_graph_t::register_signal_consumer(
-    const isignal_t *signal,
-    std::shared_ptr<process_t> process,
-    module_t *module)
+void dependency_graph_t::register_signal_consumer(const isignal_t *signal, const process_info_t &proc_info)
 {
-    signal_consumers[signal].push_back({process, module});
+    signal_consumers[signal].push_back(proc_info);
 }
 
 void dependency_graph_t::export_dot(const std::string &filename) const
@@ -54,28 +48,36 @@ void dependency_graph_t::export_dot(const std::string &filename) const
     ofs << "    rankdir=LR;\n";
     // Collect all signals and modules.
     for (const auto &[signal_if, producer_info] : signal_producers) {
-        if (const auto *signal = signal_if->get_bound_signal()) {
+        auto signal = signal_if->get_bound_signal();
+        if (signal) {
             all_signals.insert(signal);
-            all_modules.insert(producer_info.module);
+        }
+        auto module = reinterpret_cast<const module_t *>(producer_info.owner.ptr);
+        if (module) {
+            all_modules.insert(module);
         }
     }
     for (const auto &[signal_if, consumer_list] : signal_consumers) {
-        if (const auto *signal = signal_if->get_bound_signal()) {
+        auto signal = signal_if->get_bound_signal();
+        if (signal) {
             all_signals.insert(signal);
             for (const auto &consumer_info : consumer_list) {
-                all_modules.insert(consumer_info.module);
+                auto module = reinterpret_cast<const module_t *>(consumer_info.owner.ptr);
+                if (module) {
+                    all_modules.insert(module);
+                }
             }
         }
     }
     // Generate unique IDs.
-    for (const auto *signal : all_signals) {
+    for (auto signal : all_signals) {
         signal_ids[signal] = "sig_" + this->random_id();
     }
-    for (const auto *module : all_modules) {
+    for (auto module : all_modules) {
         module_ids[module] = "mod_" + this->random_id();
     }
     // Emit signal nodes.
-    for (const auto *signal : all_signals) {
+    for (auto signal : all_signals) {
         const std::string &id = signal_ids[signal];
         ofs << "    \"" << id << "\" [shape=ellipse, style=filled, fillcolor=lightblue, label=\"" << signal->get_name()
             << "\\n(type=" << signal->get_type_name() << ")";
@@ -84,24 +86,29 @@ void dependency_graph_t::export_dot(const std::string &filename) const
         ofs << "\"];\n";
     }
     // Emit module nodes.
-    for (const auto *module : all_modules) {
+    for (auto module : all_modules) {
         const std::string &id = module_ids[module];
         ofs << "    \"" << id << "\" [shape=box, style=filled, fillcolor=lightgray, label=\"" << module->get_name()
             << "\"];\n";
     }
     // Emit producer edges.
     for (const auto &[signal_if, producer_info] : signal_producers) {
-        if (const auto *signal = signal_if->get_bound_signal()) {
-            ofs << "    \"" << module_ids[producer_info.module] << "\" -> \"" << signal_ids[signal]
-                << "\" [label=\"produces\"];\n";
+        auto signal = signal_if->get_bound_signal();
+        auto module = reinterpret_cast<const module_t *>(producer_info.owner.ptr);
+        if (signal && module) {
+            ofs << "    \"" << module_ids[module] << "\" -> \"" << signal_ids[signal] << "\" [label=\"produces\"];\n";
         }
     }
     // Emit consumer edges.
     for (const auto &[signal_if, consumer_list] : signal_consumers) {
-        if (const auto *signal = signal_if->get_bound_signal()) {
+        auto signal = signal_if->get_bound_signal();
+        if (signal) {
             for (const auto &consumer_info : consumer_list) {
-                ofs << "    \"" << signal_ids[signal] << "\" -> \"" << module_ids[consumer_info.module]
-                    << "\" [label=\"consumed by\"];\n";
+                auto module = reinterpret_cast<const module_t *>(consumer_info.owner.ptr);
+                if (module) {
+                    ofs << "    \"" << signal_ids[signal] << "\" -> \"" << module_ids[module]
+                        << "\" [label=\"consumes\"];\n";
+                }
             }
         }
     }

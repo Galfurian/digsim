@@ -4,6 +4,7 @@
 /// This file is distributed under the terms of the MIT License.
 /// See the full license in the root directory at LICENSE.md.
 
+#include "dependency_graph.hpp"
 #include "module.hpp"
 #include "scheduler.hpp"
 
@@ -18,43 +19,53 @@ module_t::module_t(const std::string &_name)
     // Nothing to do here.
 }
 
-template <typename Module, typename T> void module_t::add_sensitivity(void (Module::*method)(), input_t<T> &signal)
+template <typename Module, typename T>
+void module_t::add_sensitivity(void (Module::*method)(), const std::string _name, input_t<T> &signal)
 {
-    add_sensitivity(digsim::get_or_create_process<Module>(static_cast<Module *>(this), method), signal);
+    auto proc_info = digsim::get_or_create_process<Module>(static_cast<Module *>(this), method, _name);
+
+    add_sensitivity(proc_info, signal);
 }
 
 template <typename Module, typename T, typename... Signals>
-void module_t::add_sensitivity(void (Module::*method)(), input_t<T> &first, Signals &...rest)
+void module_t::add_sensitivity(void (Module::*method)(), const std::string _name, input_t<T> &first, Signals &...rest)
 {
-    add_sensitivity(method, first);
-    (add_sensitivity(method, rest), ...);
+    add_sensitivity(method, _name, first);
+    (add_sensitivity(method, _name, rest), ...);
 }
 
-template <typename T> void module_t::add_sensitivity(std::shared_ptr<process_t> process, input_t<T> &signal)
+template <typename T> void module_t::add_sensitivity(const process_info_t &proc_info, input_t<T> &signal)
 {
-    signal.on_change(process);
-    scheduler.register_initializer(process);
+    signal.on_change(proc_info);
+    scheduler.register_initializer(proc_info);
 
     // Register in dependency graph.
-    dependency_graph.register_signal_consumer(&signal, process, this);
+    dependency_graph.register_signal_consumer(&signal, proc_info);
 }
 
-template <typename Module, typename T> void module_t::add_produces(void (Module::*method)(), output_t<T> &signal)
+template <typename Module, typename T>
+void module_t::add_produces(void (Module::*method)(), const std::string _name, output_t<T> &signal)
 {
-    add_produces(digsim::get_or_create_process<Module>(static_cast<Module *>(this), method), signal);
+    auto proc_info = digsim::get_or_create_process<Module>(static_cast<Module *>(this), method, _name);
+
+    add_produces(proc_info, signal);
 }
 
 template <typename Module, typename T, typename... Signals>
-void module_t::add_produces(void (Module::*method)(), output_t<T> &first, Signals &...rest)
+void module_t::add_produces(void (Module::*method)(), const std::string _name, output_t<T> &first, Signals &...rest)
 {
-    add_produces(method, first);
-    (add_produces(method, rest), ...);
+    add_produces(method, _name, first);
+    (add_produces(method, _name, rest), ...);
 }
 
-template <typename T> void module_t::add_produces(std::shared_ptr<process_t> process, output_t<T> &signal)
+template <typename T> void module_t::add_produces(const process_info_t &proc_info, output_t<T> &signal)
 {
-    dependency_graph.register_signal_producer(&signal, process, this);
+    dependency_graph.register_signal_producer(&signal, proc_info);
 }
 
 } // namespace digsim
+
+#define ADD_SENSITIVITY(object, method, ...) add_sensitivity(&object::method, #method, __VA_ARGS__)
+
+#define ADD_PRODUCES(object, method, ...) add_produces(&object::method, #method, __VA_ARGS__)
 

@@ -28,8 +28,8 @@ public:
         , sel("sel")
         , out("out")
     {
-        add_sensitivity(&Mux2to1::evaluate, a, b, sel);
-        add_produces(&Mux2to1::evaluate, out);
+        ADD_SENSITIVITY(Mux2to1, evaluate, a, b, sel);
+        ADD_PRODUCES(Mux2to1, evaluate, out);
     }
 
 private:
@@ -68,8 +68,8 @@ public:
         , sum("sum")
         , cout("cout")
     {
-        add_sensitivity(&FullAdder::evaluate, a, b, cin);
-        add_produces(&FullAdder::evaluate, sum, cout);
+        ADD_SENSITIVITY(FullAdder, evaluate, a, b, cin);
+        ADD_PRODUCES(FullAdder, evaluate, sum, cout);
     }
 
 private:
@@ -113,8 +113,8 @@ public:
         , in("in")
         , out("out")
     {
-        add_sensitivity(&NotGate::evaluate, in);
-        add_produces(&NotGate::evaluate, out);
+        ADD_SENSITIVITY(NotGate, evaluate, in);
+        ADD_PRODUCES(NotGate, evaluate, out);
     }
 
     void evaluate()
@@ -146,8 +146,8 @@ public:
         , b("b")
         , out("out")
     {
-        add_sensitivity(&AndGate::evaluate, a, b);
-        add_produces(&AndGate::evaluate, out);
+        ADD_SENSITIVITY(AndGate, evaluate, a, b);
+        ADD_PRODUCES(AndGate, evaluate, out);
     }
 
 private:
@@ -179,8 +179,8 @@ public:
         , b("b")
         , out("out")
     {
-        add_sensitivity(&OrGate::evaluate, a, b);
-        add_produces(&OrGate::evaluate, out);
+        ADD_SENSITIVITY(OrGate, evaluate, a, b);
+        ADD_PRODUCES(OrGate, evaluate, out);
     }
 
 private:
@@ -212,8 +212,8 @@ public:
         , b("b")
         , out("out")
     {
-        add_sensitivity(&XorGate::evaluate, a, b);
-        add_produces(&XorGate::evaluate, out);
+        ADD_SENSITIVITY(XorGate, evaluate, a, b);
+        ADD_PRODUCES(XorGate, evaluate, out);
     }
 
 private:
@@ -245,8 +245,8 @@ public:
         , b("b")
         , out("out")
     {
-        add_sensitivity(&NandGate::evaluate, a, b);
-        add_produces(&NandGate::evaluate, out);
+        ADD_SENSITIVITY(NandGate, evaluate, a, b);
+        ADD_PRODUCES(NandGate, evaluate, out);
     }
 
 private:
@@ -284,20 +284,20 @@ public:
         , q("q")
         , q_not("q_not")
     {
-        add_sensitivity(&DFlipFlop::evaluate, clk, d);
-        add_produces(&DFlipFlop::evaluate, q, q_not);
+        ADD_SENSITIVITY(DFlipFlop, evaluate, clk, d);
+        ADD_PRODUCES(DFlipFlop, evaluate, q, q_not);
     }
 
     void bind_reset(digsim::signal_t<bool> &reset_signal)
     {
         reset(reset_signal);
-        add_sensitivity(&DFlipFlop::evaluate, reset);
+        ADD_SENSITIVITY(DFlipFlop, evaluate, reset);
     }
 
     void bind_enable(digsim::signal_t<bool> &enable_signal)
     {
         enable(enable_signal);
-        add_sensitivity(&DFlipFlop::evaluate, enable);
+        ADD_SENSITIVITY(DFlipFlop, evaluate, enable);
     }
 
 private:
