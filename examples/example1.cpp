@@ -13,7 +13,7 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::trace);
+    digsim::logger.set_level(digsim::log_level_t::info);
 
     // Inputs
     digsim::signal_t<bool> a("a");
@@ -47,7 +47,7 @@ int main()
     not_sum_2.in(not_sum);
     not_sum_2.out(sum_out);
 
-    // Delay chain: cout → not1 → not2
+    // Delay chain: cout -> not1 -> not2
     NotGate not_cout_1("cout_not1");
     not_cout_1.in(count);
     not_cout_1.out(not_cout);
@@ -63,13 +63,12 @@ int main()
     digsim::probe_t<bool> p2("p2");
     p2.in(cout_out);
 
-    // Export graph
+    // Export graph.
     digsim::dependency_graph.export_dot("example1.dot");
 
-    digsim::info("Main", "=== Initialize simulation ===");
+    digsim::info("Main", "=== Initializing simulation ===");
 
     digsim::scheduler.initialize();
-    digsim::scheduler.stabilize();
 
     digsim::info("Main", "=== Running simulation ===");
 

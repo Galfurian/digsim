@@ -4,11 +4,12 @@
 /// This file is distributed under the terms of the MIT License.
 /// See the full license in the root directory at LICENSE.md.
 
-#include "dependency_graph.hpp"
-#include "module.hpp"
-#include "scheduler.hpp"
-
 #pragma once
+
+#include "digsim/module.hpp"
+
+#include "digsim/dependency_graph.hpp"
+#include "digsim/scheduler.hpp"
 
 namespace digsim
 {

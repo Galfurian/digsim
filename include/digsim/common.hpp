@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "digsim/named_object.hpp"
+
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -19,8 +21,6 @@ using discrete_time_t = uint64_t;
 
 /// @brief The types of the processes.
 using process_t = std::function<void()>;
-
-class named_object_t;
 
 /// @brief A class that holds a reference to a named object.
 struct object_ref_t {

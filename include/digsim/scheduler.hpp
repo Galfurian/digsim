@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "common.hpp"
+#include "digsim/common.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -70,9 +70,6 @@ public:
     /// @brief Initializes the scheduler and all registered processes.
     void initialize();
 
-    /// @brief Stabilizes the simulation by processing all events in the event queue.
-    void stabilize();
-
     /// @brief Runs the simulation for a specified amount of time.
     /// @param simulation_time the total time to run the simulation, defaults to 0 which means run until all events are
     /// processed.
@@ -85,6 +82,8 @@ private:
     /// @brief Private constructor for the singleton pattern.
     scheduler_t();
 
+    /// @brief Check if the scheduler is initialized.
+    bool initialized;
     /// @brief The current simulation time.
     discrete_time_t now;
     /// @brief The priority queue of events, ordered by their scheduled time.

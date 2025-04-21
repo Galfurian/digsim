@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "signal.hpp"
+#include "digsim/signal.hpp"
 
 #include <set>
 

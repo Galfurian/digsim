@@ -4,15 +4,16 @@
 /// This file is distributed under the terms of the MIT License.
 /// See the full license in the root directory at LICENSE.md.
 
-#include "logger.hpp"
-#include "scheduler.hpp"
-
 #pragma once
+
+#include "digsim/logger.hpp"
+#include "digsim/scheduler.hpp"
 
 namespace digsim
 {
 scheduler_t::scheduler_t()
-    : now(0)
+    : initialized(false)
+    , now(0)
     , event_queue()
     , initializer_queue()
 {
@@ -39,9 +40,27 @@ inline void scheduler_t::register_initializer(const process_info_t &proc_info) {
 
 inline void scheduler_t::initialize()
 {
+    if (initialized) {
+        digsim::debug("scheduler_t", "Scheduler already initialized. Skipping initialization.");
+        return;
+    }
+#if 0
+    digsim::debug("scheduler_t", "0.1. Check for bad cycles.");
+    // First, compute the cycles in the dependency graph.
+    digsim::dependency_graph.compute_cycles();
+    // Check the cycles.
+    for (const auto &cycle : digsim::dependency_graph.get_cycles()) {
+        if (digsim::dependency_graph.is_bad_cycle(cycle)) {
+            digsim::error("scheduler_t", "Bad cycle detected:");
+            digsim::dependency_graph.print_cycle_report(cycle);
+            digsim::error("scheduler_t", "Exiting.");
+            std::exit(EXIT_FAILURE);
+        }
+    }
+#endif
     // Run all initialization callbacks.
     if (!initializer_queue.empty()) {
-        digsim::debug("scheduler_t", "0.1. Running initializers");
+        digsim::debug("scheduler_t", "0.2. Running initializers");
         digsim::debug("scheduler_t", "    Initializer queue size: " + std::to_string(initializer_queue.size()));
         digsim::debug("scheduler_t", ">>>");
         // Run all initializers.
@@ -54,56 +73,31 @@ inline void scheduler_t::initialize()
         // Clear the initializer queue.
         initializer_queue.clear();
     }
-}
-
-inline void scheduler_t::stabilize()
-{
-    digsim::debug("scheduler_t", "0.2. Stabilizing the circuit");
-    while (!event_queue.empty()) {
-        auto next_time = event_queue.top().time;
-        if (next_time > now)
-            break;
-        now = next_time;
-        std::set<std::shared_ptr<process_t>> batch;
-        while (!event_queue.empty() && event_queue.top().time == now) {
-            auto &ev = event_queue.top();
-            batch.insert(ev.process_info.process);
-            event_queue.pop();
-        }
-        for (auto &cb : batch) {
-            (*cb)();
-        }
-    }
-    print_event_queue();
-    digsim::debug("scheduler_t", "");
-    digsim::debug("scheduler_t", "");
+    initialized = true;
 }
 
 inline void scheduler_t::run(discrete_time_t simulation_time)
 {
+    if (!initialized) {
+        digsim::debug("scheduler_t", "Scheduler not initialized. Calling initialize()...");
+        initialize();
+    }
     // This will hold the batched processes to be executed.
     std::set<std::shared_ptr<process_t>> batch;
-
     discrete_time_t simulation_end = now + simulation_time;
-
     while (!event_queue.empty()) {
         discrete_time_t current_time = event_queue.top().time;
-
         // Next event is beyond the allowed time.
         if ((simulation_time > 0) && (current_time > simulation_end)) {
             break;
         }
-
         digsim::debug("scheduler_t", "1. Extracting all events...");
         digsim::debug("scheduler_t", "    Current time     : {}", std::to_string(current_time));
         digsim::debug("scheduler_t", "    Event queue size : {}", std::to_string(event_queue.size()));
-
         // Update the current time.
         now = current_time;
-
         // Clear the batch for this time.
         batch.clear();
-
         // Extract all callbacks scheduled for this time
         while (!event_queue.empty() && event_queue.top().time == current_time) {
             if (batch.insert(event_queue.top().process_info.process).second) {
@@ -113,8 +107,7 @@ inline void scheduler_t::run(discrete_time_t simulation_time)
             event_queue.pop();
         }
         digsim::debug("scheduler_t", "");
-
-        // Now run the batch
+        // Now run the batch.
         if (!batch.empty()) {
             digsim::debug("scheduler_t", "2. Running batch of callbacks...");
             digsim::debug("scheduler_t", ">>>");
@@ -125,7 +118,6 @@ inline void scheduler_t::run(discrete_time_t simulation_time)
             digsim::debug("scheduler_t", "");
         }
         print_event_queue();
-        digsim::debug("scheduler_t", "");
         digsim::debug("scheduler_t", "");
     }
 }

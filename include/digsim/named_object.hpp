@@ -1,4 +1,4 @@
-/// @file named_objec.hpp
+/// @file named_object.hpp
 /// @brief
 /// @copyright
 /// This file is distributed under the terms of the MIT License.

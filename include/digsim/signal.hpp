@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include "common.hpp"
-#include "named_objec.hpp"
+#include "digsim/common.hpp"
 
 #include <iostream>
 #include <memory>

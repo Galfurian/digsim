@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "common.hpp"
+#include "digsim/common.hpp"
 
-#include "module.hpp"
+#include "digsim/module.hpp"
 
 #include <iostream>
 #include <sstream>

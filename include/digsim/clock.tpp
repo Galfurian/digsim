@@ -1,4 +1,4 @@
-/// @file clock.hpp
+/// @file clock.tpp
 /// @brief Implementation of a clock module for digital simulation.
 /// @copyright
 /// This file is distributed under the terms of the MIT License.

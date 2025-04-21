@@ -4,10 +4,12 @@
 /// This file is distributed under the terms of the MIT License.
 /// See the full license in the root directory at LICENSE.md.
 
-#include "logger.hpp"
-#include "scheduler.hpp"
-
 #pragma once
+
+#include "digsim/signal.hpp"
+
+#include "digsim/logger.hpp"
+#include "digsim/scheduler.hpp"
 
 namespace digsim
 {

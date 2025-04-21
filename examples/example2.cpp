@@ -13,9 +13,7 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::trace);
-
-    digsim::info("Main", "=== Initializing simulation ===");
+    digsim::logger.set_level(digsim::log_level_t::info);
 
     // Inputs.
     digsim::signal_t<bool> a("a");
@@ -47,6 +45,8 @@ int main()
     probe1.in(mux_out);
 
     digsim::dependency_graph.export_dot("example2.dot");
+
+    digsim::info("Main", "=== Initializing simulation ===");
 
     digsim::scheduler.initialize();
 
