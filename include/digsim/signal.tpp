@@ -14,6 +14,10 @@
 namespace digsim
 {
 
+// =============================================================================
+// SIGNAL
+// =============================================================================
+
 template <typename T>
 signal_t<T>::signal_t(const std::string &_name, T _initial, discrete_time_t _delay)
     : isignal_t(_name)
@@ -219,6 +223,10 @@ template <typename T> void input_t<T>::operator()(isignal_t &_signal)
 {
     auto signal = dynamic_cast<signal_t<T> *>(&_signal);
     if (!signal) {
+        auto input = dynamic_cast<input_t<T> *>(&_signal);
+        if (input) {
+            throw std::runtime_error("Input `" + get_name() + "` cannot be bound to another input.");
+        }
         throw std::runtime_error("Input `" + get_name() + "` not bound to a signal.");
     }
     digsim::trace("input_t", "Binding input `{}` to signal `{}`", get_name(), signal->get_name());

@@ -6,8 +6,18 @@
 
 #pragma once
 
+#include <bitset>
 #include <format>
 #include <string>
+
+template <std::size_t N> struct std::formatter<std::bitset<N>, char> {
+    constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext> auto format(const std::bitset<N> &bits, FormatContext &ctx) const
+    {
+        return std::format_to(ctx.out(), "{}", bits.to_string());
+    }
+};
 
 namespace digsim
 {

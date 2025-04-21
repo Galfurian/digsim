@@ -35,11 +35,11 @@ bool process_info_t::operator<(const process_info_t &other) const { return key <
 
 bool process_info_t::operator==(const process_info_t &other) const { return key == other.key; }
 
-bool process_info_t::validate() const { return (process != nullptr) && (key != nullptr); }
+bool process_info_t::validate() const { return (process != nullptr) && (key != 0); }
 
 std::size_t process_info_hash::operator()(const process_info_t &info) const noexcept
 {
-    return std::hash<const void *>{}(info.key);
+    return std::hash<std::uintptr_t>{}(info.key);
 }
 
 bool process_info_equal::operator()(const process_info_t &lhs, const process_info_t &rhs) const noexcept

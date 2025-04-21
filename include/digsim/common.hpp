@@ -39,7 +39,7 @@ struct object_ref_t {
 /// @brief Stores detailed information about a scheduled process.
 struct process_info_t {
     std::shared_ptr<process_t> process; ///< The process to be executed.
-    void const *key;                    ///< A unique key for the process.
+    std::uintptr_t key;                 ///< A unique key for the process.
     object_ref_t owner;                 ///< The object instance that contains the method to be executed.
     std::string name;                   ///< The name of the process, typically in the format "obj.method".
 
@@ -90,7 +90,7 @@ std::ostream &operator<<(std::ostream &os, const object_ref_t &ref);
 /// @param obj the object instance.
 /// @param method the pointer to the method of the object.
 /// @return a unique key that combines the object's address and the method's address.
-template <typename Object> void *get_method_key(Object *obj, void (Object::*method)())
+template <typename Object> std::uintptr_t get_method_key(Object *obj, void (Object::*method)())
 {
     // The union is used to safely cast the method pointer to a void pointer.
     union {
@@ -100,19 +100,15 @@ template <typename Object> void *get_method_key(Object *obj, void (Object::*meth
     // Ensure the object pointer is not null.
     if (!obj) {
         throw std::runtime_error("Object pointer is null.");
-        return nullptr;
     }
     // Ensure the method pointer is not null.
     if (!method) {
         throw std::runtime_error("Method pointer is null.");
-        return nullptr;
     }
     // Set the method pointer in the union.
-    caster.method_ptr  = method;
+    caster.method_ptr = method;
     // Combine the object's address and the method's address into a unique key.
-    uintptr_t combined = reinterpret_cast<uintptr_t>(obj) ^ reinterpret_cast<uintptr_t>(caster.ptr);
-    // Return the combined address as a void pointer.
-    return reinterpret_cast<void *>(combined);
+    return reinterpret_cast<std::uintptr_t>(obj) ^ reinterpret_cast<std::uintptr_t>(caster.ptr);
 }
 
 /// @brief Retrieves or creates a process for a given method of an object.
@@ -124,8 +120,8 @@ template <typename Object> void *get_method_key(Object *obj, void (Object::*meth
 template <typename Object>
 process_info_t get_or_create_process(Object *obj, void (Object::*method)(), const std::string &name = "")
 {
-    static std::unordered_map<void const *, process_info_t> method_cache;
-    void *key = digsim::get_method_key(obj, method);
+    static std::unordered_map<std::uintptr_t, process_info_t> method_cache;
+    auto key = digsim::get_method_key(obj, method);
     if (!key) {
         throw std::runtime_error("Failed to generate method key.");
     }
