@@ -26,15 +26,41 @@ public:
     /// @param _name the name of the module.
     /// @param _input the input signal to probe.
     /// @param _callback the callback function to call when the input signal changes.
-    probe_t(const std::string &_name, std::function<void(const digsim::input_t<T> &)> _callback = nullptr);
+    probe_t(const std::string &_name, std::function<void(const digsim::input_t<T> &)> _callback = nullptr)
+        : module_t(_name)
+        , in("in")
+        , callback(std::move(_callback))
+    {
+        // If the user did not provide a callback, assign the default one.
+        if (_callback) {
+            callback = _callback;
+        } else {
+            callback = [this](const digsim::input_t<T> &sig) { this->default_callback(sig); };
+        }
+
+        ADD_SENSITIVITY(probe_t, evaluate, in);
+    }
 
 private:
     /// @brief Evaluate the input signal and call the callback if it has changed.
-    void evaluate();
+    void evaluate()
+    {
+        if (callback) {
+            callback(in);
+        }
+    }
 
-    void default_callback(const digsim::input_t<T> &_in) const;
+    void default_callback(const digsim::input_t<T> &_in) const
+    {
+        const auto &sig = _in.get_bound_signal();
+        if (sig) {
+            // Print the signal value.
+            std::stringstream ss;
+            ss << sig->get_name() << " = " << _in.get();
+            digsim::info(get_name(), ss.str());
+        }
+    }
 };
 
 } // namespace digsim
 
-#include "digsim/probe.tpp"

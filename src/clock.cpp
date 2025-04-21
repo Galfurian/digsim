@@ -1,10 +1,8 @@
-/// @file clock.tpp
+/// @file clock.cpp
 /// @brief Implementation of a clock module for digital simulation.
 /// @copyright
 /// This file is distributed under the terms of the MIT License.
 /// See the full license in the root directory at LICENSE.md.
-
-#pragma once
 
 #include "digsim/clock.hpp"
 

@@ -44,6 +44,10 @@ public:
     /// @param signal the signal to bind this output to.
     virtual void operator()(isignal_t &signal) = 0;
 
+    /// @brief Add the process to the list of processes that should be notified when the signal changes.
+    /// @param proc_info the process information containing the process to be executed when the signal changes.
+    virtual void notify(const process_info_t &proc_info) = 0;
+
     /// @brief Gets the default delay for this signal.
     /// @return the default delay for this signal.
     virtual discrete_time_t get_delay() const = 0;
@@ -88,6 +92,8 @@ public:
     bool has_changed() const;
 
     void operator()(isignal_t &_signal) override;
+
+    void notify(const process_info_t &proc_info) override;
 
     discrete_time_t get_delay() const override;
 
@@ -140,6 +146,8 @@ public:
 
     void operator()(isignal_t &_signal) override;
 
+    void notify(const process_info_t &proc_info) override;
+
     discrete_time_t get_delay() const override;
 
     bool bound() const override;
@@ -162,11 +170,9 @@ public:
     /// @return the current value of the signal.
     T get() const;
 
-    /// @brief Registers a process to be notified when the signal changes.
-    /// @param proc_info the process information containing the process to be executed when the signal changes.
-    void on_change(const process_info_t &proc_info);
-
     void operator()(isignal_t &_signal) override;
+
+    void notify(const process_info_t &proc_info) override;
 
     discrete_time_t get_delay() const override;
 

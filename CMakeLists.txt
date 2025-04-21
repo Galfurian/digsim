@@ -50,12 +50,19 @@ find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 # -----------------------------------------------------------------------------
 
 # Add the C++ library.
-add_library(${PROJECT_NAME} INTERFACE)
+add_library(${PROJECT_NAME}
+    ${PROJECT_SOURCE_DIR}/src/clock.cpp
+    ${PROJECT_SOURCE_DIR}/src/common.cpp
+    ${PROJECT_SOURCE_DIR}/src/dependency_graph.cpp
+    ${PROJECT_SOURCE_DIR}/src/logger.cpp
+    ${PROJECT_SOURCE_DIR}/src/module.cpp
+    ${PROJECT_SOURCE_DIR}/src/scheduler.cpp
+)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 # Inlcude header directories.
-target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 # Set the library to use c++-17
-target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
 # -----------------------------------------------------------------------------
 # Set the compilation flags.
@@ -64,40 +71,40 @@ target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Disable warnings for MSVC-specific "safe" functions like strcpy_s, etc.,
     # which are not portable and may clutter warning logs.
-    target_compile_definitions(${PROJECT_NAME} INTERFACE _CRT_SECURE_NO_WARNINGS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC _CRT_SECURE_NO_WARNINGS)
 
     # Disable warning C4702: unreachable code.
     add_compile_options(/wd4702)
 
     if(WARNINGS_AS_ERRORS)
         # Treat all warnings as errors to enforce stricter code quality.
-        target_compile_options(${PROJECT_NAME} INTERFACE /WX)
+        target_compile_options(${PROJECT_NAME} PUBLIC /WX)
     endif()
 
     if(STRICT_WARNINGS)
         # Enable external header management to suppress warnings in system and
         # external headers, making it easier to focus on project-specific issues.
-        target_compile_options(${PROJECT_NAME} INTERFACE /experimental:external)
-        target_compile_options(${PROJECT_NAME} INTERFACE /external:I ${CMAKE_BINARY_DIR})
-        target_compile_options(${PROJECT_NAME} INTERFACE /external:anglebrackets)
-        target_compile_options(${PROJECT_NAME} INTERFACE /external:W0)
+        target_compile_options(${PROJECT_NAME} PUBLIC /experimental:external)
+        target_compile_options(${PROJECT_NAME} PUBLIC /external:I ${CMAKE_BINARY_DIR})
+        target_compile_options(${PROJECT_NAME} PUBLIC /external:anglebrackets)
+        target_compile_options(${PROJECT_NAME} PUBLIC /external:W0)
 
         # Use a high warning level to catch as many potential issues as possible.
-        target_compile_options(${PROJECT_NAME} INTERFACE /W4)
+        target_compile_options(${PROJECT_NAME} PUBLIC /W4)
 
         # Enforce standards-compliant behavior to avoid relying on MSVC-specific extensions.
-        target_compile_options(${PROJECT_NAME} INTERFACE /permissive-)
+        target_compile_options(${PROJECT_NAME} PUBLIC /permissive-)
     endif()
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     if(WARNINGS_AS_ERRORS)
         # Treat all warnings as errors to enforce stricter code quality.
-        target_compile_options(${PROJECT_NAME} INTERFACE -Werror)
+        target_compile_options(${PROJECT_NAME} PUBLIC -Werror)
     endif()
 
     if(STRICT_WARNINGS)
         # Enable a broad set of warnings to catch common and subtle issues:
-        target_compile_options(${PROJECT_NAME} INTERFACE
+        target_compile_options(${PROJECT_NAME} PUBLIC
             -Wall                # Enable most general-purpose warnings.
             -Wextra              # Enable extra warnings not included in -Wall.
             -Wconversion         # Warn about implicit type conversions that may lose data.
@@ -143,6 +150,9 @@ if(BUILD_EXAMPLES)
     
     add_executable(${PROJECT_NAME}_example8 ${PROJECT_SOURCE_DIR}/examples/example8.cpp)
     target_link_libraries(${PROJECT_NAME}_example8 PUBLIC ${PROJECT_NAME})
+    
+    add_executable(${PROJECT_NAME}_example9 ${PROJECT_SOURCE_DIR}/examples/example9.cpp)
+    target_link_libraries(${PROJECT_NAME}_example9 PUBLIC ${PROJECT_NAME})
 
 endif()
 

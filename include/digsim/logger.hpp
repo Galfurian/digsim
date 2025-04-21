@@ -27,11 +27,7 @@ class logger_t
 public:
     /// @brief Get the singleton instance of the logger.
     /// @return a reference to the logger instance.
-    static logger_t &instance()
-    {
-        static logger_t logger;
-        return logger;
-    }
+    static logger_t &instance();
 
     /// @brief Set the global log level.
     /// @param level the log level to set.
@@ -54,21 +50,7 @@ private:
     /// @brief Turns a log level into a string representation.
     /// @param level the log level to convert to a string.
     /// @return a string representation of the log level.
-    inline std::string level_to_str(log_level_t level) const noexcept
-    {
-        switch (level) {
-        case log_level_t::error:
-            return "ERR";
-        case log_level_t::info:
-            return "INF";
-        case log_level_t::debug:
-            return "DBG";
-        case log_level_t::trace:
-            return "TRC";
-        default:
-            return "LOG";
-        }
-    }
+    std::string level_to_str(log_level_t level) const noexcept;
 
     /// @brief The current global log level.
     log_level_t global_level;
@@ -81,30 +63,27 @@ inline digsim::logger_t &logger = digsim::logger_t::instance();
 /// @param level the log level of the message.
 /// @param src the source of the log message, typically the name of the module or component.
 /// @param msg the message to log.
-inline void log(log_level_t level, const std::string &src, const std::string &msg)
-{
-    digsim::logger.log(level, src, msg);
-}
+void log(log_level_t level, const std::string &src, const std::string &msg);
 
 /// @brief Logs an error message with the specified source.
 /// @param src the source of the log message, typically the name of the module or component.
 /// @param msg the message to log.
-inline void error(const std::string &src, const std::string &msg) { digsim::logger.log(log_level_t::error, src, msg); }
+void error(const std::string &src, const std::string &msg);
 
 /// @brief Logs an informational message with the specified source.
 /// @param src the source of the log message, typically the name of the module or component.
 /// @param msg the message to log.
-inline void info(const std::string &src, const std::string &msg) { digsim::logger.log(log_level_t::info, src, msg); }
+void info(const std::string &src, const std::string &msg);
 
 /// @brief Logs a debug message with the specified source.
 /// @param src the source of the log message, typically the name of the module or component.
 /// @param msg the message to log.
-inline void debug(const std::string &src, const std::string &msg) { digsim::logger.log(log_level_t::debug, src, msg); }
+void debug(const std::string &src, const std::string &msg);
 
 /// @brief Logs a trace message with the specified source.
 /// @param src the source of the log message, typically the name of the module or component.
 /// @param msg the message to log.
-inline void trace(const std::string &src, const std::string &msg) { digsim::logger.log(log_level_t::trace, src, msg); }
+void trace(const std::string &src, const std::string &msg);
 
 /// @brief Logs a message with the specified log level and source using a format string.
 /// @tparam ...Args Variadic template arguments for the format string.
@@ -162,5 +141,3 @@ inline void trace(const std::string &source, std::format_string<Args...> fmt, Ar
 }
 
 } // namespace digsim
-
-#include "logger.tpp"

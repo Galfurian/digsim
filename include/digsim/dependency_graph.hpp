@@ -6,13 +6,16 @@
 
 #pragma once
 
+#include "digsim/common.hpp"
+
 #include <unordered_map>
 #include <unordered_set>
 
-#include "digsim/module.hpp"
-
 namespace digsim
 {
+
+class module_t;  // Forward declare module base.
+class isignal_t; // Forward declare abstract signal.
 
 using path_t = std::vector<const isignal_t *>;
 
@@ -126,5 +129,3 @@ private:
 inline dependency_graph_t &dependency_graph = dependency_graph_t::instance();
 
 } // namespace digsim
-
-#include "dependency_graph.tpp"

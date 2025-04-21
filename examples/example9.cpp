@@ -15,19 +15,14 @@ int main()
     digsim::logger.set_level(digsim::log_level_t::info);
 
     // Create signal for loop
-    digsim::signal_t<bool> not1_out("not1_out", false, 1);
-    digsim::signal_t<bool> not2_out("not2_out", false, 1);
+    digsim::signal_t<bool> sig("sig", false, 1);
 
     // Create inverters
-    NotGate not1("not1");
-    not1.in(not2_out);
-    not1.out(not1_out);
+    NotGate not_gate("not_gate");
+    not_gate.in(sig);
+    not_gate.out(sig);
 
-    NotGate not2("not2");
-    not2.in(not1_out);
-    not2.out(not2_out);
-
-    digsim::dependency_graph.export_dot("example8.dot");
+    digsim::dependency_graph.export_dot("example9.dot");
 
     digsim::info("Main", "=== Initializing simulation ===");
 
@@ -35,7 +30,6 @@ int main()
 
     digsim::info("Main", "=== Running simulation ===");
 
-    not2_out.set(true);
     digsim::scheduler.run(5);
 
     digsim::info("Main", "=== Simulation finished ===");

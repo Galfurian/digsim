@@ -42,5 +42,3 @@ private:
 };
 
 } // namespace digsim
-
-#include "digsim/clock.tpp"

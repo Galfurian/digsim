@@ -55,6 +55,22 @@ template <typename T> inline void signal_t<T>::operator()(isignal_t &_signal)
         "Use input_t or output_t to bind signals.");
 }
 
+template <typename T> inline void signal_t<T>::notify(const process_info_t &proc_info)
+{
+    if (!proc_info.process) {
+        throw std::runtime_error("Cannot register an invalid process to input `" + get_name() + "`.");
+    }
+    if (!proc_info.key) {
+        throw std::runtime_error("Cannot register a process with a null key to input `" + get_name() + "`.");
+    }
+    if (processes.find(proc_info) != processes.end()) {
+        digsim::trace("input_t", "Process already registered for input `{}`", get_name());
+        return;
+    }
+    digsim::trace("input_t", "Registering process `{}` for input `{}`", proc_info.to_string(), get_name());
+    processes.insert(proc_info);
+}
+
 template <typename T> inline discrete_time_t signal_t<T>::get_delay() const { return delay; }
 
 template <typename T> inline bool signal_t<T>::bound() const { return !processes.empty(); }
@@ -138,6 +154,10 @@ template <typename T> void output_t<T>::operator()(isignal_t &_signal)
     // Set the bound signal to the provided signal.
     bound_signal = signal;
 }
+template <typename T> inline void output_t<T>::notify(const process_info_t &)
+{
+    throw std::runtime_error("Cannot use an output to register a process to be notified.");
+}
 
 template <typename T> discrete_time_t output_t<T>::get_delay() const
 {
@@ -176,7 +196,7 @@ template <typename T> T input_t<T>::get() const
     return signal->get();
 }
 
-template <typename T> inline void input_t<T>::on_change(const process_info_t &proc_info)
+template <typename T> inline void input_t<T>::notify(const process_info_t &proc_info)
 {
     if (!proc_info.process) {
         throw std::runtime_error("Cannot register an invalid process to input `" + get_name() + "`.");
@@ -191,7 +211,7 @@ template <typename T> inline void input_t<T>::on_change(const process_info_t &pr
     digsim::trace("input_t", "Registering process `{}` for input `{}`", proc_info.to_string(), get_name());
     processes.insert(proc_info);
     if (bound_signal) {
-        bound_signal->processes.insert(proc_info);
+        bound_signal->notify(proc_info);
     }
 }
 

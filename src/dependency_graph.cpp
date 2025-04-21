@@ -1,10 +1,8 @@
-/// @file dependency_graph.tpp
+/// @file dependency_graph.cpp
 /// @brief
 /// @copyright
 /// This file is distributed under the terms of the MIT License.
 /// See the full license in the root directory at LICENSE.md.
-
-#pragma once
 
 #include "digsim/dependency_graph.hpp"
 
@@ -271,10 +269,16 @@ std::vector<const isignal_t *> dependency_graph_t::get_all_signals() const
 {
     std::unordered_set<const isignal_t *> all;
     for (const auto &pair : signal_producers) {
-        all.insert(pair.first);
+        // Get the bound signal.
+        if (const auto *bound = pair.first->get_bound_signal()) {
+            all.insert(bound);
+        }
     }
     for (const auto &pair : signal_consumers) {
-        all.insert(pair.first);
+        // Get the bound signal.
+        if (const auto *bound = pair.first->get_bound_signal()) {
+            all.insert(bound);
+        }
     }
     return std::vector<const isignal_t *>(all.begin(), all.end());
 }
