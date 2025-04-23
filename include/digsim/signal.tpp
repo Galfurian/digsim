@@ -14,6 +14,51 @@
 namespace digsim
 {
 
+inline std::string binding_chain_to_string(const isignal_t *signal)
+{
+    if (!signal) {
+        return "null";
+    }
+    std::stringstream ss;
+    do {
+        ss << signal->get_name();
+        if (signal->get_bound_signal()) {
+            ss << " -> ";
+        }
+    } while ((signal = signal->get_bound_signal()));
+    return ss.str();
+}
+
+template <typename T> signal_t<T> *resolve_signal(const isignal_t *signal_if)
+{
+    if (!signal_if) {
+        return nullptr;
+    }
+    auto signal = dynamic_cast<const signal_t<T> *>(signal_if);
+    if (signal) {
+        return const_cast<signal_t<T> *>(signal);
+    }
+    return resolve_signal<T>(signal_if->get_bound_signal());
+}
+
+template <typename T> inline output_t<T> *resolve_final_output(const output_t<T> *start)
+{
+    const output_t<T> *curr = start;
+    while (auto *next = dynamic_cast<const output_t<T> *>(curr->get_bound_signal())) {
+        curr = next;
+    }
+    return const_cast<output_t<T> *>(curr);
+}
+
+template <typename T> inline input_t<T> *resolve_final_input(const input_t<T> *start)
+{
+    const input_t<T> *curr = start;
+    while (auto *next = dynamic_cast<const input_t<T> *>(curr->get_bound_signal())) {
+        curr = next;
+    }
+    return const_cast<input_t<T> *>(curr);
+}
+
 // =============================================================================
 // SIGNAL
 // =============================================================================
@@ -59,19 +104,19 @@ template <typename T> inline void signal_t<T>::operator()(isignal_t &_signal)
         "Use input_t or output_t to bind signals.");
 }
 
-template <typename T> inline void signal_t<T>::notify(const process_info_t &proc_info)
+template <typename T> inline void signal_t<T>::subscribe(const process_info_t &proc_info)
 {
     if (!proc_info.process) {
-        throw std::runtime_error("Cannot register an invalid process to input `" + get_name() + "`.");
+        throw std::runtime_error("Cannot subscribe an invalid process to signal `" + get_name() + "`.");
     }
     if (!proc_info.key) {
-        throw std::runtime_error("Cannot register a process with a null key to input `" + get_name() + "`.");
+        throw std::runtime_error("Cannot subscribe a process with a null key to signal `" + get_name() + "`.");
     }
     if (processes.find(proc_info) != processes.end()) {
-        digsim::trace("input_t", "Process already registered for input `{}`", get_name());
+        digsim::trace("input_t", "Process already subscribed for signal `{}`", get_name());
         return;
     }
-    digsim::trace("input_t", "Registering process `{}` for input `{}`", proc_info.to_string(), get_name());
+    digsim::trace("signal_t", "Subscribing process `{}` for signal `{}`", proc_info.to_string(), get_name());
     processes.insert(proc_info);
 }
 
@@ -85,18 +130,13 @@ template <typename T> inline const char *signal_t<T>::get_type_name() const { re
 
 template <typename T> inline void signal_t<T>::set_now(T new_value)
 {
-    if (new_value == value) {
-        digsim::trace("signal_t", "No change for signal `{}`: {} == {}", get_name(), value, new_value);
-    } else {
-        digsim::trace("signal_t", "Setting new value for signal `{}`: {} -> {}", get_name(), value, new_value);
+    if (new_value != value) {
+        digsim::trace("signal_t", "{}: {} -> {} (now)", get_name(), value, new_value);
         // Update the last value to the current value before changing it.
         last_value = value;
         // Update the value to the new value.
         value      = new_value;
         for (auto &proc_info : processes) {
-            digsim::trace(
-                "signal_t", "Signal `{}` is scheduling process `{}` to run immediately.", get_name(),
-                proc_info.to_string());
             // Schedule the process to be executed immediately.
             digsim::scheduler.schedule_now(proc_info);
         }
@@ -105,9 +145,7 @@ template <typename T> inline void signal_t<T>::set_now(T new_value)
 
 template <typename T> inline void signal_t<T>::set_delayed(T new_value, discrete_time_t _delay)
 {
-    digsim::trace(
-        "signal_t", "Signal `{}` is scheduling a change from {} to {} after {} time units.", get_name(), value,
-        new_value, _delay);
+    digsim::trace("signal_t", "{}: {} -> {} (delayed by {})", get_name(), value, new_value, _delay);
     // Store the new value to be applied after the delay.
     stored_value = new_value;
     // Create a process that will apply the stored value after the delay.
@@ -132,7 +170,7 @@ output_t<T>::output_t(const std::string &_name)
 
 template <typename T> void output_t<T>::set(T new_value)
 {
-    auto signal = dynamic_cast<signal_t<T> *>(bound_signal);
+    auto signal = resolve_signal<T>(this);
     if (!signal) {
         throw std::runtime_error("Output `" + get_name() + "` not bound to a signal.");
     }
@@ -141,38 +179,49 @@ template <typename T> void output_t<T>::set(T new_value)
 
 template <typename T> T output_t<T>::get() const
 {
-    auto signal = dynamic_cast<signal_t<T> *>(bound_signal);
+    auto signal = resolve_signal<T>(this);
     if (!signal) {
         throw std::runtime_error("Output `" + get_name() + "` not bound to a signal.");
     }
     return signal->get();
 }
 
-template <typename T> void output_t<T>::operator()(isignal_t &_signal)
+template <typename T> void output_t<T>::operator()(isignal_t &binding)
 {
-    auto signal = dynamic_cast<signal_t<T> *>(&_signal);
-    if (!signal) {
-        throw std::runtime_error("Output `" + get_name() + "` not bound to a signal.");
+    if (auto *output = dynamic_cast<output_t<T> *>(&binding)) {
+        // Bind the output to this output.
+        output->bound_signal = this;
+
+    } else if (auto *signal = dynamic_cast<signal_t<T> *>(&binding)) {
+        // Resolve the final output in the chain.
+        output_t<T> *resolved = resolve_final_output(this);
+        // Check if the output is already bound to a signal.
+        if (resolved->bound_signal) {
+            throw std::runtime_error("Output `" + resolved->get_name() + "` already bound to a signal.");
+        }
+        // Bind the output to the signal.
+        resolved->bound_signal = signal;
+
+    } else {
+        throw std::runtime_error("Output `" + get_name() + "` cannot be bound to `" + binding.get_name() + "`.");
     }
-    digsim::trace("output_t", "Binding output `{}` to signal `{}`", get_name(), signal->get_name());
-    // Set the bound signal to the provided signal.
-    bound_signal = signal;
 }
-template <typename T> inline void output_t<T>::notify(const process_info_t &)
+
+template <typename T> inline void output_t<T>::subscribe(const process_info_t &)
 {
-    throw std::runtime_error("Cannot use an output to register a process to be notified.");
+    throw std::runtime_error("Cannot use an output to subscribe a process to be notified.");
 }
 
 template <typename T> discrete_time_t output_t<T>::get_delay() const
 {
-    auto signal = dynamic_cast<signal_t<T> *>(bound_signal);
-    if (signal) {
-        return signal->get_delay();
+    auto signal = resolve_signal<T>(this);
+    if (!signal) {
+        throw std::runtime_error("Output `" + get_name() + "` not bound to a signal.");
     }
-    return 0;
+    return signal->get_delay();
 }
 
-template <typename T> bool output_t<T>::bound() const { return bound_signal != nullptr; }
+template <typename T> bool output_t<T>::bound() const { return resolve_signal<T>(this) != nullptr; }
 
 template <typename T> const isignal_t *output_t<T>::get_bound_signal() const { return bound_signal; }
 
@@ -193,59 +242,80 @@ input_t<T>::input_t(const std::string &_name)
 
 template <typename T> T input_t<T>::get() const
 {
-    auto signal = dynamic_cast<signal_t<T> *>(bound_signal);
+    auto signal = resolve_signal<T>(this);
     if (!signal) {
         throw std::runtime_error("Input `" + get_name() + "` not bound to a signal.");
     }
     return signal->get();
 }
 
-template <typename T> inline void input_t<T>::notify(const process_info_t &proc_info)
+template <typename T> inline void input_t<T>::subscribe(const process_info_t &proc_info)
 {
     if (!proc_info.process) {
-        throw std::runtime_error("Cannot register an invalid process to input `" + get_name() + "`.");
+        throw std::runtime_error("Cannot subscribe an invalid process to input `" + get_name() + "`.");
     }
     if (!proc_info.key) {
-        throw std::runtime_error("Cannot register a process with a null key to input `" + get_name() + "`.");
+        throw std::runtime_error("Cannot subscribe a process with a null key to input `" + get_name() + "`.");
     }
     if (processes.find(proc_info) != processes.end()) {
-        digsim::trace("input_t", "Process already registered for input `{}`", get_name());
+        digsim::trace("input_t", "Process already subscribed for input `{}`", get_name());
         return;
     }
-    digsim::trace("input_t", "Registering process `{}` for input `{}`", proc_info.to_string(), get_name());
+    digsim::trace("input_t", "Subscribing process `{}` for input `{}`", proc_info.to_string(), get_name());
     processes.insert(proc_info);
-    if (bound_signal) {
-        bound_signal->notify(proc_info);
+}
+
+template <typename T> void input_t<T>::operator()(isignal_t &binding)
+{
+    if (auto *input = dynamic_cast<input_t<T> *>(&binding)) {
+        // Bind the input to this input.
+        input->bound_signal = this;
+
+    } else if (auto *signal = dynamic_cast<signal_t<T> *>(&binding)) {
+        // Resolve the final input in the chain.
+        input_t<T> *resolved = resolve_final_input(this);
+        // Check if the input is already bound to a signal.
+        if (resolved->bound_signal) {
+            throw std::runtime_error("Input `" + resolved->get_name() + "` already bound to a signal.");
+        }
+        // Bind the input to the signal.
+        resolved->bound_signal = signal;
+        // Share process subscriptions.
+        signal->processes.insert(resolved->processes.begin(), resolved->processes.end());
+
+    } else {
+        throw std::runtime_error("Input `" + get_name() + "` cannot be bound to `" + binding.get_name() + "`.");
     }
 }
 
-template <typename T> void input_t<T>::operator()(isignal_t &_signal)
+template <typename T> template <typename U> std::enable_if_t<std::is_same_v<U, bool>, bool> input_t<T>::posedge() const
 {
-    auto signal = dynamic_cast<signal_t<T> *>(&_signal);
+    auto signal = resolve_signal<T>(this);
     if (!signal) {
-        auto input = dynamic_cast<input_t<T> *>(&_signal);
-        if (input) {
-            throw std::runtime_error("Input `" + get_name() + "` cannot be bound to another input.");
-        }
         throw std::runtime_error("Input `" + get_name() + "` not bound to a signal.");
     }
-    digsim::trace("input_t", "Binding input `{}` to signal `{}`", get_name(), signal->get_name());
-    // Set the bound signal to the provided signal.
-    bound_signal = signal;
-    // Add to the list of processes that should be notified when the signal changes.
-    bound_signal->processes.insert(processes.begin(), processes.end());
+    return signal->value && !signal->last_value;
+}
+
+template <typename T> template <typename U> std::enable_if_t<std::is_same_v<U, bool>, bool> input_t<T>::negedge() const
+{
+    auto signal = resolve_signal<T>(this);
+    if (!signal) {
+        throw std::runtime_error("Input `" + get_name() + "` not bound to a signal.");
+    }
+    return !signal->value && signal->last_value;
 }
 
 template <typename T> discrete_time_t input_t<T>::get_delay() const
 {
-    auto signal = dynamic_cast<signal_t<T> *>(bound_signal);
-    if (signal) {
-        return signal->get_delay();
+    auto signal = resolve_signal<T>(this);
+    if (!signal) {
+        throw std::runtime_error("Input `" + get_name() + "` not bound to a signal.");
     }
-    return 0;
+    return signal->get_delay();
 }
 
-template <typename T> bool input_t<T>::bound() const { return bound_signal != nullptr; }
+template <typename T> bool input_t<T>::bound() const { return resolve_signal<T>(this) != nullptr; }
 
 template <typename T> const isignal_t *input_t<T>::get_bound_signal() const { return bound_signal; }
 

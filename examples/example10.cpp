@@ -12,35 +12,197 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::info);
+    digsim::logger.set_level(digsim::log_level_t::trace);
 
-    digsim::info("Main", "=== Creating modules ===");
+    // Input signals.
+    digsim ::signal_t<std::bitset<4>> a("a", 0b0000, 0);
+    digsim::signal_t<std::bitset<4>> b("b", 0b0000, 0);
+    digsim::signal_t<std::bitset<4>> op("op", 0b1111, 0);
+    digsim::signal_t<bool> clk("clk", false, 0);
+    // Output signals.
+    digsim::signal_t<std::bitset<4>> out("out", 0b0000, 1);
+    digsim::signal_t<std::bitset<4>> remainder("remainder", 0b0000, 1);
+    digsim::signal_t<std::bitset<4>> status("status", 0b0000, 1);
 
-    digsim::signal_t<std::bitset<4>> a("a");
-    digsim::signal_t<std::bitset<4>> b("b");
-    digsim::signal_t<uint8_t> op("op");
-    digsim::signal_t<bool> clk("clk");
-
-    digsim::signal_t<std::bitset<8>> out("out");
-    digsim::signal_t<bool> zero_division("zero_division");
-
-    digsim::clock_t clk0("clk0");
-    clk0.out(clk);
-
+    // Create the ALU.
     alu_t<4> alu0("alu0");
     alu0.a(a);
     alu0.b(b);
     alu0.op(op);
     alu0.clk(clk);
     alu0.out(out);
-    alu0.zero_division(zero_division);
+    alu0.remainder(remainder);
+    alu0.status(status);
 
     digsim::dependency_graph.export_dot("example10.dot");
 
     digsim::info("Main", "=== Initializing simulation ===");
+
     digsim::scheduler.initialize();
+
     digsim::info("Main", "=== Running simulation ===");
-    digsim::scheduler.run(5);
+
+    digsim::info("Main", "=== Logic operations ===");
+
+    clk.set(true);
+
+    a.set(0b1100);
+    b.set(0b1010);
+    op.set(0); // AND
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(1); // OR
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(2); // XOR
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(3); // NOT (on A only)
+    digsim::scheduler.run();
+
+    digsim::info("Main", "=== Arithmetic operations ===");
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    a.set(0b0110);
+    b.set(0b0011);
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(4); // ADD
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(5); // SUB
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(6); // MUL
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(7); // DIV
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(8); // MOD
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    // Test divide-by-zero
+    b.set(0);
+    op.set(7); // DIV by zero
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(8); // MOD by zero
+    digsim::scheduler.run();
+
+    digsim::info("Main", "=== Shift operations ===");
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    // Shifts
+    a.set(0b0001);
+    b.set(2); // shift amount
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(9); // SHL
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(10); // SHR
+    digsim::scheduler.run();
+
+    digsim::info("Main", "=== Comparison operations ===");
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    // Comparisons
+    a.set(0b0101);
+    b.set(0b0101);
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(11); // EQUAL (true)
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    a.set(0b0011);
+    b.set(0b0110);
+    op.set(11); // EQUAL (false)
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    op.set(12); // LESS THAN (true)
+    digsim::scheduler.run();
+
+    clk.set(false);
+    digsim::scheduler.run();
+    clk.set(true);
+
+    a.set(0b1110);
+    b.set(0b0010);
+    op.set(12); // LESS THAN (false)
+    digsim::scheduler.run();
+
     digsim::info("Main", "=== Simulation finished ===");
+
     return 0;
 }

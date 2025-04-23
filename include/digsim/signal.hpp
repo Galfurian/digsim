@@ -46,7 +46,7 @@ public:
 
     /// @brief Add the process to the list of processes that should be notified when the signal changes.
     /// @param proc_info the process information containing the process to be executed when the signal changes.
-    virtual void notify(const process_info_t &proc_info) = 0;
+    virtual void subscribe(const process_info_t &proc_info) = 0;
 
     /// @brief Gets the default delay for this signal.
     /// @return the default delay for this signal.
@@ -59,6 +59,11 @@ public:
     /// @brief Returns the type name of the signal (e.g., "bool", "int").
     virtual const char *get_type_name() const = 0;
 };
+
+/// @brief Returns a string representation of the binding chain.
+/// @param signal the signal to get the binding chain for.
+/// @return a string representation of the binding chain.
+std::string binding_chain_to_string(const isignal_t *signal);
 
 /// @brief The signal_t class represents a signal in a digital simulation.
 /// @tparam T the type of the signal value.
@@ -93,11 +98,11 @@ public:
 
     void operator()(isignal_t &_signal) override;
 
-    void notify(const process_info_t &proc_info) override;
+    void subscribe(const process_info_t &proc_info) override;
 
     discrete_time_t get_delay() const override;
 
-    virtual bool bound() const override;
+    bool bound() const override;
 
     const isignal_t *get_bound_signal() const override;
 
@@ -146,7 +151,7 @@ public:
 
     void operator()(isignal_t &_signal) override;
 
-    void notify(const process_info_t &proc_info) override;
+    void subscribe(const process_info_t &proc_info) override;
 
     discrete_time_t get_delay() const override;
 
@@ -158,7 +163,7 @@ public:
 
 private:
     /// @brief The signal this input or output is bound to.
-    signal_t<T> *bound_signal = nullptr;
+    isignal_t *bound_signal = nullptr;
 };
 
 template <typename T> class input_t : public isignal_t
@@ -172,7 +177,21 @@ public:
 
     void operator()(isignal_t &_signal) override;
 
-    void notify(const process_info_t &proc_info) override;
+    void subscribe(const process_info_t &proc_info) override;
+
+    /// @brief Returns true on a rising edge (value transition).
+    /// - For bool: returns true when signal goes from false to true.
+    /// - For numeric types: returns true when value > last_value.
+    /// @note This is the opposite of negedge().
+    /// @return true if the signal has a positive edge, false otherwise.
+    template <typename U = T> std::enable_if_t<std::is_same_v<U, bool>, bool> posedge() const;
+
+    /// @brief Returns true on a falling edge (value transition).
+    /// - For bool: returns true when signal goes from true to false.
+    /// - For numeric types: returns true when value < last_value.
+    /// @note This is the opposite of posedge().
+    /// @return true if the signal has a negative edge, false otherwise.
+    template <typename U = T> std::enable_if_t<std::is_same_v<U, bool>, bool> negedge() const;
 
     discrete_time_t get_delay() const override;
 
@@ -184,10 +203,15 @@ public:
 
 private:
     /// @brief The signal this input or output is bound to.
-    signal_t<T> *bound_signal = nullptr;
+    isignal_t *bound_signal = nullptr;
     /// @brief A set of processes that are registered to be notified when the signal changes.
     std::unordered_set<process_info_t, process_info_hash, process_info_equal> processes;
 };
+
+/// @brief Resolves the signal to its final bound signal.
+/// @param signal_if the signal to start the resolution from.
+/// @return the resolved signal.
+template <typename T> signal_t<T> *resolve_signal(const isignal_t *signal_if);
 
 } // namespace digsim
 

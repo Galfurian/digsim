@@ -21,7 +21,7 @@ module_t::module_t(const std::string &_name)
 
 void module_t::add_sensitivity(const process_info_t &proc_info, isignal_t &signal)
 {
-    signal.notify(proc_info);
+    signal.subscribe(proc_info);
     scheduler.register_initializer(proc_info);
     // Register in dependency graph.
     dependency_graph.register_signal_consumer(&signal, proc_info);
