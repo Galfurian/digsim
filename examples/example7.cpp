@@ -65,7 +65,7 @@ private:
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::info);
+    digsim::logger.set_level(digsim::log_level_t::trace);
 
     // === Signals ===
     digsim::signal_t<bool> trigger("trigger");

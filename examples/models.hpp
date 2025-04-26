@@ -29,7 +29,7 @@ public:
         , out("out")
     {
         ADD_SENSITIVITY(Mux2to1, evaluate, a, b, sel);
-        ADD_PRODUCES(Mux2to1, evaluate, out);
+        ADD_PRODUCER(Mux2to1, evaluate, out);
     }
 
 private:
@@ -69,7 +69,7 @@ public:
         , cout("cout")
     {
         ADD_SENSITIVITY(FullAdder, evaluate, a, b, cin);
-        ADD_PRODUCES(FullAdder, evaluate, sum, cout);
+        ADD_PRODUCER(FullAdder, evaluate, sum, cout);
     }
 
 private:
@@ -114,7 +114,7 @@ public:
         , out(_name + ".out")
     {
         ADD_SENSITIVITY(NotGate, evaluate, in);
-        ADD_PRODUCES(NotGate, evaluate, out);
+        ADD_PRODUCER(NotGate, evaluate, out);
     }
 
     void evaluate()
@@ -147,7 +147,7 @@ public:
         , out("out")
     {
         ADD_SENSITIVITY(AndGate, evaluate, a, b);
-        ADD_PRODUCES(AndGate, evaluate, out);
+        ADD_PRODUCER(AndGate, evaluate, out);
     }
 
 private:
@@ -180,7 +180,7 @@ public:
         , out("out")
     {
         ADD_SENSITIVITY(OrGate, evaluate, a, b);
-        ADD_PRODUCES(OrGate, evaluate, out);
+        ADD_PRODUCER(OrGate, evaluate, out);
     }
 
 private:
@@ -213,7 +213,7 @@ public:
         , out("out")
     {
         ADD_SENSITIVITY(XorGate, evaluate, a, b);
-        ADD_PRODUCES(XorGate, evaluate, out);
+        ADD_PRODUCER(XorGate, evaluate, out);
     }
 
 private:
@@ -246,7 +246,7 @@ public:
         , out("out")
     {
         ADD_SENSITIVITY(NandGate, evaluate, a, b);
-        ADD_PRODUCES(NandGate, evaluate, out);
+        ADD_PRODUCER(NandGate, evaluate, out);
     }
 
 private:
@@ -285,7 +285,7 @@ public:
         , q_not("q_not")
     {
         ADD_SENSITIVITY(DFlipFlop, evaluate, clk, d);
-        ADD_PRODUCES(DFlipFlop, evaluate, q, q_not);
+        ADD_PRODUCER(DFlipFlop, evaluate, q, q_not);
     }
 
     void bind_reset(digsim::signal_t<bool> &reset_signal)
@@ -372,7 +372,8 @@ public:
         , status(_name + ".status")
     {
         ADD_SENSITIVITY(alu_t, evaluate, clk);
-        ADD_PRODUCES(alu_t, evaluate, out, remainder, status);
+        ADD_CONSUMER(alu_t, evaluate, a, b, op);
+        ADD_PRODUCER(alu_t, evaluate, out, remainder, status);
     }
 
 private:

@@ -32,7 +32,7 @@ clock_t::clock_t(
     // Schedule the first evaluation of the clock signal.
     scheduler.schedule_after(proc_info, delay);
     // Register the output signal in the dependency graph.
-    ADD_PRODUCES(clock_t, evaluate, out);
+    ADD_PRODUCER(clock_t, evaluate, out);
 }
 
 void clock_t::evaluate()

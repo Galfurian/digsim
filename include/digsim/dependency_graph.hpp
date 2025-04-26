@@ -17,6 +17,7 @@ namespace digsim
 class module_t;  // Forward declare module base.
 class isignal_t; // Forward declare abstract signal.
 
+/// @brief Defines how a path is represented in the dependency graph.
 using path_t = std::vector<const isignal_t *>;
 
 /// @brief Process information structure that contains details about the process
@@ -54,6 +55,7 @@ public:
     void compute_cycles();
 
     /// @brief Prints a report of the cycles detected in the dependency graph.
+    /// @param cycle The cycle to print.
     void print_cycle_report(const path_t &cycle) const;
 
     /// @brief Checks if a given cycle is a bad cycle.

@@ -27,8 +27,6 @@ int main()
 
     digsim::info("Main", "=== Running simulation ===");
 
-    digsim::scheduler.initialize();
-
     s_in.set(true);
     digsim::scheduler.run();
 

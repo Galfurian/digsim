@@ -10,14 +10,26 @@
 #include <format>
 #include <string>
 
-template <std::size_t N> struct std::formatter<std::bitset<N>, char> {
+namespace std
+{
+/// @brief Custom formatter for std::bitset to allow formatting with std::format.
+/// @tparam N the size of the bitset.
+template <std::size_t N> struct formatter<std::bitset<N>, char> {
+    /// @brief Parses the format string for std::bitset.
+    /// @param ctx the format parse context.
+    /// @return the beginning of the format string.
     constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
 
+    /// @brief Formats the std::bitset as a string.
+    /// @param bits the std::bitset to format.
+    /// @param ctx the format context.
+    /// @return the formatted string.
     template <typename FormatContext> auto format(const std::bitset<N> &bits, FormatContext &ctx) const
     {
         return std::format_to(ctx.out(), "{}", bits.to_string());
     }
 };
+} // namespace std
 
 namespace digsim
 {

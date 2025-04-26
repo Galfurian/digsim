@@ -23,11 +23,14 @@ void module_t::add_sensitivity(const process_info_t &proc_info, isignal_t &signa
 {
     signal.subscribe(proc_info);
     scheduler.register_initializer(proc_info);
-    // Register in dependency graph.
+}
+
+void module_t::add_consumer(const process_info_t &proc_info, isignal_t &signal)
+{
     dependency_graph.register_signal_consumer(&signal, proc_info);
 }
 
-void module_t::add_produces(const process_info_t &proc_info, isignal_t &signal)
+void module_t::add_producer(const process_info_t &proc_info, isignal_t &signal)
 {
     dependency_graph.register_signal_producer(&signal, proc_info);
 }

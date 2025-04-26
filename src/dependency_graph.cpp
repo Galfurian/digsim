@@ -23,26 +23,36 @@ dependency_graph_t &dependency_graph_t::instance()
 
 void dependency_graph_t::register_signal_producer(const isignal_t *signal, const process_info_t &proc_info)
 {
+    // Check if the signal is already registered.
+    if (signal_producers.count(signal) > 0) {
+        return;
+    }
     signal_producers[signal] = proc_info;
     // Track which signal is produced by which module.
     if (auto module = dynamic_cast<const module_t *>(proc_info.owner.ptr)) {
         // Add the signal to the module's outputs.
         if (module_outputs[module].count(signal) == 0) {
             module_outputs[module].insert(signal);
-            digsim::debug("DG", "Module `{}` produces signal `{}`", module->get_name(), signal->get_name());
+            digsim::debug(
+                "dependency_graph_t", "Module `{}` produces signal `{}`", module->get_name(), signal->get_name());
         }
     }
 }
 
 void dependency_graph_t::register_signal_consumer(const isignal_t *signal, const process_info_t &proc_info)
 {
+    // Check if the signal is already registered.
+    if (signal_consumers.count(signal) > 0) {
+        return;
+    }
     signal_consumers[signal].push_back(proc_info);
     // Track which module consumes this signal.
     if (auto module = dynamic_cast<const module_t *>(proc_info.owner.ptr)) {
         // Add the signal to the module's inputs.
         if (module_inputs[module].count(signal) == 0) {
             module_inputs[module].insert(signal);
-            digsim::debug("DG", "Module `{}` consumes signal `{}`", module->get_name(), signal->get_name());
+            digsim::debug(
+                "dependency_graph_t", "Module `{}` consumes signal `{}`", module->get_name(), signal->get_name());
         }
     }
 }
@@ -158,7 +168,7 @@ void dependency_graph_t::compute_cycles()
 
 void dependency_graph_t::print_cycle_report(const path_t &cycle) const
 {
-    digsim::info("DG", "Cycle:");
+    digsim::info("dependency_graph_t", "Cycle:");
     for (const auto *signal : cycle) {
         const isignal_t *output_port    = nullptr;
         const module_t *signal_producer = nullptr;
@@ -184,16 +194,16 @@ void dependency_graph_t::print_cycle_report(const path_t &cycle) const
         if (signal_producer && output_port) {
             // If a producer is found, print the signal name and its producer.
             digsim::info(
-                "DG", "  - {} [{}.{}, delay: {}]", signal->get_name(), signal_producer->get_name(),
+                "dependency_graph_t", "  - {} [{}.{}, delay: {}]", signal->get_name(), signal_producer->get_name(),
                 output_port->get_name(), signal->get_delay());
         } else {
             // If no producer is found, just print the signal name.
-            digsim::info("DG", "  - {} [delay: {}]", signal->get_name(), signal->get_delay());
+            digsim::info("dependency_graph_t", "  - {} [delay: {}]", signal->get_name(), signal->get_delay());
         }
     }
     // Close the loop
     if (!cycle.empty()) {
-        digsim::info("DG", "  - Back to {}.", cycle.front()->get_name());
+        digsim::info("dependency_graph_t", "  - Back to {}.", cycle.front()->get_name());
     }
 }
 
@@ -294,7 +304,9 @@ void dependency_graph_t::update_signal_graph()
         if (!signal) {
             continue;
         }
-        digsim::debug("DG", "Output signal `{}` is bound to `{}`...", iface_signal->get_name(), signal->get_name());
+        digsim::debug(
+            "dependency_graph_t", "Output signal `{}` is bound to `{}`...", iface_signal->get_name(),
+            signal->get_name());
         // For each signal interface in consumers...
         for (const auto &[consumer_iface, consumer_list] : signal_consumers) {
             // Check if the consumer signal is bound to the same signal.
@@ -303,7 +315,7 @@ void dependency_graph_t::update_signal_graph()
                 continue;
             }
             digsim::debug(
-                "DG", "    Signal `{}` is in turn bound to input signal `{}`...", signal->get_name(),
+                "dependency_graph_t", "    Signal `{}` is in turn bound to input signal `{}`...", signal->get_name(),
                 consumer_iface->get_name());
             // Now we know signal is bound to both an output and input — it connects them.
             // Link signal to each output of the consumer's module.
@@ -318,7 +330,7 @@ void dependency_graph_t::update_signal_graph()
                     if (auto *bound = out_port->get_bound_signal()) {
                         signal_graph[signal].push_back(bound);
                         digsim::debug(
-                            "DG", "        Link resolved signal `{}` -> `{}`...", signal->get_name(),
+                            "dependency_graph_t", "        Link resolved signal `{}` -> `{}`...", signal->get_name(),
                             bound->get_name());
                     }
                 }

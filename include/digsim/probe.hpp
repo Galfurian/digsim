@@ -24,7 +24,6 @@ public:
 
     /// @brief Constructor for the probe module.
     /// @param _name the name of the module.
-    /// @param _input the input signal to probe.
     /// @param _callback the callback function to call when the input signal changes.
     probe_t(const std::string &_name, std::function<void(const digsim::input_t<T> &)> _callback = nullptr)
         : module_t(_name)

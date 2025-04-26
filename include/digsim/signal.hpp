@@ -57,6 +57,7 @@ public:
     virtual const isignal_t *get_bound_signal() const = 0;
 
     /// @brief Returns the type name of the signal (e.g., "bool", "int").
+    /// @return the type name of the signal.
     virtual const char *get_type_name() const = 0;
 };
 
@@ -136,9 +137,12 @@ private:
     friend class output_t<T>;
 };
 
+/// @brief The output_t class represents an output signal in a digital simulation.
 template <typename T> class output_t : public isignal_t
 {
 public:
+    /// @brief Constructor for the output_t class.
+    /// @param _name the name of the output signal.
     output_t(const std::string &_name);
 
     /// @brief Sets the value of the signal.
@@ -166,9 +170,12 @@ private:
     isignal_t *bound_signal = nullptr;
 };
 
+/// @brief The input_t class represents an input signal in a digital simulation.
 template <typename T> class input_t : public isignal_t
 {
 public:
+    /// @brief Constructor for the input_t class.
+    /// @param _name the name of the input signal.
     input_t(const std::string &_name);
 
     /// @brief Gets the current value of the signal.

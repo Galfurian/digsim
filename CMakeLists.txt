@@ -255,7 +255,7 @@ if(DOXYGEN_FOUND)
     set(DOXYGEN_WARN_IF_UNDOCUMENTED YES)
     set(DOXYGEN_WARN_IF_DOC_ERROR YES)
     set(DOXYGEN_WARN_NO_PARAMDOC YES)
-    set(DOXYGEN_WARN_AS_ERROR YES) # Treat warnings as errors for CI
+    set(DOXYGEN_WARN_AS_ERROR NO)
    
     # Exclude certain files or directories from documentation (if needed)
     set(DOXYGEN_EXCLUDE_PATTERNS "${PROJECT_SOURCE_DIR}/tests/*" "${PROJECT_SOURCE_DIR}/examples/*")

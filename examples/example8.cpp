@@ -12,7 +12,7 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::info);
+    digsim::logger.set_level(digsim::log_level_t::trace);
 
     // Create signal for loop
     digsim::signal_t<bool> not1_out("not1_out", false, 1);

@@ -13,7 +13,7 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::info);
+    digsim::logger.set_level(digsim::log_level_t::trace);
 
     // Initial state
     digsim::info("Main", "=== Initializing simulation ===");
