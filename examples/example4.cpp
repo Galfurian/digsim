@@ -1,22 +1,12 @@
-/// @file digital_circuit.cpp
+/// @file example4.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
-/// @version 0.1
-/// @date 2024-05-13
-///
-/// @copyright Copyright (c) 2024
-///
+/// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "digsim/digsim.hpp"
-
-#include "models.hpp"
+#include "models/d_flip_flop.hpp"
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::trace);
-
-    // Initial state
-    digsim::info("Main", "=== Initializing simulation ===");
+    digsim::logger.set_level(digsim::log_level_t::debug);
 
     // Signals
     digsim::signal_t<bool> clk_out("clk_out");
@@ -34,14 +24,10 @@ int main()
     DFlipFlop dff("dff");
     dff.clk(clk_out);
     dff.d(d);
+    dff.enable(en);
+    dff.reset(rst);
     dff.q(q);
     dff.q_not(qn);
-    dff.bind_enable(en);
-    dff.bind_reset(rst);
-
-    // Probe output
-    digsim::probe_t<bool> probe("probe");
-    probe.in(q); // Automatically uses default callback
 
     digsim::dependency_graph.export_dot("example4.dot");
 

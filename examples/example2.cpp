@@ -1,19 +1,13 @@
-/// @file digital_circuit.cpp
+/// @file example2.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
-/// @version 0.1
-/// @date 2024-05-13
-///
-/// @copyright Copyright (c) 2024
-///
+/// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "digsim/digsim.hpp"
-
-#include "models.hpp"
+#include "models/mux2to1.hpp"
+#include "models/not_gate.hpp"
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::trace);
+    digsim::logger.set_level(digsim::log_level_t::debug);
 
     // Inputs.
     digsim::signal_t<bool> a("a");
@@ -24,7 +18,7 @@ int main()
     digsim::signal_t<bool> inv2_out("inv2_out");
 
     // Models.
-    Mux2to1 mux("mux");
+    Mux2to1<bool> mux("mux");
     mux.a(a);
     mux.b(b);
     mux.sel(sel);

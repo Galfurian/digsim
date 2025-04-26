@@ -27,16 +27,14 @@ void scheduler_t::schedule(const event_t &event) { event_queue.push(event); }
 void scheduler_t::schedule_now(const process_info_t &proc_info)
 {
     schedule(event_t{now, proc_info});
-    digsim::debug(
-        "scheduler_t", "[@t = {:-4}, #queue = {:-2}] Now: {} (now)", now, event_queue.size(), proc_info.to_string());
+    digsim::trace("scheduler_t", "[#queue = {:-2}] Now: {} (now)", event_queue.size(), proc_info.to_string());
 }
 
 void scheduler_t::schedule_after(const process_info_t &proc_info, discrete_time_t delay)
 {
     schedule(event_t{now + delay, proc_info});
-    digsim::debug(
-        "scheduler_t", "[@t = {:-4}, #queue = {:-2}] Schedule: {} (+{}t)", now, event_queue.size(),
-        proc_info.to_string(), delay);
+    digsim::trace(
+        "scheduler_t", "[#queue = {:-2}] Schedule: {} (+{}t)", event_queue.size(), proc_info.to_string(), delay);
 }
 
 void scheduler_t::register_initializer(const process_info_t &proc_info) { initializer_queue.insert(proc_info); }
@@ -44,12 +42,12 @@ void scheduler_t::register_initializer(const process_info_t &proc_info) { initia
 void scheduler_t::initialize()
 {
     if (initialized) {
-        digsim::debug(
-            "scheduler_t", "[@t = {:-4}, #queue = {:-2}] Scheduler already initialized. Skipping initialization", now,
+        digsim::trace(
+            "scheduler_t", "[#queue = {:-2}] Scheduler already initialized. Skipping initialization",
             event_queue.size());
         return;
     }
-    digsim::debug("scheduler_t", "[@t = {:-4}, #queue = {:-2}] -- Check for bad cycles", now, event_queue.size());
+    digsim::trace("scheduler_t", "[#queue = {:-2}] -- Check for bad cycles", event_queue.size());
     // First, compute the cycles in the dependency graph.
     digsim::dependency_graph.compute_cycles();
     // Check the cycles.
@@ -65,8 +63,7 @@ void scheduler_t::initialize()
     }
     // Run all initialization callbacks.
     if (!initializer_queue.empty()) {
-        digsim::debug(
-            "scheduler_t", "[@t = {:-4}, #queue = {:-2}] -- Begin initialization cylce", now, event_queue.size());
+        digsim::trace("scheduler_t", "[#queue = {:-2}] -- Begin initialization cylce", event_queue.size());
         // Run all initializers.
         for (const auto &initializer : initializer_queue) {
             (*initializer.process)();
@@ -80,9 +77,8 @@ void scheduler_t::initialize()
 void scheduler_t::run(discrete_time_t simulation_time)
 {
     if (!initialized) {
-        digsim::debug(
-            "scheduler_t", "[@t = {:-4}, #queue = {:-2}] Scheduler not initialized. Calling initialize()", now,
-            event_queue.size());
+        digsim::trace(
+            "scheduler_t", "[#queue = {:-2}] Scheduler not initialized. Calling initialize()", event_queue.size());
         initialize();
     }
     // This will hold the batched processes to be executed.
@@ -94,7 +90,7 @@ void scheduler_t::run(discrete_time_t simulation_time)
         if ((simulation_time > 0) && (current_time > simulation_end)) {
             break;
         }
-        digsim::debug("scheduler_t", "[@t = {:-4}, #queue = {:-2}] -- Begin cylce", now, event_queue.size());
+        digsim::trace("scheduler_t", "[#queue = {:-2}] -- Begin cylce", event_queue.size());
         // Update the current time.
         now = current_time;
         // Clear the batch for this time.
@@ -102,15 +98,15 @@ void scheduler_t::run(discrete_time_t simulation_time)
         // Extract all callbacks scheduled for this time
         while (!event_queue.empty() && event_queue.top().time == current_time) {
             if (batch.insert(event_queue.top().process_info.process).second) {
-                digsim::debug(
-                    "scheduler_t", "[@t = {:-4}, #queue = {:-2}]     Pop: {}", now, event_queue.size(),
+                digsim::trace(
+                    "scheduler_t", "[#queue = {:-2}]     Pop: {}", event_queue.size(),
                     event_queue.top().process_info.to_string());
             }
             event_queue.pop();
         }
         // Now run the batch.
         if (!batch.empty()) {
-            digsim::debug("scheduler_t", "[@t = {:-4}, #queue = {:-2}] -- Run batch", now, event_queue.size());
+            digsim::trace("scheduler_t", "[#queue = {:-2}] -- Run batch", event_queue.size());
             for (auto &callback : batch) {
                 (*callback)();
             }
@@ -129,7 +125,7 @@ void scheduler_t::print_event_queue() const
         copy.pop();
     }
     if (!time_buckets.empty()) {
-        digsim::debug("scheduler_t", "[@t = {:-4}, #queue = {:-2}] -- Event queue", now, event_queue.size());
+        digsim::trace("scheduler_t", "[#queue = {:-2}] -- Event queue", event_queue.size());
         for (const auto &[t, names] : time_buckets) {
             std::stringstream ss;
             ss << "    Queue [" << std::right << std::setw(3) << t << "] : [ ";
@@ -137,10 +133,10 @@ void scheduler_t::print_event_queue() const
                 ss << n << " ";
             }
             ss << "]";
-            digsim::debug("scheduler_t", "[@t = {:-4}, #queue = {:-2}] {}", now, event_queue.size(), ss.str());
+            digsim::trace("scheduler_t", "[#queue = {:-2}] {}", event_queue.size(), ss.str());
         }
     } else {
-        digsim::debug("scheduler_t", "[@t = {:-4}, #queue = {:-2}] -- Event queue is empty", now, event_queue.size());
+        digsim::trace("scheduler_t", "[#queue = {:-2}] -- Event queue is empty", event_queue.size());
     }
 }
 

@@ -1,18 +1,12 @@
-/// @file digital_circuit.cpp
+/// @file example10.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
-/// @version 0.1
-/// @date 2024-05-13
-///
-/// @copyright Copyright (c) 2024
-///
+/// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "digsim/digsim.hpp"
-#include "models.hpp"
+#include "models/alu.hpp"
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::trace);
+    digsim::logger.set_level(digsim::log_level_t::debug);
 
     // Input signals.
     digsim ::signal_t<std::bitset<4>> a("a", 0b0000, 0);

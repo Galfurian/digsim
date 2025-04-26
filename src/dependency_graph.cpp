@@ -33,7 +33,7 @@ void dependency_graph_t::register_signal_producer(const isignal_t *signal, const
         // Add the signal to the module's outputs.
         if (module_outputs[module].count(signal) == 0) {
             module_outputs[module].insert(signal);
-            digsim::debug(
+            digsim::trace(
                 "dependency_graph_t", "Module `{}` produces signal `{}`", module->get_name(), signal->get_name());
         }
     }
@@ -51,7 +51,7 @@ void dependency_graph_t::register_signal_consumer(const isignal_t *signal, const
         // Add the signal to the module's inputs.
         if (module_inputs[module].count(signal) == 0) {
             module_inputs[module].insert(signal);
-            digsim::debug(
+            digsim::trace(
                 "dependency_graph_t", "Module `{}` consumes signal `{}`", module->get_name(), signal->get_name());
         }
     }
@@ -304,7 +304,7 @@ void dependency_graph_t::update_signal_graph()
         if (!signal) {
             continue;
         }
-        digsim::debug(
+        digsim::trace(
             "dependency_graph_t", "Output signal `{}` is bound to `{}`...", iface_signal->get_name(),
             signal->get_name());
         // For each signal interface in consumers...
@@ -314,7 +314,7 @@ void dependency_graph_t::update_signal_graph()
             if (!consumer_signal || consumer_signal != signal) {
                 continue;
             }
-            digsim::debug(
+            digsim::trace(
                 "dependency_graph_t", "    Signal `{}` is in turn bound to input signal `{}`...", signal->get_name(),
                 consumer_iface->get_name());
             // Now we know signal is bound to both an output and input — it connects them.
@@ -329,7 +329,7 @@ void dependency_graph_t::update_signal_graph()
                 for (const auto *out_port : get_outputs(consumer_module)) {
                     if (auto *bound = out_port->get_bound_signal()) {
                         signal_graph[signal].push_back(bound);
-                        digsim::debug(
+                        digsim::trace(
                             "dependency_graph_t", "        Link resolved signal `{}` -> `{}`...", signal->get_name(),
                             bound->get_name());
                     }

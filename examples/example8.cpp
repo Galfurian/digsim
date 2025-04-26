@@ -1,18 +1,12 @@
-/// @file digital_circuit.cpp
+/// @file example8.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
-/// @version 0.1
-/// @date 2024-05-13
-///
-/// @copyright Copyright (c) 2024
-///
+/// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "digsim/digsim.hpp"
-#include "models.hpp"
+#include "models/not_gate.hpp"
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::trace);
+    digsim::logger.set_level(digsim::log_level_t::debug);
 
     // Create signal for loop
     digsim::signal_t<bool> not1_out("not1_out", false, 1);

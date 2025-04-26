@@ -1,15 +1,8 @@
-/// @file digital_circuit.cpp
+/// @file example7.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
-/// @version 0.1
-/// @date 2024-05-13
-///
-/// @copyright Copyright (c) 2024
-///
+/// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "digsim/digsim.hpp"
-
-#include "models.hpp"
+#include <digsim/digsim.hpp>
 
 class ping_module : public digsim::module_t
 {
@@ -19,8 +12,8 @@ public:
 
     ping_module(const std::string &_name)
         : digsim::module_t(_name)
-        , trigger(_name + ".trigger")
-        , clk(_name + ".clk")
+        , trigger("trigger")
+        , clk("clk")
         , waiting(false)
         , counter(0)
     {
@@ -65,7 +58,7 @@ private:
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::trace);
+    digsim::logger.set_level(digsim::log_level_t::debug);
 
     // === Signals ===
     digsim::signal_t<bool> trigger("trigger");

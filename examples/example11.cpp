@@ -1,14 +1,46 @@
-/// @file digital_circuit.cpp
+/// @file example11.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
-/// @version 0.1
-/// @date 2024-05-13
-///
-/// @copyright Copyright (c) 2024
-///
+/// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "digsim/digsim.hpp"
-#include "models.hpp"
+#include "models/not_gate.hpp"
+
+class InnerModule : public digsim::module_t
+{
+public:
+    digsim::input_t<bool> in;
+    digsim::output_t<bool> out;
+
+    NotGate inv;
+
+    InnerModule(const std::string &_name)
+        : digsim::module_t(_name)
+        , in("in")
+        , out("out")
+        , inv("not_gate")
+    {
+        inv.in(in);
+        inv.out(out);
+    }
+};
+
+class TopModule : public digsim::module_t
+{
+public:
+    digsim::input_t<bool> in;
+    digsim::output_t<bool> out;
+
+    InnerModule inner;
+
+    TopModule(const std::string &_name)
+        : digsim::module_t(_name)
+        , in("in")
+        , out("out")
+        , inner("inner")
+    {
+        inner.in(in);
+        inner.out(out);
+    }
+};
 
 int main()
 {
