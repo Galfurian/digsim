@@ -45,15 +45,34 @@ public:
         ADD_PRODUCER(alu_t, evaluate, out, remainder, status);
     }
 
-private:
-    /// @brief Status flags.
-    enum status_flag_t {
-        FLAG_CARRY    = 0, ///< Carry flag.
-        FLAG_BORROW   = 1, ///< Borrow flag.
-        FLAG_DIV_ZERO = 2, ///< Zero division flag.
-        FLAG_OVERFLOW = 3  ///< Overflow flag.
+    /// @brief The list of operations supported by the ALU.
+    enum class op_t {
+        /// @brief ALU operations.
+        AND,         ///< AND
+        OR,          ///< OR
+        XOR,         ///< XOR
+        NOT,         ///< NOT
+        ADD,         ///< ADD
+        SUB,         ///< SUB
+        MUL,         ///< MUL
+        DIV,         ///< DIV
+        MOD,         ///< MOD
+        SHIFT_LEFT,  ///< SHIFT LEFT
+        SHIFT_RIGHT, ///< SHIFT RIGHT
+        EQUAL,       ///< EQUAL
+        LT,          ///< LESS THAN
+        GT,          ///< GREATER THAN
     };
 
+    /// @brief Status flags.
+    enum status_flag_t {
+        FLAG_CARRY    = (1 << 0), ///< Carry flag.
+        FLAG_BORROW   = (1 << 1), ///< Borrow flag.
+        FLAG_DIV_ZERO = (1 << 2), ///< Zero division flag.
+        FLAG_OVERFLOW = (1 << 3), ///< Overflow flag.
+    };
+
+private:
     /// @brief Evaluate the ALU operation.
     void evaluate()
     {
@@ -73,66 +92,78 @@ private:
         const unsigned long a_u = a_val.to_ulong();
         const unsigned long b_u = b_val.to_ulong();
 
-        switch (op_val.to_ulong()) {
-        case 0:
+        switch (static_cast<op_t>(op_val.to_ulong())) {
+        case op_t::AND:
             result = a_val & b_val;
-            break; // AND
-        case 1:
+            break;
+        case op_t::OR:
             result = a_val | b_val;
-            break; // OR
-        case 2:
+            break;
+        case op_t::XOR:
             result = a_val ^ b_val;
-            break; // XOR
-        case 3:
+            break;
+        case op_t::NOT:
             result = ~a_val;
-            break; // NOT
-        case 4: {  // ADD
+            break;
+        case op_t::ADD: {
             unsigned long sum = a_u + b_u;
             result            = sum;
             if (sum >= (1UL << N)) {
-                flags = 1 << FLAG_CARRY;
+                flags = FLAG_CARRY;
             }
             break;
         }
-        case 5: { // SUB
+        case op_t::SUB: {
             long diff = static_cast<long>(a_u) - static_cast<long>(b_u);
-            result    = diff;
+            result    = static_cast<unsigned long>(diff);
             if (diff < 0) {
-                flags = 1 << FLAG_OVERFLOW;
+                flags = FLAG_OVERFLOW;
             }
             break;
         }
-        case 6:
-            result = a_u * b_u;
-            break; // MUL
-        case 7:    // DIV
+        case op_t::MUL: {
+            unsigned long prod = a_u * b_u;
+            if (prod >= (1UL << N)) {
+                flags  = FLAG_OVERFLOW;
+                result = 0;
+            } else {
+                result = prod;
+            }
+            break;
+        }
+        case op_t::DIV:
             if (b_u == 0) {
                 result = 0;
-                flags  = 1 << FLAG_DIV_ZERO;
+                rem    = 0;
+                flags  = FLAG_DIV_ZERO;
             } else {
                 result = a_u / b_u;
+                rem    = a_u % b_u;
             }
             break;
-        case 8: // MOD
+        case op_t::MOD:
             if (b_u == 0) {
                 rem   = 0;
-                flags = 1 << FLAG_DIV_ZERO;
+                flags = FLAG_DIV_ZERO;
             } else {
                 rem = a_u % b_u;
             }
             break;
-        case 9:
-            result = a_u << b_u;
-            break; // SHL
-        case 10:
-            result = a_u >> b_u;
-            break; // SHR
-        case 11:
+        case op_t::SHIFT_LEFT:
+            result = (b_u >= N) ? 0 : (a_u << b_u);
+            break;
+        case op_t::SHIFT_RIGHT:
+            result = (b_u >= N) ? 0 : (a_u >> b_u);
+            break;
+        case op_t::EQUAL:
             result = (a_u == b_u);
-            break; // EQUAL
-        case 12:
+            break;
+        case op_t::LT:
             result = (a_u < b_u);
-            break; // LESS THAN
+            break;
+        case op_t::GT:
+            result = (a_u > b_u);
+            break;
         default:
             result = 0;
             break;
