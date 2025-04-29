@@ -18,7 +18,16 @@ class module_t : public named_object_t
 public:
     /// @brief Constructor for the module_t class.
     /// @param _name the name of the module.
-    explicit module_t(const std::string &_name);
+    /// @param _parent_module the parent module of this module.
+    module_t(const std::string &_name, module_t *_parent_module = nullptr);
+
+    /// @brief Sets the parent module of this module.
+    /// @param _parent_module the parent module to set.
+    void set_parent(module_t *_parent_module) { parent_module = _parent_module; }
+
+    /// @brief Returns the parent module of this module.
+    /// @return a pointer to the parent module.
+    module_t *get_parent() const { return parent_module; }
 
     /// @brief Adds a signal to the process sensitivity list.
     /// @tparam Module the module type that contains the method.
@@ -123,6 +132,10 @@ protected:
     /// @param signal the signal that is going to be produced.
     /// @note This method is used to register the process in the dependency graph.
     void add_producer(const process_info_t &proc_info, isignal_t &signal);
+
+private:
+    /// @brief Pointer to the parent module.
+    module_t *parent_module = nullptr;
 };
 
 } // namespace digsim

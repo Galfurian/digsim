@@ -16,11 +16,11 @@ public:
     digsim::input_t<bool> b;
     digsim::output_t<bool> out;
 
-    NandGate(const std::string &_name)
-        : digsim::module_t(_name)
-        , a("a")
-        , b("b")
-        , out("out")
+    NandGate(const std::string &_name, digsim::module_t *_parent = nullptr)
+        : digsim::module_t(_name, _parent)
+        , a("a", this)
+        , b("b", this)
+        , out("out", this)
     {
         ADD_SENSITIVITY(NandGate, evaluate, a, b);
         ADD_PRODUCER(NandGate, evaluate, out);

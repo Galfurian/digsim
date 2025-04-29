@@ -13,10 +13,11 @@
 template <size_t N> class alu_t : public digsim::module_t
 {
 public:
-    digsim::input_t<std::bitset<N>> a;          ///< First operand.
-    digsim::input_t<std::bitset<N>> b;          ///< Second operand.
-    digsim::input_t<std::bitset<4>> op;         ///< Operation code.
-    digsim::input_t<bool> clk;                  ///< Clock signal.
+    digsim::input_t<bool> clk;          ///< Clock signal.
+    digsim::input_t<std::bitset<N>> a;  ///< First operand.
+    digsim::input_t<std::bitset<N>> b;  ///< Second operand.
+    digsim::input_t<std::bitset<4>> op; ///< Operation code.
+
     digsim::output_t<std::bitset<N>> out;       ///< Output result.
     digsim::output_t<std::bitset<N>> remainder; ///< Remainder of division.
     digsim::output_t<std::bitset<4>> status;    ///< Status flags.
@@ -25,13 +26,13 @@ public:
     /// @param _name Name of the module.
     alu_t(const std::string &_name)
         : module_t(_name)
-        , a("a")
-        , b("b")
-        , op("op")
-        , clk("clk")
-        , out("out")
-        , remainder("remainder")
-        , status("status")
+        , clk("clk", this)
+        , a("a", this)
+        , b("b", this)
+        , op("op", this)
+        , out("out", this)
+        , remainder("remainder", this)
+        , status("status", this)
     {
         ADD_SENSITIVITY(alu_t, evaluate, clk);
         ADD_CONSUMER(alu_t, evaluate, a, b, op);

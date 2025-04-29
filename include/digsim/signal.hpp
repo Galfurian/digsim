@@ -21,6 +21,7 @@ namespace digsim
 template <typename T> class signal_t;
 template <typename T> class input_t;
 template <typename T> class output_t;
+class module_t;
 
 /// @brief Abstract base interface for all signals (type-erased).
 class isignal_t : public named_object_t
@@ -35,6 +36,10 @@ public:
     }
 
     virtual ~isignal_t() = default;
+
+    /// @brief Returns the module that owns this signal.
+    /// @return a pointer to the module that owns this signal.
+    virtual module_t *get_owner() const = 0;
 
     /// @brief Checks if this input or output is bound to a signal.
     /// @return true if this input or output is bound to a signal, false otherwise.
@@ -64,7 +69,7 @@ public:
 /// @brief Returns a string representation of the binding chain.
 /// @param signal the signal to get the binding chain for.
 /// @return a string representation of the binding chain.
-std::string binding_chain_to_string(const isignal_t *signal);
+std::string get_signal_location_string(const isignal_t *signal);
 
 /// @brief The signal_t class represents a signal in a digital simulation.
 /// @tparam T the type of the signal value.
@@ -96,6 +101,10 @@ public:
     /// @brief Checks if the signal has changed since the last time it was checked.
     /// @return true if the signal has changed, false otherwise.
     bool has_changed() const;
+
+    /// @brief Returns the module that owns this signal, however, signals do not belong to any module.
+    /// @return a pointer to the module that owns this signal.
+    module_t *get_owner() const override { return nullptr; }
 
     void operator()(isignal_t &_signal) override;
 
@@ -143,7 +152,12 @@ template <typename T> class output_t : public isignal_t
 public:
     /// @brief Constructor for the output_t class.
     /// @param _name the name of the output signal.
-    output_t(const std::string &_name);
+    /// @param _sig_owner the module that owns this output signal, defaulting to nullptr.
+    output_t(const std::string &_name, module_t *_sig_owner = nullptr);
+
+    /// @brief Returns the module that owns this signal.
+    /// @return a pointer to the module that owns this signal.
+    module_t *get_owner() const override { return sig_owner; }
 
     /// @brief Sets the value of the signal.
     /// @param new_value the new value to set the signal to.
@@ -166,6 +180,8 @@ public:
     const char *get_type_name() const override;
 
 private:
+    /// @brief The module that owns this signal.
+    module_t *sig_owner     = nullptr;
     /// @brief The signal this input or output is bound to.
     isignal_t *bound_signal = nullptr;
 };
@@ -176,7 +192,12 @@ template <typename T> class input_t : public isignal_t
 public:
     /// @brief Constructor for the input_t class.
     /// @param _name the name of the input signal.
-    input_t(const std::string &_name);
+    /// @param _sig_owner the module that owns this input signal, defaulting to nullptr.
+    input_t(const std::string &_name, module_t *_sig_owner = nullptr);
+
+    /// @brief Returns the module that owns this signal.
+    /// @return a pointer to the module that owns this signal.
+    module_t *get_owner() const override { return sig_owner; }
 
     /// @brief Gets the current value of the signal.
     /// @return the current value of the signal.
@@ -209,6 +230,8 @@ public:
     const char *get_type_name() const override;
 
 private:
+    /// @brief The module that owns this signal.
+    module_t *sig_owner     = nullptr;
     /// @brief The signal this input or output is bound to.
     isignal_t *bound_signal = nullptr;
     /// @brief A set of processes that are registered to be notified when the signal changes.

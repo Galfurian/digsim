@@ -18,6 +18,7 @@ public:
         , out("out")
         , inv("not_gate")
     {
+        inv.set_parent(this);
         inv.in(in);
         inv.out(out);
     }
@@ -37,6 +38,7 @@ public:
         , out("out")
         , inner("inner")
     {
+        inner.set_parent(this);
         inner.in(in);
         inner.out(out);
     }

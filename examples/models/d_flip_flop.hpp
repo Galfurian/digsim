@@ -19,14 +19,14 @@ public:
     digsim::output_t<bool> q;
     digsim::output_t<bool> q_not;
 
-    DFlipFlop(const std::string &_name)
-        : digsim::module_t(_name)
-        , clk("clk")
-        , d("d")
-        , enable("enable")
-        , reset("reset")
-        , q("q")
-        , q_not("q_not")
+    DFlipFlop(const std::string &_name, digsim::module_t *_parent = nullptr)
+        : digsim::module_t(_name, _parent)
+        , clk("clk", this)
+        , d("d", this)
+        , enable("enable", this)
+        , reset("reset", this)
+        , q("q", this)
+        , q_not("q_not", this)
     {
         ADD_SENSITIVITY(DFlipFlop, evaluate, clk);
         ADD_CONSUMER(DFlipFlop, evaluate, d, enable, reset);

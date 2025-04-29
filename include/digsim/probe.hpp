@@ -26,7 +26,7 @@ public:
     /// @param _name the name of the module.
     /// @param _callback the callback function to call when the input signal changes.
     probe_t(const std::string &_name, std::function<void(const digsim::input_t<T> &)> _callback = nullptr)
-        : module_t(_name)
+        : module_t(_name, nullptr)
         , in("in")
         , callback(std::move(_callback))
     {

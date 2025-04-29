@@ -15,10 +15,10 @@ public:
     digsim::input_t<bool> in;
     digsim::output_t<bool> out;
 
-    NotGate(const std::string &_name)
-        : digsim::module_t(_name)
-        , in("in")
-        , out("out")
+    NotGate(const std::string &_name, digsim::module_t *_parent = nullptr)
+        : digsim::module_t(_name, _parent)
+        , in("in", this)
+        , out("out", this)
     {
         ADD_SENSITIVITY(NotGate, evaluate, in);
         ADD_PRODUCER(NotGate, evaluate, out);

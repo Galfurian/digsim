@@ -18,13 +18,13 @@ public:
     digsim::output_t<bool> sum;
     digsim::output_t<bool> cout;
 
-    FullAdder(const std::string &_name)
-        : digsim::module_t(_name)
-        , a("a")
-        , b("b")
-        , cin("cin")
-        , sum("sum")
-        , cout("cout")
+    FullAdder(const std::string &_name, digsim::module_t *_parent = nullptr)
+        : digsim::module_t(_name, _parent)
+        , a("a", this)
+        , b("b", this)
+        , cin("cin", this)
+        , sum("sum", this)
+        , cout("cout", this)
     {
         ADD_SENSITIVITY(FullAdder, evaluate, a, b, cin);
         ADD_PRODUCER(FullAdder, evaluate, sum, cout);

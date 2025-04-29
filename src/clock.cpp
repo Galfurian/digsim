@@ -15,7 +15,7 @@ clock_t::clock_t(
     double clk_duty_cycle,
     discrete_time_t clk_start_time,
     bool clk_posedge_first)
-    : module_t(clk_name)
+    : module_t(clk_name, nullptr)
     , out("out")
     , period(clk_period)
     , duty_cycle(clk_duty_cycle)

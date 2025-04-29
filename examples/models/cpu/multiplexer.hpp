@@ -19,10 +19,10 @@ public:
 
     multiplexer_t(const std::string &_name)
         : digsim::module_t(_name)
-        , a("a")
-        , b("b")
-        , sel("sel")
-        , out("out")
+        , a("a", this)
+        , b("b", this)
+        , sel("sel", this)
+        , out("out", this)
     {
         ADD_SENSITIVITY(multiplexer_t, evaluate, a, b, sel);
         ADD_PRODUCER(multiplexer_t, evaluate, out);

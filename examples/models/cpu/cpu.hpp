@@ -25,8 +25,8 @@ public:
 
     cpu_t(const std::string &_name, const std::vector<uint64_t> &_rom_contents)
         : module_t(_name)
-        , clk("clk")
-        , reset("reset")
+        , clk("clk", this)
+        , reset("reset", this)
         , pc("pc")
         , rom("rom", _rom_contents)
         , control("control")
@@ -54,6 +54,7 @@ public:
         , rd("rd")
     {
         // === Program Counter ===
+        pc.set_parent(this);
         pc.clk(clk);
         pc.reset(reset);
         pc.load(signal_dummy_false);     // No branching yet
@@ -61,10 +62,12 @@ public:
         pc.addr(pc_to_rom);
 
         // === ROM ===
+        rom.set_parent(this);
         rom.addr(pc_to_rom);
         rom.instruction(rom_to_control);
 
         // === Control Unit ===
+        control.set_parent(this);
         control.instruction(rom_to_control);
         control.alu_op(control_to_aluop);
         control.reg_write(control_to_regwrite);
@@ -72,6 +75,7 @@ public:
         control.mem_to_reg(control_to_memtoreg);
 
         // === Register File ===
+        reg.set_parent(this);
         reg.clk(clk);
         reg.addr_a(rs);
         reg.addr_b(rt);
@@ -82,6 +86,7 @@ public:
         reg.data_b(reg_b);
 
         // === ALU ===
+        alu.set_parent(this);
         alu.clk(clk);                 // Clock
         alu.a(reg_a);                 // A operand from reg A
         alu.b(reg_b);                 // B operand from reg B
@@ -91,6 +96,7 @@ public:
         alu.status(alu_status);       // ALU flags output
 
         // === RAM ===
+        ram.set_parent(this);
         ram.clk(clk);       // Clock
         ram.addr(alu_out);  // Address comes from ALU result
         ram.data_in(reg_b); // Data to store comes from reg B
@@ -98,6 +104,7 @@ public:
         ram.data_out(ram_out);
 
         // === Write-Back Mux ===
+        multiplexer.set_parent(this);
         multiplexer.a(alu_out);
         multiplexer.b(ram_out);
         multiplexer.sel(control_to_memtoreg);

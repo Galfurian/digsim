@@ -21,11 +21,11 @@ public:
 
     pc_t(const std::string &_name)
         : module_t(_name)
-        , clk("clk")
-        , reset("reset")
-        , load("load")
-        , next_addr("next_addr")
-        , addr("addr")
+        , clk("clk", this)
+        , reset("reset", this)
+        , load("load", this)
+        , next_addr("next_addr", this)
+        , addr("addr", this)
     {
         ADD_SENSITIVITY(pc_t, evaluate, clk);
         ADD_CONSUMER(pc_t, evaluate, next_addr);

@@ -22,12 +22,12 @@ public:
 
     ram_t(const std::string &_name)
         : module_t(_name)
-        , clk("clk")
-        , reset("reset")
-        , addr("addr")
-        , data_in("data_in")
-        , write_enable("write_enable")
-        , data_out("data_out")
+        , clk("clk", this)
+        , reset("reset", this)
+        , addr("addr", this)
+        , data_in("data_in", this)
+        , write_enable("write_enable", this)
+        , data_out("data_out", this)
     {
         ADD_SENSITIVITY(ram_t, evaluate, clk, reset);
         ADD_PRODUCER(ram_t, evaluate, data_out);

@@ -20,21 +20,20 @@ public:
     digsim::input_t<uint8_t> addr_w;
     digsim::input_t<bool> write_enable;
     digsim::input_t<std::bitset<N>> data_in;
-
     digsim::output_t<std::bitset<N>> data_a;
     digsim::output_t<std::bitset<N>> data_b;
 
     reg_t(const std::string &_name)
         : module_t(_name)
-        , clk("clk")
-        , reset("reset")
-        , addr_a("addr_a")
-        , addr_b("addr_b")
-        , addr_w("addr_w")
-        , write_enable("write_enable")
-        , data_in("data_in")
-        , data_a("data_a")
-        , data_b("data_b")
+        , clk("clk", this)
+        , reset("reset", this)
+        , addr_a("addr_a", this)
+        , addr_b("addr_b", this)
+        , addr_w("addr_w", this)
+        , write_enable("write_enable", this)
+        , data_in("data_in", this)
+        , data_a("data_a", this)
+        , data_b("data_b", this)
     {
         ADD_SENSITIVITY(reg_t, evaluate, clk, reset);
         ADD_PRODUCER(reg_t, evaluate, data_a, data_b);

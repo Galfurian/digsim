@@ -18,8 +18,8 @@ public:
 
     rom_t(const std::string &_name, const std::vector<uint64_t> &_contents)
         : module_t(_name)
-        , addr("addr")
-        , instruction("instruction")
+        , addr("addr", this)
+        , instruction("instruction", this)
         , contents(_contents)
     {
         ADD_SENSITIVITY(rom_t, evaluate, addr);

@@ -25,11 +25,11 @@ public:
     /// @param _name The name of the module.
     control_unit_t(const std::string &_name)
         : module_t(_name)
-        , instruction("instruction")
-        , alu_op("alu_op")
-        , reg_write("reg_write")
-        , mem_write("mem_write")
-        , mem_to_reg("mem_to_reg")
+        , instruction("instruction", this)
+        , alu_op("alu_op", this)
+        , reg_write("reg_write", this)
+        , mem_write("mem_write", this)
+        , mem_to_reg("mem_to_reg", this)
     {
         ADD_SENSITIVITY(control_unit_t, evaluate, instruction);
         ADD_PRODUCER(control_unit_t, evaluate, alu_op, reg_write, mem_write, mem_to_reg);

@@ -17,12 +17,12 @@ public:
     digsim::input_t<bool> sel;
     digsim::output_t<T> out;
 
-    Mux2to1(const std::string &_name)
-        : digsim::module_t(_name)
-        , a("a")
-        , b("b")
-        , sel("sel")
-        , out("out")
+    Mux2to1(const std::string &_name, digsim::module_t *_parent = nullptr)
+        : digsim::module_t(_name, _parent)
+        , a("a", this)
+        , b("b", this)
+        , sel("sel", this)
+        , out("out", this)
     {
         ADD_SENSITIVITY(Mux2to1, evaluate, a, b, sel);
         ADD_PRODUCER(Mux2to1, evaluate, out);

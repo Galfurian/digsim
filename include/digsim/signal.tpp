@@ -14,21 +14,6 @@
 namespace digsim
 {
 
-inline std::string binding_chain_to_string(const isignal_t *signal)
-{
-    if (!signal) {
-        return "null";
-    }
-    std::stringstream ss;
-    do {
-        ss << signal->get_name();
-        if (signal->get_bound_signal()) {
-            ss << " -> ";
-        }
-    } while ((signal = signal->get_bound_signal()));
-    return ss.str();
-}
-
 template <typename T> signal_t<T> *resolve_signal(const isignal_t *signal_if)
 {
     if (!signal_if) {
@@ -161,8 +146,9 @@ template <typename T> inline void signal_t<T>::apply_stored() { this->set_now(st
 // =============================================================================
 
 template <typename T>
-output_t<T>::output_t(const std::string &_name)
+output_t<T>::output_t(const std::string &_name, module_t *_sig_owner)
     : isignal_t(_name)
+    , sig_owner(_sig_owner)
     , bound_signal()
 {
     // Nothing to do here.
@@ -172,7 +158,7 @@ template <typename T> void output_t<T>::set(T new_value)
 {
     auto signal = resolve_signal<T>(this);
     if (!signal) {
-        throw std::runtime_error("Output `" + get_name() + "` not bound to a signal.");
+        throw std::runtime_error("Output not bound: " + get_signal_location_string(this));
     }
     signal->set(new_value);
 }
@@ -181,7 +167,7 @@ template <typename T> T output_t<T>::get() const
 {
     auto signal = resolve_signal<T>(this);
     if (!signal) {
-        throw std::runtime_error("Output `" + get_name() + "` not bound to a signal.");
+        throw std::runtime_error("Output not bound: " + get_signal_location_string(this));
     }
     return signal->get();
 }
@@ -197,7 +183,7 @@ template <typename T> void output_t<T>::operator()(isignal_t &binding)
         output_t<T> *resolved = resolve_final_output(this);
         // Check if the output is already bound to a signal.
         if (resolved->bound_signal) {
-            throw std::runtime_error("Output `" + resolved->get_name() + "` already bound to a signal.");
+            throw std::runtime_error("Output already bound: " + get_signal_location_string(this));
         }
         // Bind the output to the signal.
         resolved->bound_signal = signal;
@@ -216,7 +202,7 @@ template <typename T> discrete_time_t output_t<T>::get_delay() const
 {
     auto signal = resolve_signal<T>(this);
     if (!signal) {
-        throw std::runtime_error("Output `" + get_name() + "` not bound to a signal.");
+        throw std::runtime_error("Output not bound: " + get_signal_location_string(this));
     }
     return signal->get_delay();
 }
@@ -232,8 +218,9 @@ template <typename T> inline const char *output_t<T>::get_type_name() const { re
 // ============================================================================
 
 template <typename T>
-input_t<T>::input_t(const std::string &_name)
+input_t<T>::input_t(const std::string &_name, module_t *_sig_owner)
     : isignal_t(_name)
+    , sig_owner(_sig_owner)
     , bound_signal()
     , processes()
 {
@@ -244,7 +231,7 @@ template <typename T> T input_t<T>::get() const
 {
     auto signal = resolve_signal<T>(this);
     if (!signal) {
-        throw std::runtime_error("Input `" + get_name() + "` not bound to a signal.");
+        throw std::runtime_error("Input not bound: " + get_signal_location_string(this));
     }
     return signal->get();
 }
@@ -276,7 +263,7 @@ template <typename T> void input_t<T>::operator()(isignal_t &binding)
         input_t<T> *resolved = resolve_final_input(this);
         // Check if the input is already bound to a signal.
         if (resolved->bound_signal) {
-            throw std::runtime_error("Input `" + resolved->get_name() + "` already bound to a signal.");
+            throw std::runtime_error("Input already bound: " + get_signal_location_string(this));
         }
         // Bind the input to the signal.
         resolved->bound_signal = signal;
@@ -284,7 +271,8 @@ template <typename T> void input_t<T>::operator()(isignal_t &binding)
         signal->processes.insert(resolved->processes.begin(), resolved->processes.end());
 
     } else {
-        throw std::runtime_error("Input `" + get_name() + "` cannot be bound to `" + binding.get_name() + "`.");
+        throw std::runtime_error(
+            "Input " + get_signal_location_string(this) + " cannot be bound to `" + binding.get_name() + "`.");
     }
 }
 
@@ -292,7 +280,7 @@ template <typename T> template <typename U> std::enable_if_t<std::is_same_v<U, b
 {
     auto signal = resolve_signal<T>(this);
     if (!signal) {
-        throw std::runtime_error("Input `" + get_name() + "` not bound to a signal.");
+        throw std::runtime_error("Input not bound: " + get_signal_location_string(this));
     }
     return signal->value && !signal->last_value;
 }
@@ -301,7 +289,7 @@ template <typename T> template <typename U> std::enable_if_t<std::is_same_v<U, b
 {
     auto signal = resolve_signal<T>(this);
     if (!signal) {
-        throw std::runtime_error("Input `" + get_name() + "` not bound to a signal.");
+        throw std::runtime_error("Input not bound: " + get_signal_location_string(this));
     }
     return !signal->value && signal->last_value;
 }
@@ -310,7 +298,7 @@ template <typename T> discrete_time_t input_t<T>::get_delay() const
 {
     auto signal = resolve_signal<T>(this);
     if (!signal) {
-        throw std::runtime_error("Input `" + get_name() + "` not bound to a signal.");
+        throw std::runtime_error("Input not bound: " + get_signal_location_string(this));
     }
     return signal->get_delay();
 }
