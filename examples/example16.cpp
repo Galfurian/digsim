@@ -8,19 +8,16 @@ int main()
 {
     digsim::logger.set_level(digsim::log_level_t::debug);
 
-    // Input signals
-    digsim::signal_t<std::bitset<16>> instruction("instruction", 0);
-
-    // Output signals
-    digsim::signal_t<uint8_t> alu_op("alu_op");
+    // Signals.
+    digsim::signal_t<bs_opcode_t> opcode("opcode", 0);
+    digsim::signal_t<bs_opcode_t> alu_op("alu_op");
     digsim::signal_t<bool> reg_write("reg_write");
     digsim::signal_t<bool> mem_write("mem_write");
     digsim::signal_t<bool> mem_to_reg("mem_to_reg");
 
-    // Instantiate the control unit
-    control_unit_t<16> cu0("cu0");
-
-    cu0.instruction(instruction);
+    // Instantiate the control unit.
+    control_unit_t cu0("cu0");
+    cu0.opcode(opcode);
     cu0.alu_op(alu_op);
     cu0.reg_write(reg_write);
     cu0.mem_write(mem_write);
@@ -31,31 +28,36 @@ int main()
 
     digsim::info("Main", "=== Running Control Unit tests ===");
 
-    auto test = [&](uint16_t instr_val, uint8_t expected_alu, bool exp_reg_write, bool exp_mem_write,
+    auto test = [&](opcode_t opcode_val, uint8_t expected_alu, bool exp_reg_write, bool exp_mem_write,
                     bool exp_mem_to_reg) {
-        instruction.set(instr_val);
+        // Set the opcode value.
+        opcode.set(static_cast<uint8_t>(opcode_val));
+        // Run the scheduler to propagate the changes.
         digsim::scheduler.run();
-        bool ok = (alu_op.get() == expected_alu) && (reg_write.get() == exp_reg_write) &&
-                  (mem_write.get() == exp_mem_write) && (mem_to_reg.get() == exp_mem_to_reg);
-        if (ok) {
-            digsim::info("Test", "Instruction {:04X} OK", instr_val);
+        // If the opcode involves the ALU, check the opcode value.
+        bool alu_ok;
+        if (opcode_val >= opcode_t::ALU_AND && opcode_val <= opcode_t::ALU_LT) {
+            alu_ok = (alu_op.get() == expected_alu);
         } else {
+            alu_ok = true;
+        }
+        bool other_ok = (reg_write.get() == exp_reg_write) && (mem_write.get() == exp_mem_write) &&
+                        (mem_to_reg.get() == exp_mem_to_reg);
+        if (!alu_ok || !other_ok) {
             digsim::error(
-                "Test", "Instruction {:04X} Failed (alu_op={}, reg_write={}, mem_write={}, mem_to_reg={})", instr_val,
-                alu_op.get(), reg_write.get(), mem_write.get(), mem_to_reg.get());
+                "Test", "Error with opcode {} (alu_op={}, reg_write={}, mem_write={}, mem_to_reg={})",
+                static_cast<int>(opcode_val), alu_op.get(), reg_write.get(), mem_write.get(), mem_to_reg.get());
         }
     };
 
-    // -------------------------
     // Tests
-    // -------------------------
-    test(0x0000, 0, true, false, false);   // ALU op
-    test(0x1000, 1, true, false, false);   // ALU op
-    test(0x2000, 2, true, false, false);   // ALU op
-    test(0x3000, 3, false, true, false);   // STORE
-    test(0x4000, 4, true, false, true);    // LOAD
-    test(0x5000, 5, false, false, false);  // Unknown or NOP
-    test(0xF000, 15, false, false, false); // Reserved or illegal
+    test(opcode_t::ALU_ADD, 4, true, false, false);
+    test(opcode_t::ALU_SUB, 5, true, false, false);
+    test(opcode_t::ALU_MUL, 6, true, false, false);
+    test(opcode_t::STORE, 0, false, true, false);
+    test(opcode_t::LOAD, 0, true, false, true);
+    test(opcode_t::NOP, 0, false, false, false);
+    test(opcode_t::ILLEGAL, 0, false, false, false);
 
     digsim::info("Main", "=== Control Unit tests finished ===");
 

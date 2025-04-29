@@ -9,13 +9,13 @@
 #include <iomanip>
 #include <sstream>
 
-template <typename T> class multiplexer_t : public digsim::module_t
+class multiplexer_t : public digsim::module_t
 {
 public:
-    digsim::input_t<T> a;
-    digsim::input_t<T> b;
+    digsim::input_t<bs_data_t> a;
+    digsim::input_t<bs_data_t> b;
     digsim::input_t<bool> sel;
-    digsim::output_t<T> out;
+    digsim::output_t<bs_data_t> out;
 
     multiplexer_t(const std::string &_name)
         : digsim::module_t(_name)
@@ -31,18 +31,11 @@ public:
 private:
     void evaluate()
     {
-        T result = sel.get() ? b.get() : a.get();
-
-        std::stringstream ss;
-        ss << "a:" << a.get() << ", ";
-        ss << "b:" << b.get() << ", ";
-        ss << "sel:" << sel.get() << " -> ";
-        ss << "out:" << result;
-        if (out.get_delay() > 0) {
-            ss << " (+" << out.get_delay() << "t)";
-        }
-        digsim::info(get_name(), ss.str());
-
+        auto result = sel.get() ? b.get() : a.get();
         out.set(result);
+
+        digsim::debug(
+            get_name(), "a: 0x{:04X}, b: 0x{:04X}, sel: {}, out: 0x{:04X}", a.get().to_ulong(), b.get().to_ulong(),
+            sel.get(), result.to_ulong());
     }
 };

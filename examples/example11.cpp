@@ -9,17 +9,17 @@ int main()
     digsim::logger.set_level(digsim::log_level_t::debug);
 
     // Input signals.
-    digsim ::signal_t<std::bitset<4>> a("a", 0b0000, 0);
-    digsim::signal_t<std::bitset<4>> b("b", 0b0000, 0);
-    digsim::signal_t<std::bitset<4>> op("op", 0b1111, 0);
+    digsim ::signal_t<bs_data_t> a("a", 0, 0);
+    digsim::signal_t<bs_data_t> b("b", 0, 0);
+    digsim::signal_t<bs_opcode_t> op("op", 0, 0);
     digsim::signal_t<bool> clk("clk", false, 0);
     // Output signals.
-    digsim::signal_t<std::bitset<4>> out("out", 0b0000, 1);
-    digsim::signal_t<std::bitset<4>> remainder("remainder", 0b0000, 1);
-    digsim::signal_t<std::bitset<4>> status("status", 0b0000, 1);
+    digsim::signal_t<bs_data_t> out("out", 0, 1);
+    digsim::signal_t<bs_data_t> remainder("remainder", 0, 1);
+    digsim::signal_t<bs_status_t> status("status", 0, 1);
 
     // Create the ALU.
-    alu_t<4> alu0("alu0");
+    alu_t alu0("alu0");
     alu0.a(a);
     alu0.b(b);
     alu0.op(op);

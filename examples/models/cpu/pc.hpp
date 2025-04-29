@@ -6,18 +6,20 @@
 
 #include <digsim/digsim.hpp>
 
+#include "cpu_defines.hpp"
+
 #include <bitset>
 #include <iomanip>
 #include <sstream>
 
-template <size_t N> class pc_t : public digsim::module_t
+class pc_t : public digsim::module_t
 {
 public:
     digsim::input_t<bool> clk;
     digsim::input_t<bool> reset;
     digsim::input_t<bool> load;
-    digsim::input_t<std::bitset<N>> next_addr;
-    digsim::output_t<std::bitset<N>> addr;
+    digsim::input_t<bs_address_t> next_addr;
+    digsim::output_t<bs_address_t> addr;
 
     pc_t(const std::string &_name)
         : module_t(_name)
@@ -35,39 +37,28 @@ public:
 private:
     void evaluate()
     {
-        if (!clk.posedge())
+        if (!clk.posedge()) {
             return;
-        // Prepare the new address value.
-        std::bitset<N> new_addr;
-        // If reset is active, set addr to 0.
+        }
+
+        bs_address_t new_addr;
+
         if (reset.get()) {
             new_addr = 0;
-        }
-        // If load is active, set addr to next_addr.
-        else if (load.get()) {
+        } else if (load.get()) {
             new_addr = next_addr.get();
-        }
-        // Otherwise, increment addr by 1.
-        else {
+        } else {
             new_addr = addr.get().to_ulong() + 1;
         }
-        // Update the addr output signal.
+
         addr.set(new_addr);
 
-        // Debugging output.
-        std::stringstream ss;
-        ss << "clk:" << clk.get() << ", reset:" << reset.get() << ", load:" << load.get()
-           << ", next_addr: " << next_addr.get();
         if (reset.get()) {
-            ss << " -> addr: 00000000 (reset)";
+            digsim::debug(get_name(), "reset     -> addr: 0x{:04X}", new_addr.to_ulong());
         } else if (load.get()) {
-            ss << " -> addr: " << new_addr << " (load)";
+            digsim::debug(get_name(), "load      -> addr: 0x{:04X}", new_addr.to_ulong());
         } else {
-            ss << " -> addr: " << new_addr << " (increment)";
+            digsim::debug(get_name(), "increment -> addr: 0x{:04X}", new_addr.to_ulong());
         }
-        if (addr.get_delay() > 0) {
-            ss << " (+" << addr.get_delay() << "t)";
-        }
-        digsim::debug(get_name(), ss.str());
     }
 };

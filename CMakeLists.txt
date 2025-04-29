@@ -54,6 +54,7 @@ add_library(${PROJECT_NAME}
     ${PROJECT_SOURCE_DIR}/src/clock.cpp
     ${PROJECT_SOURCE_DIR}/src/common.cpp
     ${PROJECT_SOURCE_DIR}/src/dependency_graph.cpp
+    ${PROJECT_SOURCE_DIR}/src/isignal.cpp
     ${PROJECT_SOURCE_DIR}/src/logger.cpp
     ${PROJECT_SOURCE_DIR}/src/module.cpp
     ${PROJECT_SOURCE_DIR}/src/scheduler.cpp
@@ -177,6 +178,9 @@ if(BUILD_EXAMPLES)
     
     add_executable(${PROJECT_NAME}_example17 ${PROJECT_SOURCE_DIR}/examples/example17.cpp)
     target_link_libraries(${PROJECT_NAME}_example17 PUBLIC ${PROJECT_NAME})
+    
+    add_executable(${PROJECT_NAME}_example18 ${PROJECT_SOURCE_DIR}/examples/example18.cpp)
+    target_link_libraries(${PROJECT_NAME}_example18 PUBLIC ${PROJECT_NAME})
 
 endif()
 

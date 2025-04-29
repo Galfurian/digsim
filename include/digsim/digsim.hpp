@@ -20,7 +20,10 @@ enum : unsigned char {
 
 // Core simulation classes
 #include "digsim/dependency_graph.hpp"
+#include "digsim/input.hpp"
+#include "digsim/isignal.hpp"
 #include "digsim/module.hpp"
+#include "digsim/output.hpp"
 #include "digsim/scheduler.hpp"
 #include "digsim/signal.hpp"
 

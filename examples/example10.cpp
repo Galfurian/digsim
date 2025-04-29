@@ -8,19 +8,27 @@ class InnerModule : public digsim::module_t
 {
 public:
     digsim::input_t<bool> in;
-    digsim::output_t<bool> out;
+    digsim::output_t<bool> out0;
+    digsim::output_t<bool> out1;
 
-    NotGate inv;
+    NotGate not0;
+    NotGate not1;
 
     InnerModule(const std::string &_name)
         : digsim::module_t(_name)
-        , in("in")
-        , out("out")
-        , inv("not_gate")
+        , in("in", this)
+        , out0("out0", this)
+        , out1("out1", this)
+        , not0("not0")
+        , not1("not1")
     {
-        inv.set_parent(this);
-        inv.in(in);
-        inv.out(out);
+        not0.set_parent(this);
+        not0.in(in);
+        not0.out(out0);
+
+        not1.set_parent(this);
+        not1.in(in);
+        not1.out(out1);
     }
 };
 
@@ -28,30 +36,37 @@ class TopModule : public digsim::module_t
 {
 public:
     digsim::input_t<bool> in;
-    digsim::output_t<bool> out;
+    digsim::output_t<bool> out0;
+    digsim::output_t<bool> out1;
 
     InnerModule inner;
 
     TopModule(const std::string &_name)
         : digsim::module_t(_name)
         , in("in")
-        , out("out")
+        , out0("out0")
+        , out1("out1")
         , inner("inner")
     {
         inner.set_parent(this);
         inner.in(in);
-        inner.out(out);
+        inner.out0(out0);
+        inner.out1(out1);
     }
 };
 
 int main()
 {
+    digsim::logger.set_level(digsim::log_level_t::trace);
+
     digsim::signal_t<bool> s_in("s_in");
-    digsim::signal_t<bool> s_out("s_out");
+    digsim::signal_t<bool> s_out0("s_out0");
+    digsim::signal_t<bool> s_out1("s_out1");
 
     TopModule top("top");
     top.in(s_in);
-    top.out(s_out);
+    top.out0(s_out0);
+    top.out1(s_out1);
 
     digsim::dependency_graph.export_dot("example10.dot");
 

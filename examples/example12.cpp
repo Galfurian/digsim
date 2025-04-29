@@ -8,22 +8,20 @@ int main()
 {
     digsim::logger.set_level(digsim::log_level_t::debug);
 
-    // Input signals.
+    // Signals.
     digsim::signal_t<bool> clk("clk", false, 0);
     digsim::signal_t<bool> reset("reset", false, 0);
     digsim::signal_t<bool> load("load", false, 0);
-    digsim::signal_t<std::bitset<8>> next_addr("next_addr", 0b00000000, 0);
-
-    // Output signal.
-    digsim::signal_t<std::bitset<8>> addr("addr", 0b00000000, 1);
+    digsim::signal_t<bs_address_t> next_addr("next_addr", 0b00000000, 0);
+    digsim::signal_t<bs_address_t> addr("addr", 0b00000000, 1);
 
     // Create the Program Counter.
-    pc_t<8> pc("pc0");
-    pc.clk(clk);
-    pc.reset(reset);
-    pc.load(load);
-    pc.next_addr(next_addr);
-    pc.addr(addr);
+    pc_t pc0("pc0");
+    pc0.clk(clk);
+    pc0.reset(reset);
+    pc0.load(load);
+    pc0.next_addr(next_addr);
+    pc0.addr(addr);
 
     // Export the dependency graph.
     digsim::dependency_graph.export_dot("example_pc.dot");

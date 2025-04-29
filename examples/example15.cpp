@@ -9,17 +9,16 @@ int main()
     digsim::logger.set_level(digsim::log_level_t::debug);
 
     // Signals
-    digsim::signal_t<uint8_t> addr_a("addr_a", 0);
-    digsim::signal_t<uint8_t> addr_b("addr_b", 0);
-    digsim::signal_t<uint8_t> addr_w("addr_w", 0);
+    digsim::signal_t<bs_register_t> addr_a("addr_a", 0);
+    digsim::signal_t<bs_register_t> addr_b("addr_b", 0);
+    digsim::signal_t<bs_register_t> addr_w("addr_w", 0);
     digsim::signal_t<bool> write_enable("write_enable", false);
-    digsim::signal_t<std::bitset<8>> data_in("data_in", 0);
-    digsim::signal_t<std::bitset<8>> data_a("data_a", 0);
-    digsim::signal_t<std::bitset<8>> data_b("data_b", 0);
+    digsim::signal_t<bs_data_t> data_in("data_in", 0);
+    digsim::signal_t<bs_data_t> data_a("data_a", 0);
+    digsim::signal_t<bs_data_t> data_b("data_b", 0);
 
     // Instantiate register file: 8 registers, each 8 bits
-    reg_t<8, 8> reg0("reg0");
-
+    reg_t reg0("reg0");
     reg0.addr_a(addr_a);
     reg0.addr_b(addr_b);
     reg0.addr_w(addr_w);

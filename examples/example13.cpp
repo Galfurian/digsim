@@ -8,16 +8,14 @@ int main()
 {
     digsim::logger.set_level(digsim::log_level_t::debug);
 
-    // Input signals
-    digsim::signal_t<std::bitset<8>> addr("addr");
-    digsim::signal_t<std::bitset<8>> data_in("data_in");
+    // Signals.
+    digsim::signal_t<bs_address_t> addr("addr");
+    digsim::signal_t<bs_data_t> data_in("data_in");
     digsim::signal_t<bool> write_enable("write_enable");
-
-    // Output signal
-    digsim::signal_t<std::bitset<8>> data_out("data_out");
+    digsim::signal_t<bs_data_t> data_out("data_out");
 
     // Instantiate RAM
-    ram_t<8, 256> ram0("ram0");
+    ram_t ram0("ram0");
     ram0.addr(addr);
     ram0.data_in(data_in);
     ram0.write_enable(write_enable);

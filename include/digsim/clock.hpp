@@ -7,6 +7,7 @@
 #pragma once
 
 #include "digsim/module.hpp"
+#include "digsim/output.hpp"
 
 namespace digsim
 {

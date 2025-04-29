@@ -9,14 +9,14 @@ int main()
     digsim::logger.set_level(digsim::log_level_t::debug);
 
     // Create ROM contents (simple program).
-    std::vector<uint64_t> program = {0x12, 0x34, 0x56, 0x78, 0x9A};
+    std::vector<uint16_t> program = {0x12, 0x34, 0x56, 0x78, 0x9A};
 
     // Signals.
-    digsim::signal_t<std::bitset<8>> addr("addr", 0);
-    digsim::signal_t<std::bitset<8>> instr("instr");
+    digsim::signal_t<bs_address_t> addr("addr", 0);
+    digsim::signal_t<bs_instruction_t> instr("instr");
 
     // Instantiate the ROM.
-    rom_t<8> rom("ROM", program);
+    rom_t rom("ROM", program);
     rom.addr(addr);
     rom.instruction(instr);
 
@@ -26,7 +26,7 @@ int main()
 
     digsim::info("Main", "=== Running ROM tests ===");
 
-    for (uint64_t i = 0; i < program.size(); ++i) {
+    for (std::size_t i = 0; i < program.size(); ++i) {
         addr.set(i);
         digsim::scheduler.run();
         if (instr.get().to_ulong() == program[i]) {

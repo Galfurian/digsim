@@ -6,19 +6,21 @@
 
 #include <digsim/digsim.hpp>
 
+#include "cpu_defines.hpp"
+
 #include <bitset>
 #include <iomanip>
 #include <sstream>
 
-template <std::size_t N, std::size_t SIZE = 256> class ram_t : public digsim::module_t
+class ram_t : public digsim::module_t
 {
 public:
     digsim::input_t<bool> clk;
     digsim::input_t<bool> reset;
-    digsim::input_t<std::bitset<N>> addr;
-    digsim::input_t<std::bitset<N>> data_in;
+    digsim::input_t<bs_address_t> addr;
+    digsim::input_t<bs_data_t> data_in;
     digsim::input_t<bool> write_enable;
-    digsim::output_t<std::bitset<N>> data_out;
+    digsim::output_t<bs_data_t> data_out;
 
     ram_t(const std::string &_name)
         : module_t(_name)
@@ -34,19 +36,15 @@ public:
     }
 
 private:
-    /// @brief An array of memory cells.
-    std::array<std::bitset<N>, SIZE> mem{};
+    std::array<bs_data_t, MEM_SIZE> mem{};
 
     void evaluate()
     {
-        // Only evaluate on rising edge.
         if (!clk.posedge()) {
             return;
         }
 
-        // Handle reset signal.
         if (reset.get()) {
-            // Reset all memory cells to zero.
             for (auto &cell : mem) {
                 cell.reset();
             }
@@ -54,23 +52,19 @@ private:
             return;
         }
 
-        // Get the address and check if it's within bounds.
         auto address = addr.get().to_ulong();
-        if (address >= SIZE) {
-            digsim::error("RAM", "Address out of bounds: {} >= {}", address, SIZE);
+        if (address >= MEM_SIZE) {
+            digsim::error(get_name(), "Address out of bounds: {} >= {}", address, MEM_SIZE);
             return;
         }
 
-        // Read or write data based on the write_enable signal.
         if (write_enable.get()) {
             mem[address] = data_in.get();
         }
         data_out.set(mem[address]);
 
-        // Debugging output.
-        std::stringstream ss;
-        ss << "address: " << addr.get() << ", data_in: " << data_in.get() << ", write_enable: " << write_enable.get()
-           << ", data_out: " << data_out.get();
-        digsim::debug("RAM", ss.str());
+        digsim::debug(
+            get_name(), "address: 0x{:02X}, data_in: 0x{:02X}, data_out: 0x{:02X}, write_enable: {}", address,
+            data_in.get().to_ulong(), data_out.get().to_ulong(), write_enable.get());
     }
 };
