@@ -10,15 +10,19 @@
 #include <iomanip>
 #include <sstream>
 
+/// @brief A simple control unit for a CPU.
+/// @tparam N The size of the instruction word.
 template <size_t N> class control_unit_t : public digsim::module_t
 {
 public:
-    digsim::input_t<std::bitset<N>> instruction;
-    digsim::output_t<uint8_t> alu_op;
-    digsim::output_t<bool> reg_write;
-    digsim::output_t<bool> mem_write;
-    digsim::output_t<bool> mem_to_reg;
+    digsim::input_t<std::bitset<N>> instruction; ///< The type of the instruction word.
+    digsim::output_t<std::bitset<4>> alu_op;     ///< The type of the ALU operation.
+    digsim::output_t<bool> reg_write;            ///< Output for register write enable.
+    digsim::output_t<bool> mem_write;            ///< Output for memory write enable.
+    digsim::output_t<bool> mem_to_reg;           ///< Output for memory to register enable.
 
+    /// @brief Constructor for the control unit.
+    /// @param _name The name of the module.
     control_unit_t(const std::string &_name)
         : module_t(_name)
         , instruction("instruction")
@@ -32,6 +36,7 @@ public:
     }
 
 private:
+    /// @brief Evaluate the control unit.
     void evaluate()
     {
         uint8_t opcode = static_cast<uint8_t>(instruction.get().to_ulong() >> 12U);

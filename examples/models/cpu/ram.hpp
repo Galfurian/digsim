@@ -13,6 +13,8 @@
 template <std::size_t N, std::size_t SIZE = 256> class ram_t : public digsim::module_t
 {
 public:
+    digsim::input_t<bool> clk;
+    digsim::input_t<bool> reset;
     digsim::input_t<std::bitset<N>> addr;
     digsim::input_t<std::bitset<N>> data_in;
     digsim::input_t<bool> write_enable;
@@ -20,12 +22,14 @@ public:
 
     ram_t(const std::string &_name)
         : module_t(_name)
+        , clk("clk")
+        , reset("reset")
         , addr("addr")
         , data_in("data_in")
         , write_enable("write_enable")
         , data_out("data_out")
     {
-        ADD_SENSITIVITY(ram_t, evaluate, addr, data_in, write_enable);
+        ADD_SENSITIVITY(ram_t, evaluate, clk, reset);
         ADD_PRODUCER(ram_t, evaluate, data_out);
     }
 
@@ -35,7 +39,29 @@ private:
 
     void evaluate()
     {
-        uint64_t address = addr.get().to_ulong();
+        // Only evaluate on rising edge.
+        if (!clk.posedge()) {
+            return;
+        }
+
+        // Handle reset signal.
+        if (reset.get()) {
+            // Reset all memory cells to zero.
+            for (auto &cell : mem) {
+                cell.reset();
+            }
+            data_out.set(0);
+            return;
+        }
+
+        // Get the address and check if it's within bounds.
+        auto address = addr.get().to_ulong();
+        if (address >= SIZE) {
+            digsim::error("RAM", "Address out of bounds: {} >= {}", address, SIZE);
+            return;
+        }
+
+        // Read or write data based on the write_enable signal.
         if (write_enable.get()) {
             mem[address] = data_in.get();
         }

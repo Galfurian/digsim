@@ -2,7 +2,7 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "models/cpu/register.hpp"
+#include "models/cpu/reg.hpp"
 
 int main()
 {

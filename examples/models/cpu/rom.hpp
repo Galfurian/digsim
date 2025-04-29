@@ -31,7 +31,10 @@ private:
 
     void evaluate()
     {
+        // Get the address.
         uint64_t address = addr.get().to_ulong();
+
+        // Read the instruction from ROM if address is valid.
         if (address < contents.size()) {
             instruction.set(contents[address]);
         } else {

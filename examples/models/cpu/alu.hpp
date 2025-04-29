@@ -13,20 +13,13 @@
 template <size_t N> class alu_t : public digsim::module_t
 {
 public:
-    /// @brief First operand.
-    digsim::input_t<std::bitset<N>> a;
-    /// @brief Second operand.
-    digsim::input_t<std::bitset<N>> b;
-    /// @brief Operation code.
-    digsim::input_t<std::bitset<4>> op;
-    /// @brief Clock signal.
-    digsim::input_t<bool> clk;
-    /// @brief Output result.
-    digsim::output_t<std::bitset<N>> out;
-    /// @brief Remainder of division.
-    digsim::output_t<std::bitset<N>> remainder;
-    /// @brief Status flags.
-    digsim::output_t<std::bitset<4>> status;
+    digsim::input_t<std::bitset<N>> a;          ///< First operand.
+    digsim::input_t<std::bitset<N>> b;          ///< Second operand.
+    digsim::input_t<std::bitset<4>> op;         ///< Operation code.
+    digsim::input_t<bool> clk;                  ///< Clock signal.
+    digsim::output_t<std::bitset<N>> out;       ///< Output result.
+    digsim::output_t<std::bitset<N>> remainder; ///< Remainder of division.
+    digsim::output_t<std::bitset<4>> status;    ///< Status flags.
 
     /// @brief Constructor.
     /// @param _name Name of the module.
