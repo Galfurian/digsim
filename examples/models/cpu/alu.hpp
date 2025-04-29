@@ -173,6 +173,7 @@ private:
         remainder.set(rem);
         status.set(flags);
 
+        // Debugging output.
         std::stringstream ss;
         ss << "a:" << a_val;
         ss << ", b:" << b_val;
@@ -189,6 +190,6 @@ private:
         if (status.get_delay() > 0) {
             ss << " (+" << status.get_delay() << "t)";
         }
-        digsim::info(get_name(), ss.str());
+        digsim::debug(get_name(), ss.str());
     }
 };

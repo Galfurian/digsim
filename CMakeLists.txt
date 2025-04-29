@@ -159,6 +159,24 @@ if(BUILD_EXAMPLES)
     
     add_executable(${PROJECT_NAME}_example11 ${PROJECT_SOURCE_DIR}/examples/example11.cpp)
     target_link_libraries(${PROJECT_NAME}_example11 PUBLIC ${PROJECT_NAME})
+    
+    add_executable(${PROJECT_NAME}_example12 ${PROJECT_SOURCE_DIR}/examples/example12.cpp)
+    target_link_libraries(${PROJECT_NAME}_example12 PUBLIC ${PROJECT_NAME})
+    
+    add_executable(${PROJECT_NAME}_example13 ${PROJECT_SOURCE_DIR}/examples/example13.cpp)
+    target_link_libraries(${PROJECT_NAME}_example13 PUBLIC ${PROJECT_NAME})
+    
+    add_executable(${PROJECT_NAME}_example14 ${PROJECT_SOURCE_DIR}/examples/example14.cpp)
+    target_link_libraries(${PROJECT_NAME}_example14 PUBLIC ${PROJECT_NAME})
+    
+    add_executable(${PROJECT_NAME}_example15 ${PROJECT_SOURCE_DIR}/examples/example15.cpp)
+    target_link_libraries(${PROJECT_NAME}_example15 PUBLIC ${PROJECT_NAME})
+    
+    add_executable(${PROJECT_NAME}_example16 ${PROJECT_SOURCE_DIR}/examples/example16.cpp)
+    target_link_libraries(${PROJECT_NAME}_example16 PUBLIC ${PROJECT_NAME})
+    
+    add_executable(${PROJECT_NAME}_example17 ${PROJECT_SOURCE_DIR}/examples/example17.cpp)
+    target_link_libraries(${PROJECT_NAME}_example17 PUBLIC ${PROJECT_NAME})
 
 endif()
 
