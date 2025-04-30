@@ -2,8 +2,8 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "models/full_adder.hpp"
-#include "models/gates/not_gate.hpp"
+#include "full_adder.hpp"
+#include "gates/not_gate.hpp"
 
 int main()
 {

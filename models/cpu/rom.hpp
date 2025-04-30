@@ -28,6 +28,16 @@ public:
         ADD_PRODUCER(rom_t, evaluate, instruction);
     }
 
+    /// @brief Read instruction from ROM at given address
+    uint16_t debug_read(std::size_t read_addr) const
+    {
+        if (read_addr >= contents.size()) {
+            digsim::error(get_name(), "debug_read: out of bounds access to address {}", read_addr);
+            return 0;
+        }
+        return contents[read_addr];
+    }
+
 private:
     std::vector<uint16_t> contents; ///< Contents of ROM (addressable by 16-bit instructions)
 
@@ -51,7 +61,8 @@ private:
         auto rd     = instr & 0xF;
 
         digsim::debug(
-            get_name(), "address: 0x{:04X}, instruction: 0x{:04X} => opcode: {}, rs: {}, rt: {}, rd: {}", address,
-            instr, opcode, rs, rt, rd);
+            get_name(),
+            "address: 0x{:04X}, instruction: 0x{:04X} => opcode: 0x{:04X}, rs: 0x{:04X}, rt: 0x{:04X}, rd: 0x{:04X}",
+            address, instr, opcode, rs, rt, rd);
     }
 };

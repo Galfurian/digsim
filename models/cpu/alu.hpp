@@ -12,23 +12,21 @@
 #include <iomanip>
 #include <sstream>
 
+/// @brief ALU (Arithmetic Logic Unit) supporting 4-phase CPU pipeline.
 class alu_t : public digsim::module_t
 {
 public:
-    // Input signals.
-    digsim::input_t<bool> clk;       ///< Clock signal.
-    digsim::input_t<bool> reset;     ///< Reset signal.
-    digsim::input_t<bs_data_t> a;    ///< First operand.
-    digsim::input_t<bs_data_t> b;    ///< Second operand.
-    digsim::input_t<bs_opcode_t> op; ///< Operation code.
+    digsim::input_t<bool> clk;         ///< Clock signal.
+    digsim::input_t<bool> reset;       ///< Reset signal.
+    digsim::input_t<bs_data_t> a;      ///< First operand.
+    digsim::input_t<bs_data_t> b;      ///< Second operand.
+    digsim::input_t<bs_opcode_t> op;   ///< Operation code.
+    digsim::input_t<bs_phase_t> phase; ///< Current pipeline phase.
 
-    // Output signals.
     digsim::output_t<bs_data_t> out;       ///< Output result.
     digsim::output_t<bs_data_t> remainder; ///< Remainder of division.
     digsim::output_t<bs_status_t> status;  ///< Status flags.
 
-    /// @brief Constructor.
-    /// @param _name Name of the module.
     alu_t(const std::string &_name)
         : module_t(_name)
         , clk("clk", this)
@@ -36,12 +34,12 @@ public:
         , a("a", this)
         , b("b", this)
         , op("op", this)
+        , phase("phase", this)
         , out("out", this)
         , remainder("remainder", this)
         , status("status", this)
     {
         ADD_SENSITIVITY(alu_t, evaluate, clk, reset);
-        ADD_CONSUMER(alu_t, evaluate, a, b, op);
         ADD_PRODUCER(alu_t, evaluate, out, remainder, status);
     }
 
@@ -54,7 +52,7 @@ public:
     };
 
 private:
-    /// @brief Evaluate the ALU operation.
+    /// @brief Evaluate the ALU operation, only during EXECUTE phase.
     void evaluate()
     {
         // Only evaluate on rising edge.
@@ -70,7 +68,11 @@ private:
             return;
         }
 
-        // Get the input values.
+        // Only perform ALU operation in EXECUTE phase.
+        if (static_cast<phase_t>(phase.get().to_ulong()) != phase_t::EXECUTE) {
+            return;
+        }
+
         const auto a_val  = a.get();
         const auto b_val  = b.get();
         const auto op_val = op.get();
@@ -78,7 +80,6 @@ private:
         const auto b_u    = b_val.to_ulong();
         const auto op_u   = op_val.to_ulong();
 
-        // Prepare the output values.
         bs_data_t result  = 0;
         bs_data_t rem     = 0;
         bs_status_t flags = 0;
@@ -99,17 +100,15 @@ private:
         case opcode_t::ALU_ADD: {
             unsigned long sum = a_u + b_u;
             result            = sum;
-            if (sum >= (1UL << ADDRESS_WIDTH)) {
+            if (sum >= (1UL << ADDRESS_WIDTH))
                 flags = FLAG_CARRY;
-            }
             break;
         }
         case opcode_t::ALU_SUB: {
             long diff = static_cast<long>(a_u) - static_cast<long>(b_u);
             result    = static_cast<unsigned long>(diff);
-            if (diff < 0) {
+            if (diff < 0)
                 flags = FLAG_OVERFLOW;
-            }
             break;
         }
         case opcode_t::ALU_MUL: {
@@ -144,6 +143,10 @@ private:
         case opcode_t::ALU_LT:
             result = (a_u < b_u);
             break;
+        case opcode_t::STORE:
+        case opcode_t::LOAD:
+            result = a_val; // Simple forwarding for memory ops
+            break;
         default:
             result = 0;
             break;
@@ -153,10 +156,10 @@ private:
         remainder.set(rem);
         status.set(flags);
 
-        // Debugging output.
         digsim::debug(
             get_name(),
-            "a: 0x{:04X}, b: 0x{:04X}, op: 0x{:04X} -> out: 0x{:04X}, remainder: 0x{:04X}, status: 0x{:04X}", a_u, b_u,
-            op_u, result.to_ulong(), rem.to_ulong(), flags.to_ulong());
+            "a: 0x{:04X}, b: 0x{:04X}, op: 0x{:04X} ({:15}) -> out: 0x{:04X}, remainder: 0x{:04X}, status: 0x{:04X}",
+            a_u, b_u, op_u, opcode_to_string(static_cast<opcode_t>(op_u)), result.to_ulong(), rem.to_ulong(),
+            flags.to_ulong());
     }
 };

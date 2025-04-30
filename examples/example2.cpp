@@ -2,8 +2,8 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "models/mux2to1.hpp"
-#include "models/gates/not_gate.hpp"
+#include "mux2to1.hpp"
+#include "gates/not_gate.hpp"
 
 int main()
 {

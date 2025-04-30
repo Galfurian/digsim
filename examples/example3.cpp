@@ -2,7 +2,7 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "models/d_flip_flop.hpp"
+#include "d_flip_flop.hpp"
 
 int main()
 {

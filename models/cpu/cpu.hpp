@@ -8,9 +8,10 @@
 #include "control_unit.hpp"
 #include "decoder.hpp"
 #include "multiplexer.hpp"
-#include "pc.hpp"
+#include "phase_fsm.hpp"
+#include "program_counter.hpp"
 #include "ram.hpp"
-#include "reg.hpp"
+#include "reg_file.hpp"
 #include "rom.hpp"
 
 #include <bitset>
@@ -24,6 +25,17 @@ public:
     digsim::input_t<bool> clk;
     digsim::input_t<bool> reset;
 
+    // Submodules.
+    program_counter_t pc;
+    rom_t rom;
+    decoder_t decoder;
+    control_unit_t control;
+    reg_file_t reg;
+    alu_t alu;
+    ram_t ram;
+    multiplexer_t multiplexer;
+    phase_fsm_t phase_fsm;
+
     cpu_t(const std::string &_name, const std::vector<uint16_t> &_rom_contents)
         : module_t(_name)
         , clk("clk", this)
@@ -36,13 +48,15 @@ public:
         , alu("alu")
         , ram("ram")
         , multiplexer("multiplexer")
-        , pc_to_rom("pc_to_rom")
+        , phase_fsm("phase_fsm")
+        , program_counter_to_rom("program_counter_to_rom")
         , rom_to_decoder("rom_to_decoder")
         , decoder_to_control_opcode("decoder_to_control_opcode")
         , decoder_rs("decoder_rs")
         , decoder_rt("decoder_rt")
         , decoder_rd("decoder_rd")
         , control_to_aluop("control_to_aluop")
+        , control_phase("control_phase")
         , control_to_regwrite("control_to_regwrite")
         , control_to_memwrite("control_to_memwrite")
         , control_to_memtoreg("control_to_memtoreg")
@@ -62,25 +76,34 @@ public:
         pc.reset(reset);
         pc.load(pc_load);
         pc.next_addr(pc_next_addr);
-        pc.addr(pc_to_rom);
+        pc.phase(control_phase);
+        pc.addr(program_counter_to_rom);
 
         // === ROM ===
         rom.set_parent(this);
-        rom.addr(pc_to_rom);
+        rom.addr(program_counter_to_rom);
         rom.instruction(rom_to_decoder);
 
         // === Instruction Decoder ===
         decoder.set_parent(this);
         decoder.instruction(rom_to_decoder);
+        decoder.phase(control_phase);
         decoder.opcode(decoder_to_control_opcode);
         decoder.rs(decoder_rs);
         decoder.rt(decoder_rt);
         decoder.rd(decoder_rd);
 
+        // === Phase FSM ===
+        phase_fsm.set_parent(this);
+        phase_fsm.clk(clk);
+        phase_fsm.reset(reset);
+        phase_fsm.phase(control_phase);
+
         // === Control Unit ===
         control.set_parent(this);
         control.opcode(decoder_to_control_opcode);
         control.alu_op(control_to_aluop);
+        control.phase(control_phase);
         control.reg_write(control_to_regwrite);
         control.mem_write(control_to_memwrite);
         control.mem_to_reg(control_to_memtoreg);
@@ -89,6 +112,7 @@ public:
         reg.set_parent(this);
         reg.clk(clk);
         reg.reset(reset);
+        reg.phase(control_phase);
         reg.addr_a(decoder_rs);
         reg.addr_b(decoder_rt);
         reg.addr_w(decoder_rd);
@@ -105,6 +129,7 @@ public:
         alu.b(reg_b);
         alu.op(control_to_aluop);
         alu.out(alu_out);
+        alu.phase(control_phase);
         alu.remainder(alu_remainder);
         alu.status(alu_status);
 
@@ -115,6 +140,7 @@ public:
         ram.addr(alu_out);
         ram.data_in(reg_b);
         ram.write_enable(control_to_memwrite);
+        ram.phase(control_phase);
         ram.data_out(ram_out);
 
         // === Write-Back MUX ===
@@ -126,24 +152,15 @@ public:
     }
 
 private:
-    // === Submodules ===
-    pc_t pc;
-    rom_t rom;
-    decoder_t decoder;
-    control_unit_t control;
-    reg_t reg;
-    alu_t alu;
-    ram_t ram;
-    multiplexer_t multiplexer;
-
     // === Internal signals ===
-    digsim::signal_t<bs_address_t> pc_to_rom;
+    digsim::signal_t<bs_address_t> program_counter_to_rom;
     digsim::signal_t<bs_instruction_t> rom_to_decoder;
     digsim::signal_t<bs_opcode_t> decoder_to_control_opcode;
     digsim::signal_t<bs_register_t> decoder_rs;
     digsim::signal_t<bs_register_t> decoder_rt;
     digsim::signal_t<bs_register_t> decoder_rd;
     digsim::signal_t<bs_opcode_t> control_to_aluop;
+    digsim::signal_t<bs_phase_t> control_phase;
     digsim::signal_t<bool> control_to_regwrite;
     digsim::signal_t<bool> control_to_memwrite;
     digsim::signal_t<bool> control_to_memtoreg;

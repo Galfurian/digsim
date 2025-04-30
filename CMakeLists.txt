@@ -32,9 +32,10 @@ mark_as_advanced(FORCE
 # OPTIONS
 # -----------------------------------------------------------------------------
 
+option(BUILD_TESTS "Build tests" ON)
+option(BUILD_EXAMPLES "Build examples" ON)
 option(STRICT_WARNINGS "Enable strict compiler warnings" ON)
 option(WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
-option(BUILD_EXAMPLES "Build examples" ON)
 
 # -----------------------------------------------------------------------------
 # DEPENDENCIES
@@ -129,58 +130,129 @@ if(BUILD_EXAMPLES)
   
     # Add the example.
     add_executable(${PROJECT_NAME}_example1 ${PROJECT_SOURCE_DIR}/examples/example1.cpp)
-    target_link_libraries(${PROJECT_NAME}_example1 PUBLIC ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}_example1 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_example1 PRIVATE ${PROJECT_NAME})
     
     add_executable(${PROJECT_NAME}_example2 ${PROJECT_SOURCE_DIR}/examples/example2.cpp)
-    target_link_libraries(${PROJECT_NAME}_example2 PUBLIC ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}_example2 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_example2 PRIVATE ${PROJECT_NAME})
     
     add_executable(${PROJECT_NAME}_example3 ${PROJECT_SOURCE_DIR}/examples/example3.cpp)
-    target_link_libraries(${PROJECT_NAME}_example3 PUBLIC ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}_example3 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_example3 PRIVATE ${PROJECT_NAME})
     
     add_executable(${PROJECT_NAME}_example4 ${PROJECT_SOURCE_DIR}/examples/example4.cpp)
-    target_link_libraries(${PROJECT_NAME}_example4 PUBLIC ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}_example4 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_example4 PRIVATE ${PROJECT_NAME})
     
     add_executable(${PROJECT_NAME}_example5 ${PROJECT_SOURCE_DIR}/examples/example5.cpp)
-    target_link_libraries(${PROJECT_NAME}_example5 PUBLIC ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}_example5 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_example5 PRIVATE ${PROJECT_NAME})
     
     add_executable(${PROJECT_NAME}_example6 ${PROJECT_SOURCE_DIR}/examples/example6.cpp)
-    target_link_libraries(${PROJECT_NAME}_example6 PUBLIC ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}_example6 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_example6 PRIVATE ${PROJECT_NAME})
     
     add_executable(${PROJECT_NAME}_example7 ${PROJECT_SOURCE_DIR}/examples/example7.cpp)
-    target_link_libraries(${PROJECT_NAME}_example7 PUBLIC ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}_example7 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_example7 PRIVATE ${PROJECT_NAME})
     
     add_executable(${PROJECT_NAME}_example8 ${PROJECT_SOURCE_DIR}/examples/example8.cpp)
-    target_link_libraries(${PROJECT_NAME}_example8 PUBLIC ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}_example8 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_example8 PRIVATE ${PROJECT_NAME})
     
     add_executable(${PROJECT_NAME}_example9 ${PROJECT_SOURCE_DIR}/examples/example9.cpp)
-    target_link_libraries(${PROJECT_NAME}_example9 PUBLIC ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}_example9 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_example9 PRIVATE ${PROJECT_NAME})
     
     add_executable(${PROJECT_NAME}_example10 ${PROJECT_SOURCE_DIR}/examples/example10.cpp)
-    target_link_libraries(${PROJECT_NAME}_example10 PUBLIC ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}_example10 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_example10 PRIVATE ${PROJECT_NAME})
     
-    add_executable(${PROJECT_NAME}_example11 ${PROJECT_SOURCE_DIR}/examples/example11.cpp)
-    target_link_libraries(${PROJECT_NAME}_example11 PUBLIC ${PROJECT_NAME})
+    # add_executable(${PROJECT_NAME}_example11 ${PROJECT_SOURCE_DIR}/examples/example11.cpp)
+    # target_include_directories(${PROJECT_NAME}_example1 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    # target_link_libraries(${PROJECT_NAME}_example11 PRIVATE ${PROJECT_NAME})
     
-    add_executable(${PROJECT_NAME}_example12 ${PROJECT_SOURCE_DIR}/examples/example12.cpp)
-    target_link_libraries(${PROJECT_NAME}_example12 PUBLIC ${PROJECT_NAME})
+    # add_executable(${PROJECT_NAME}_example12 ${PROJECT_SOURCE_DIR}/examples/example12.cpp)
+    # target_include_directories(${PROJECT_NAME}_example1 PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    # target_link_libraries(${PROJECT_NAME}_example12 PRIVATE ${PROJECT_NAME})
     
-    add_executable(${PROJECT_NAME}_example13 ${PROJECT_SOURCE_DIR}/examples/example13.cpp)
-    target_link_libraries(${PROJECT_NAME}_example13 PUBLIC ${PROJECT_NAME})
+    # add_executable(${PROJECT_NAME}_example14 ${PROJECT_SOURCE_DIR}/examples/example14.cpp)
+    # target_link_libraries(${PROJECT_NAME}_example14 PRIVATE ${PROJECT_NAME})
     
-    add_executable(${PROJECT_NAME}_example14 ${PROJECT_SOURCE_DIR}/examples/example14.cpp)
-    target_link_libraries(${PROJECT_NAME}_example14 PUBLIC ${PROJECT_NAME})
+    # add_executable(${PROJECT_NAME}_example15 ${PROJECT_SOURCE_DIR}/examples/example15.cpp)
+    # target_link_libraries(${PROJECT_NAME}_example15 PRIVATE ${PROJECT_NAME})
     
-    add_executable(${PROJECT_NAME}_example15 ${PROJECT_SOURCE_DIR}/examples/example15.cpp)
-    target_link_libraries(${PROJECT_NAME}_example15 PUBLIC ${PROJECT_NAME})
+    # add_executable(${PROJECT_NAME}_example16 ${PROJECT_SOURCE_DIR}/examples/example16.cpp)
+    # target_link_libraries(${PROJECT_NAME}_example16 PRIVATE ${PROJECT_NAME})
     
-    add_executable(${PROJECT_NAME}_example16 ${PROJECT_SOURCE_DIR}/examples/example16.cpp)
-    target_link_libraries(${PROJECT_NAME}_example16 PUBLIC ${PROJECT_NAME})
+    # add_executable(${PROJECT_NAME}_example17 ${PROJECT_SOURCE_DIR}/examples/example17.cpp)
+    # target_link_libraries(${PROJECT_NAME}_example17 PRIVATE ${PROJECT_NAME})
     
-    add_executable(${PROJECT_NAME}_example17 ${PROJECT_SOURCE_DIR}/examples/example17.cpp)
-    target_link_libraries(${PROJECT_NAME}_example17 PUBLIC ${PROJECT_NAME})
+    # add_executable(${PROJECT_NAME}_example18 ${PROJECT_SOURCE_DIR}/examples/example18.cpp)
+    # target_link_libraries(${PROJECT_NAME}_example18 PRIVATE ${PROJECT_NAME})
+
+endif()
+
+# -----------------------------------------------------------------------------
+# TESTS
+# -----------------------------------------------------------------------------
+
+if(BUILD_TESTS)
+
+    # CMake has support for adding tests to a project.
+    enable_testing()
+
+    # Add the test.
+    add_executable(test_ram ${PROJECT_SOURCE_DIR}/tests/test_ram.cpp)
+    target_include_directories(test_ram PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_ram ${PROJECT_NAME})
+    add_test(test_ram_run test_ram)
     
-    add_executable(${PROJECT_NAME}_example18 ${PROJECT_SOURCE_DIR}/examples/example18.cpp)
-    target_link_libraries(${PROJECT_NAME}_example18 PUBLIC ${PROJECT_NAME})
+    add_executable(test_alu ${PROJECT_SOURCE_DIR}/tests/test_alu.cpp)
+    target_include_directories(test_alu PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_alu ${PROJECT_NAME})
+    add_test(test_alu_run test_alu)
+    
+    add_executable(test_pc ${PROJECT_SOURCE_DIR}/tests/test_pc.cpp)
+    target_include_directories(test_pc PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_pc ${PROJECT_NAME})
+    add_test(test_pc_run test_pc)
+    
+    add_executable(test_rom ${PROJECT_SOURCE_DIR}/tests/test_rom.cpp)
+    target_include_directories(test_rom PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_rom ${PROJECT_NAME})
+    add_test(test_rom_run test_rom)
+    
+    add_executable(test_reg ${PROJECT_SOURCE_DIR}/tests/test_reg.cpp)
+    target_include_directories(test_reg PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_reg ${PROJECT_NAME})
+    add_test(test_reg_run test_reg)
+    
+    add_executable(test_cu ${PROJECT_SOURCE_DIR}/tests/test_cu.cpp)
+    target_include_directories(test_cu PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_cu ${PROJECT_NAME})
+    add_test(test_cu_run test_cu)
+    
+    add_executable(test_decoder ${PROJECT_SOURCE_DIR}/tests/test_decoder.cpp)
+    target_include_directories(test_decoder PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_decoder ${PROJECT_NAME})
+    add_test(test_decoder_run test_decoder)
+    
+    add_executable(test_multiplexer ${PROJECT_SOURCE_DIR}/tests/test_multiplexer.cpp)
+    target_include_directories(test_multiplexer PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_multiplexer ${PROJECT_NAME})
+    add_test(test_multiplexer_run test_multiplexer)
+    
+    add_executable(test_phase_fsm ${PROJECT_SOURCE_DIR}/tests/test_phase_fsm.cpp)
+    target_include_directories(test_phase_fsm PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_phase_fsm ${PROJECT_NAME})
+    add_test(test_test_phase_fsm test_phase_fsm)
+    
+    add_executable(test_cpu ${PROJECT_SOURCE_DIR}/tests/test_cpu.cpp)
+    target_include_directories(test_cpu PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_cpu ${PROJECT_NAME})
+    add_test(test_cpu_run test_cpu)
 
 endif()
 
