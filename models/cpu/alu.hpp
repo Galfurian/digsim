@@ -85,6 +85,7 @@ private:
         bs_status_t flags = 0;
 
         switch (static_cast<opcode_t>(op_u)) {
+        // Logic
         case opcode_t::ALU_AND:
             result = a_val & b_val;
             break;
@@ -97,25 +98,27 @@ private:
         case opcode_t::ALU_NOT:
             result = ~a_val;
             break;
+
+        // Arithmetic
         case opcode_t::ALU_ADD: {
-            unsigned long sum = a_u + b_u;
-            result            = sum;
+            auto sum = a_u + b_u;
+            result   = sum;
             if (sum >= (1UL << ADDRESS_WIDTH))
                 flags = FLAG_CARRY;
             break;
         }
         case opcode_t::ALU_SUB: {
-            long diff = static_cast<long>(a_u) - static_cast<long>(b_u);
+            auto diff = static_cast<long>(a_u) - static_cast<long>(b_u);
             result    = static_cast<unsigned long>(diff);
             if (diff < 0)
                 flags = FLAG_OVERFLOW;
             break;
         }
         case opcode_t::ALU_MUL: {
-            unsigned long prod = a_u * b_u;
+            auto prod = a_u * b_u;
             if (prod >= (1UL << ADDRESS_WIDTH)) {
-                flags  = FLAG_OVERFLOW;
                 result = 0;
+                flags  = FLAG_OVERFLOW;
             } else {
                 result = prod;
             }
@@ -131,22 +134,37 @@ private:
                 rem    = a_u % b_u;
             }
             break;
-        case opcode_t::ALU_SHIFT_LEFT:
+
+        // Shift
+        case opcode_t::SHIFT_LEFT:
             result = (b_u >= ADDRESS_WIDTH) ? 0 : (a_u << b_u);
             break;
-        case opcode_t::ALU_SHIFT_RIGHT:
+        case opcode_t::SHIFT_RIGHT:
             result = (b_u >= ADDRESS_WIDTH) ? 0 : (a_u >> b_u);
             break;
-        case opcode_t::ALU_EQUAL:
+
+        // Comparison
+        case opcode_t::CMP_EQ:
             result = (a_u == b_u);
             break;
-        case opcode_t::ALU_LT:
+        case opcode_t::CMP_LT:
             result = (a_u < b_u);
             break;
-        case opcode_t::STORE:
-        case opcode_t::LOAD:
-            result = a_val; // Simple forwarding for memory ops
+        case opcode_t::CMP_GT:
+            result = (a_u > b_u);
             break;
+        case opcode_t::CMP_NEQ:
+            result = (a_u != b_u);
+            break;
+
+        // MEM passthrough ops (if you still want to support them here)
+        case opcode_t::MEM_LOAD:
+        case opcode_t::MEM_STORE:
+        case opcode_t::MEM_LOADI:
+            result = a_val;
+            break;
+
+        // Default
         default:
             result = 0;
             break;
@@ -157,9 +175,7 @@ private:
         status.set(flags);
 
         digsim::debug(
-            get_name(),
-            "a: 0x{:04X}, b: 0x{:04X}, op: 0x{:04X} ({:15}) -> out: 0x{:04X}, remainder: 0x{:04X}, status: 0x{:04X}",
-            a_u, b_u, op_u, opcode_to_string(static_cast<opcode_t>(op_u)), result.to_ulong(), rem.to_ulong(),
-            flags.to_ulong());
+            get_name(), "a: {}, b: {}, op: {} ({:15}) -> out: {}, remainder: {}, status: {}", a.get(), b.get(),
+            op.get(), opcode_to_string(static_cast<opcode_t>(op_u)), out.get(), out.get(), status.get());
     }
 };

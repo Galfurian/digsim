@@ -8,7 +8,7 @@
 
 constexpr std::size_t ADDRESS_WIDTH     = 16;                   ///< The width of the address bus.
 constexpr std::size_t DATA_WIDTH        = 16;                   ///< The width of the data bus.
-constexpr std::size_t OPCODE_WIDTH      = 4;                    ///< The width of the opcode.
+constexpr std::size_t OPCODE_WIDTH      = 7;                    ///< The width of the opcode.
 constexpr std::size_t REGISTER_WIDTH    = 4;                    ///< The width of the register address.
 constexpr std::size_t STATUS_WIDTH      = 4;                    ///< The width of the status register.
 constexpr std::size_t INSTRUCTION_WIDTH = 16;                   ///< The width of the instruction.
@@ -26,23 +26,46 @@ using bs_instruction_t = std::bitset<INSTRUCTION_WIDTH>; ///< Instruction type.
 using bs_phase_t       = std::bitset<PHASE_FSM_WIDTH>;   ///< Phase type.
 
 /// @brief CPU instruction opcodes.
-enum class opcode_t : uint8_t {
-    ALU_AND         = 0x0, ///< AND
-    ALU_OR          = 0x1, ///< OR
-    ALU_XOR         = 0x2, ///< XOR
-    ALU_NOT         = 0x3, ///< NOT
-    ALU_ADD         = 0x4, ///< ADD
-    ALU_SUB         = 0x5, ///< SUB
-    ALU_MUL         = 0x6, ///< MUL
-    ALU_DIV         = 0x7, ///< DIV
-    ALU_SHIFT_LEFT  = 0x8, ///< SHIFT LEFT
-    ALU_SHIFT_RIGHT = 0x9, ///< SHIFT RIGHT
-    ALU_EQUAL       = 0xA, ///< EQUAL
-    ALU_LT          = 0xB, ///< LESS THAN
-    STORE           = 0xC, ///< Store to memory
-    LOAD            = 0xD, ///< Load from memory
-    NOP             = 0xE, ///< No operation
-    ILLEGAL         = 0xF  ///< Reserved / illegal instruction
+/// @brief Full 7-bit opcode combining primary class (3b) and function (4b).
+enum opcode_t : uint8_t {
+    // ALU (0x00–0x07)
+    ALU_ADD      = 0x00,
+    ALU_SUB      = 0x01,
+    ALU_AND      = 0x02,
+    ALU_OR       = 0x03,
+    ALU_XOR      = 0x04,
+    ALU_NOT      = 0x05,
+    ALU_MUL      = 0x06,
+    ALU_DIV      = 0x07,
+    // SHIFT (0x10–0x13)
+    SHIFT_LEFT   = 0x10,
+    SHIFT_RIGHT  = 0x11,
+    SHIFT_ARITH  = 0x12,
+    SHIFT_ROTATE = 0x13,
+    // CMP (0x20–0x23)
+    CMP_EQ       = 0x20,
+    CMP_LT       = 0x21,
+    CMP_GT       = 0x22,
+    CMP_NEQ      = 0x23,
+    // MEMORY (0x30–0x33)
+    MEM_LOAD     = 0x30,
+    MEM_STORE    = 0x31,
+    MEM_LOADI    = 0x32,
+    MEM_MOVE     = 0x33,
+    // BRANCH (0x40–0x44)
+    BR_JMP       = 0x40,
+    BR_BEQ       = 0x41,
+    BR_BNE       = 0x42,
+    BR_BLT       = 0x43,
+    BR_BGT       = 0x44,
+    // SYSTEM (0x50–0x53)
+    SYS_NOP      = 0x50,
+    SYS_HALT     = 0x51,
+    SYS_BREAK    = 0x52,
+    SYS_CALL     = 0x53,
+    // Reserved (0x60, 0x70)
+    RESERVED1    = 0x60,
+    RESERVED2    = 0x70
 };
 
 /// @brief The phase of the CPU FSM.
@@ -53,21 +76,75 @@ enum class phase_t : uint8_t {
     WRITEBACK = 0x3  ///< Write back result.
 };
 
-/// @brief Encode an instruction from opcode and registers.
-/// @param op The opcode.
-/// @param rs Source register A (bits [11:8]).
-/// @param rt Source register B (bits [7:4]).
-/// @param rd Destination register (bits [3:0]).
-/// @return 16-bit encoded instruction.
-uint16_t encode_instruction(opcode_t op, uint8_t rs, uint8_t rt, uint8_t rd)
+/// @brief Encodes a 16-bit instruction.
+/// @param op The 3-bit opcode.
+/// @param fn The 4-bit function code.
+/// @param rs The first source register.
+/// @param rt The second source register.
+/// @param rd The destination register (optional, default is 0).
+/// @return The 16-bit encoded instruction.
+inline uint16_t encode_instruction(uint8_t op, uint8_t fn, uint8_t rs, uint8_t rt, uint8_t rd)
 {
-    return static_cast<uint16_t>(static_cast<uint16_t>(op) << 12U) | static_cast<uint16_t>((rs & 0xFU) << 8U) |
-           static_cast<uint16_t>((rt & 0xFU) << 4U) | static_cast<uint16_t>(rd & 0xFU);
+    return static_cast<uint16_t>((op & 0x7) << 13) | //
+           static_cast<uint16_t>((fn & 0xF) << 9) |  //
+           static_cast<uint16_t>((rs & 0xF) << 5) |  //
+           static_cast<uint16_t>((rt & 0xF) << 1) |  //
+           static_cast<uint16_t>((rd & 0x1));
 }
 
-inline const char *opcode_to_string(opcode_t op)
+/// @brief Decodes a 16-bit instruction.
+/// @param instr  The 16-bit encoded instruction.
+/// @param op     The opcode (3 bits).
+/// @param fn     The function code (4 bits).
+/// @param rs     The first source register.
+/// @param rt     The second source register.
+/// @param rd     The destination register (optional, default is 0).
+inline void decode_instruction(uint16_t instr, uint8_t &op, uint8_t &fn, uint8_t &rs, uint8_t &rt, uint8_t &rd)
+{
+    op = (instr >> 13) & 0x7;
+    fn = (instr >> 9) & 0xF;
+    rs = (instr >> 5) & 0xF;
+    rt = (instr >> 1) & 0xF;
+    rd = instr & 0x1;
+}
+
+/// @brief Encodes a 16-bit instruction with opcode and function code.
+/// @param full_op The opcode (3 bits) and function code (4 bits).
+/// @param rs The first source register.
+/// @param rt The second source register.
+/// @param rd The destination register (optional, default is 0).
+/// @return The 16-bit encoded instruction.
+inline uint16_t encode_instruction(opcode_t full_op, uint8_t rs, uint8_t rt, uint8_t rd = 0)
+{
+    uint8_t op = static_cast<uint8_t>(full_op) >> 4;
+    uint8_t fn = static_cast<uint8_t>(full_op) & 0xF;
+    return encode_instruction(op, fn, rs, rt, rd);
+}
+
+/// @brief Decodes a 16-bit instruction.
+/// @param instr  The 16-bit encoded instruction.
+/// @param op     The full opcode (3 bits + 4 bits).
+/// @param rs     The first source register.
+/// @param rt     The second source register.
+/// @param rd     The destination register (optional, default is 0).
+/// @return The 16-bit encoded instruction.
+inline void decode_instruction(uint16_t instr, uint8_t &full_op, uint8_t &rs, uint8_t &rt, uint8_t &rd)
+{
+    auto opcode = static_cast<uint8_t>(instr >> 13) & 0x7; // bits 15–13
+    auto func   = static_cast<uint8_t>(instr >> 9) & 0xF;  // bits 12–9
+    full_op     = static_cast<uint8_t>(((opcode << 4) | func));
+    rs          = static_cast<uint8_t>((instr >> 5) & 0xF); // bits 8–5
+    rt          = static_cast<uint8_t>((instr >> 1) & 0xF); // bits 4–1
+    rd          = static_cast<uint8_t>(instr & 0x1);        // bit 0
+}
+
+inline const char *opcode_to_string(uint8_t op)
 {
     switch (op) {
+    case opcode_t::ALU_ADD:
+        return "ALU_ADD";
+    case opcode_t::ALU_SUB:
+        return "ALU_SUB";
     case opcode_t::ALU_AND:
         return "ALU_AND";
     case opcode_t::ALU_OR:
@@ -76,30 +153,56 @@ inline const char *opcode_to_string(opcode_t op)
         return "ALU_XOR";
     case opcode_t::ALU_NOT:
         return "ALU_NOT";
-    case opcode_t::ALU_ADD:
-        return "ALU_ADD";
-    case opcode_t::ALU_SUB:
-        return "ALU_SUB";
     case opcode_t::ALU_MUL:
         return "ALU_MUL";
     case opcode_t::ALU_DIV:
         return "ALU_DIV";
-    case opcode_t::ALU_SHIFT_LEFT:
-        return "ALU_SHIFT_LEFT";
-    case opcode_t::ALU_SHIFT_RIGHT:
-        return "ALU_SHIFT_RIGHT";
-    case opcode_t::ALU_EQUAL:
-        return "ALU_EQUAL";
-    case opcode_t::ALU_LT:
-        return "ALU_LT";
-    case opcode_t::STORE:
-        return "STORE";
-    case opcode_t::LOAD:
-        return "LOAD";
-    case opcode_t::NOP:
-        return "NOP";
-    case opcode_t::ILLEGAL:
-        return "ILLEGAL";
+    case opcode_t::SHIFT_LEFT:
+        return "SHIFT_LEFT";
+    case opcode_t::SHIFT_RIGHT:
+        return "SHIFT_RIGHT";
+    case opcode_t::SHIFT_ARITH:
+        return "SHIFT_ARITH";
+    case opcode_t::SHIFT_ROTATE:
+        return "SHIFT_ROTATE";
+    case opcode_t::CMP_EQ:
+        return "CMP_EQ";
+    case opcode_t::CMP_LT:
+        return "CMP_LT";
+    case opcode_t::CMP_GT:
+        return "CMP_GT";
+    case opcode_t::CMP_NEQ:
+        return "CMP_NEQ";
+    case opcode_t::MEM_LOAD:
+        return "MEM_LOAD";
+    case opcode_t::MEM_STORE:
+        return "MEM_STORE";
+    case opcode_t::MEM_LOADI:
+        return "MEM_LOADI";
+    case opcode_t::MEM_MOVE:
+        return "MEM_MOVE";
+    case opcode_t::BR_JMP:
+        return "BR_JMP";
+    case opcode_t::BR_BEQ:
+        return "BR_BEQ";
+    case opcode_t::BR_BNE:
+        return "BR_BNE";
+    case opcode_t::BR_BLT:
+        return "BR_BLT";
+    case opcode_t::BR_BGT:
+        return "BR_BGT";
+    case opcode_t::SYS_NOP:
+        return "SYS_NOP";
+    case opcode_t::SYS_HALT:
+        return "SYS_HALT";
+    case opcode_t::SYS_BREAK:
+        return "SYS_BREAK";
+    case opcode_t::SYS_CALL:
+        return "SYS_CALL";
+    case opcode_t::RESERVED1:
+        return "RESERVED1";
+    case opcode_t::RESERVED2:
+        return "RESERVED2";
     default:
         return "UNKNOWN";
     }

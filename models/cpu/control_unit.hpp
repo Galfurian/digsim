@@ -68,35 +68,42 @@ private:
 
         case phase_t::WRITEBACK:
             switch (in_op) {
+            // ALU results go to register
+            case opcode_t::ALU_ADD:
+            case opcode_t::ALU_SUB:
             case opcode_t::ALU_AND:
             case opcode_t::ALU_OR:
             case opcode_t::ALU_XOR:
             case opcode_t::ALU_NOT:
-            case opcode_t::ALU_ADD:
-            case opcode_t::ALU_SUB:
             case opcode_t::ALU_MUL:
             case opcode_t::ALU_DIV:
-            case opcode_t::ALU_SHIFT_LEFT:
-            case opcode_t::ALU_SHIFT_RIGHT:
-            case opcode_t::ALU_EQUAL:
-            case opcode_t::ALU_LT:
+            case opcode_t::SHIFT_LEFT:
+            case opcode_t::SHIFT_RIGHT:
+            case opcode_t::CMP_EQ:
+            case opcode_t::CMP_LT:
+            case opcode_t::CMP_GT:
+            case opcode_t::CMP_NEQ:
                 reg_write.set(true);
                 mem_write.set(false);
-                mem_to_reg.set(false);
+                mem_to_reg.set(false); // ALU → reg
                 break;
 
-            case opcode_t::STORE:
+            // LOAD: write from memory to reg
+            case opcode_t::MEM_LOAD:
+            case opcode_t::MEM_LOADI:
+                reg_write.set(true);
+                mem_write.set(false);
+                mem_to_reg.set(true); // MEM → reg
+                break;
+
+            // STORE: write reg to memory
+            case opcode_t::MEM_STORE:
                 reg_write.set(false);
                 mem_write.set(true);
                 mem_to_reg.set(false);
                 break;
 
-            case opcode_t::LOAD:
-                reg_write.set(true);
-                mem_write.set(false);
-                mem_to_reg.set(true);
-                break;
-
+            // Others: no write-back
             default:
                 reg_write.set(false);
                 mem_write.set(false);

@@ -1,8 +1,10 @@
-/// @file example16.cpp
-/// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @file test_cu.cpp
+/// @author Enrico Fraccaroli
+/// @brief Control unit test using flattened opcode_t values.
 
 #include "cpu/control_unit.hpp"
+#include <tuple>
+#include <vector>
 
 /// @brief Apply input stimulus for the control unit test.
 void apply_inputs(
@@ -11,7 +13,7 @@ void apply_inputs(
     digsim::signal_t<bs_phase_t> &phase,
     phase_t phase_val)
 {
-    opcode.set(static_cast<uint8_t>(opcode_val));
+    opcode.set(static_cast<uint8_t>(opcode_val)); // now using flattened opcode
     phase.set(static_cast<uint8_t>(phase_val));
 }
 
@@ -37,25 +39,16 @@ int verify_outputs(
             alu_op.get().to_ulong());
         fail = 1;
     }
-
     if (reg_write.get() != expected_reg_write) {
-        digsim::error(
-            "Test", "reg_write mismatch for opcode {}: expected {}, got {}", static_cast<int>(opcode_val),
-            expected_reg_write, reg_write.get());
+        digsim::error("Test", "reg_write mismatch: expected {}, got {}", expected_reg_write, reg_write.get());
         fail = 1;
     }
-
     if (mem_write.get() != expected_mem_write) {
-        digsim::error(
-            "Test", "mem_write mismatch for opcode {}: expected {}, got {}", static_cast<int>(opcode_val),
-            expected_mem_write, mem_write.get());
+        digsim::error("Test", "mem_write mismatch: expected {}, got {}", expected_mem_write, mem_write.get());
         fail = 1;
     }
-
     if (mem_to_reg.get() != expected_mem_to_reg) {
-        digsim::error(
-            "Test", "mem_to_reg mismatch for opcode {}: expected {}, got {}", static_cast<int>(opcode_val),
-            expected_mem_to_reg, mem_to_reg.get());
+        digsim::error("Test", "mem_to_reg mismatch: expected {}, got {}", expected_mem_to_reg, mem_to_reg.get());
         fail = 1;
     }
 
@@ -81,6 +74,7 @@ int run_test(
     execute_cycle();
     apply_inputs(opcode_val, opcode, phase, phase_t::WRITEBACK);
     execute_cycle();
+
     return verify_outputs(
         opcode_val, expected_reg_write, expected_mem_write, expected_mem_to_reg, alu_op, reg_write, mem_write,
         mem_to_reg);
@@ -90,7 +84,7 @@ int main()
 {
     digsim::logger.set_level(digsim::log_level_t::debug);
 
-    // Signals.
+    // Signals
     digsim::signal_t<bs_opcode_t> opcode("opcode", 0, 0);
     digsim::signal_t<bs_opcode_t> alu_op("alu_op", 0, 0);
     digsim::signal_t<bs_phase_t> phase("phase", 0, 0);
@@ -98,7 +92,7 @@ int main()
     digsim::signal_t<bool> mem_write("mem_write", false, 0);
     digsim::signal_t<bool> mem_to_reg("mem_to_reg", false, 0);
 
-    // Instantiate the control unit.
+    // Instantiate the control unit
     control_unit_t cu0("cu0");
     cu0.opcode(opcode);
     cu0.phase(phase);
@@ -109,56 +103,27 @@ int main()
 
     digsim::scheduler.initialize();
 
-    // --------------------------------------------------
-    // Test: ALU_ADD
-    if (run_test(opcode_t::ALU_ADD, true, false, false, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg)) {
-        return 1;
+    // List of test cases: (opcode_t, reg_write, mem_write, mem_to_reg)
+    std::vector<std::tuple<opcode_t, bool, bool, bool>> test_cases = {
+        {opcode_t::ALU_ADD, true, false, false},   {opcode_t::ALU_SUB, true, false, false},
+        {opcode_t::ALU_MUL, true, false, false},   {opcode_t::SHIFT_LEFT, true, false, false},
+        {opcode_t::CMP_EQ, true, false, false},    {opcode_t::MEM_LOAD, true, false, true},
+        {opcode_t::MEM_STORE, false, true, false}, {opcode_t::SYS_NOP, false, false, false},
+    };
+
+    for (const auto &[op, rw, mw, mtr] : test_cases) {
+        if (run_test(op, rw, mw, mtr, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg)) {
+            return 1;
+        }
     }
 
-    // --------------------------------------------------
-    // Test: ALU_SUB
-    if (run_test(opcode_t::ALU_SUB, true, false, false, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg)) {
-        return 1;
-    }
-
-    // --------------------------------------------------
-    // Test: ALU_MUL
-    if (run_test(opcode_t::ALU_MUL, true, false, false, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg)) {
-        return 1;
-    }
-
-    // --------------------------------------------------
-    // Test: LOAD
-    if (run_test(opcode_t::LOAD, true, false, true, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg)) {
-        return 1;
-    }
-
-    // --------------------------------------------------
-    // Test: STORE
-    if (run_test(opcode_t::STORE, false, true, false, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg)) {
-        return 1;
-    }
-
-    // --------------------------------------------------
-    // Test: NOP
-    if (run_test(opcode_t::NOP, false, false, false, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg)) {
-        return 1;
-    }
-
-    // --------------------------------------------------
-    // Test: ILLEGAL
-    if (run_test(opcode_t::ILLEGAL, false, false, false, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg)) {
-        return 1;
-    }
-
-    // --------------------------------------------------
-    // Test: Default Case (Unknown opcode)
-    uint8_t unknown_opcode = 0xFF;
-    phase.set(static_cast<uint8_t>(phase_t::EXECUTE)); // ensure correct phase
+    // Test: unknown or illegal opcode
+    uint8_t unknown_opcode = 0x7F; // intentionally invalid
+    phase.set(static_cast<uint8_t>(phase_t::WRITEBACK));
     opcode.set(unknown_opcode);
     digsim::scheduler.run();
 
-    if (reg_write.get() != false || mem_write.get() != false || mem_to_reg.get() != false) {
+    if (reg_write.get() || mem_write.get() || mem_to_reg.get()) {
         digsim::error("Test", "Unknown opcode default FAILED (0x{:02X})", unknown_opcode);
         return 1;
     }

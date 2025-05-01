@@ -158,11 +158,11 @@ template <typename T> inline const char *signal_t<T>::get_type_name() const { re
 template <typename T> inline void signal_t<T>::set_now(T new_value)
 {
     if (new_value != value) {
-        digsim::trace("signal_t", "{}: {} -> {} (now)", get_name(), value, new_value);
         // Update the last value to the current value before changing it.
         last_value = value;
         // Update the value to the new value.
         value      = new_value;
+        digsim::trace("signal_t", "{}: {} -> {} (now)", get_name(), last_value, value);
         for (auto &proc_info : processes) {
             // Schedule the process to be executed immediately.
             digsim::scheduler.schedule_now(proc_info);

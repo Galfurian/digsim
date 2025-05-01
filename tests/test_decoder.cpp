@@ -4,107 +4,77 @@
 
 #include "cpu/decoder.hpp"
 
-int run_test(
-    uint16_t instr_val,
-    uint8_t exp_opcode,
-    uint8_t exp_rs,
-    uint8_t exp_rt,
-    uint8_t exp_rd,
-    digsim::signal_t<bs_instruction_t> &instruction,
-    digsim::signal_t<bs_opcode_t> &opcode,
-    digsim::signal_t<bs_register_t> &rs,
-    digsim::signal_t<bs_register_t> &rt,
-    digsim::signal_t<bs_register_t> &rd)
+static int test_result = 0;
+
+struct decoder_env_t {
+    digsim::signal_t<bs_instruction_t> instruction{"instruction", 0, 0};
+    digsim::signal_t<bs_phase_t> phase{"phase", static_cast<uint16_t>(phase_t::DECODE), 0};
+    digsim::signal_t<bs_opcode_t> opcode{"opcode", 0, 0};
+    digsim::signal_t<bs_register_t> rs{"rs", 0, 0};
+    digsim::signal_t<bs_register_t> rt{"rt", 0, 0};
+    digsim::signal_t<bs_register_t> rd{"rd", 0, 0};
+    decoder_t decoder{"decoder"};
+
+    decoder_env_t()
+    {
+        decoder.instruction(instruction);
+        decoder.phase(phase);
+        decoder.opcode(opcode);
+        decoder.rs(rs);
+        decoder.rt(rt);
+        decoder.rd(rd);
+    }
+
+    void set_instruction(bs_instruction_t instr)
+    {
+        instruction.set(instr);
+        digsim::scheduler.run();
+    }
+};
+
+void run_test(decoder_env_t &env, uint16_t instruction)
 {
-    instruction.set(std::bitset<16>(instr_val));
+    env.set_instruction(instruction);
     digsim::scheduler.run();
 
-    bool fail = false;
+    uint8_t opcode, rs, rt, rd;
+    decode_instruction(instruction, opcode, rs, rt, rd);
 
-    if (opcode.get().to_ulong() != exp_opcode) {
-        digsim::error(
-            "Test", "Opcode mismatch: instr=0x{:04X}, expected {}, got {}", instr_val, exp_opcode,
-            opcode.get().to_ulong());
-        fail = true;
+    if (env.opcode.get() != opcode) {
+        digsim::error("Test", "OP mismatch (got 0x{:X}, expected 0x{:X})", env.opcode.get().to_ulong(), opcode);
+        test_result = 1;
     }
-    if (rs.get().to_ulong() != exp_rs) {
-        digsim::error(
-            "Test", "RS mismatch: instr=0x{:04X}, expected {}, got {}", instr_val, exp_rs, rs.get().to_ulong());
-        fail = true;
+    if (env.rs.get() != rs) {
+        digsim::error("Test", "RS mismatch (got 0x{:X}, expected 0x{:X})", env.rs.get().to_ulong(), rs);
+        test_result = 1;
     }
-    if (rt.get().to_ulong() != exp_rt) {
-        digsim::error(
-            "Test", "RT mismatch: instr=0x{:04X}, expected {}, got {}", instr_val, exp_rt, rt.get().to_ulong());
-        fail = true;
+    if (env.rt.get() != rt) {
+        digsim::error("Test", "RT mismatch (got 0x{:X}, expected 0x{:X})", env.rt.get().to_ulong(), rt);
+        test_result = 1;
     }
-    if (rd.get().to_ulong() != exp_rd) {
-        digsim::error(
-            "Test", "RD mismatch: instr=0x{:04X}, expected {}, got {}", instr_val, exp_rd, rd.get().to_ulong());
-        fail = true;
+    if (env.rd.get() != rd) {
+        digsim::error("Test", "RD mismatch (got 0x{:X}, expected 0x{:X})", env.rd.get().to_ulong(), rd);
+        test_result = 1;
     }
-
-    return fail ? 1 : 0;
 }
 
 int main()
 {
     digsim::logger.set_level(digsim::log_level_t::debug);
-
-    // Signals
-    digsim::signal_t<bs_instruction_t> instruction("instruction", 0, 0);
-    digsim::signal_t<bs_phase_t> phase("phase", 0, 0);
-    digsim::signal_t<bs_opcode_t> opcode("opcode", 0, 0);
-    digsim::signal_t<bs_register_t> rs("rs", 0, 0);
-    digsim::signal_t<bs_register_t> rt("rt", 0, 0);
-    digsim::signal_t<bs_register_t> rd("rd", 0, 0);
-
-    // Instantiate the decoder
-    decoder_t decoder("decoder");
-    decoder.instruction(instruction);
-    decoder.phase(phase);
-    decoder.opcode(opcode);
-    decoder.rs(rs);
-    decoder.rt(rt);
-    decoder.rd(rd);
-
-    phase.set(static_cast<uint16_t>(phase_t::DECODE));
-
     digsim::scheduler.initialize();
 
-    // --------------------------------------------------
-    // Test: Basic decoding 0x1234
-    if (run_test(0x1234, 0x1, 0x2, 0x3, 0x4, instruction, opcode, rs, rt, rd))
-        return 1;
+    decoder_env_t env;
 
-    // --------------------------------------------------
-    // Test: All fields at max value 0xFFFF
-    if (run_test(0xFFFF, 0xF, 0xF, 0xF, 0xF, instruction, opcode, rs, rt, rd))
-        return 1;
+    std::vector<uint16_t> raw_instructions = {
+        encode_instruction(opcode_t::ALU_DIV, 0x8, 0x7, 1), // 0x0F0F
+        encode_instruction(opcode_t::CMP_GT, 0xB, 0x3, 1),  // 0x4567
+        encode_instruction(opcode_t::BR_BGT, 0xD, 0x5, 1),  // 0x89AB
+        encode_instruction(opcode_t::ALU_ADD, 0x0, 0x0, 0), // 0x0000
+    };
 
-    // --------------------------------------------------
-    // Test: All fields at zero 0x0000
-    if (run_test(0x0000, 0x0, 0x0, 0x0, 0x0, instruction, opcode, rs, rt, rd))
-        return 1;
+    for (auto instruction : raw_instructions) {
+        run_test(env, instruction);
+    }
 
-    // --------------------------------------------------
-    // Test: Alternating pattern 0x0F0F
-    if (run_test(0x0F0F, 0x0, 0xF, 0x0, 0xF, instruction, opcode, rs, rt, rd))
-        return 1;
-
-    // --------------------------------------------------
-    // Test: Increasing fields 0x4567
-    if (run_test(0x4567, 0x4, 0x5, 0x6, 0x7, instruction, opcode, rs, rt, rd))
-        return 1;
-
-    // --------------------------------------------------
-    // Test: Decreasing fields 0x89AB
-    if (run_test(0x89AB, 0x8, 0x9, 0xA, 0xB, instruction, opcode, rs, rt, rd))
-        return 1;
-
-    // --------------------------------------------------
-    // Test: High-value random 0xABCD
-    if (run_test(0xABCD, 0xA, 0xB, 0xC, 0xD, instruction, opcode, rs, rt, rd))
-        return 1;
-
-    return 0;
+    return test_result;
 }

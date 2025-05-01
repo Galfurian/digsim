@@ -4,108 +4,113 @@
 
 #include "cpu/alu.hpp"
 
-void toggle_clock(digsim::signal_t<bool> &clk)
-{
-    clk.set(false);
-    digsim::scheduler.run(); // Falling edge
-    clk.set(true);
-    digsim::scheduler.run(); // Rising edge
-}
+static int test_result = 0;
 
-int run_alu_test(
+struct alu_env_t {
+    digsim::signal_t<bool> clk{"clk", 0, 0};
+    digsim::signal_t<bool> reset{"reset", 0, 0};
+    digsim::signal_t<bs_data_t> a{"a", 0, 0};
+    digsim::signal_t<bs_data_t> b{"b", 0, 0};
+    digsim::signal_t<bs_opcode_t> op{"op", 0, 0};
+    digsim::signal_t<bs_phase_t> phase{"phase", static_cast<uint16_t>(phase_t::EXECUTE), 0};
+    digsim::signal_t<bs_data_t> out{"out", 0, 0};
+    digsim::signal_t<bs_data_t> rem{"rem", 0, 0};
+    digsim::signal_t<bs_status_t> status{"status", 0, 0};
+    alu_t alu{"alu"};
+
+    alu_env_t()
+    {
+        alu.clk(clk);
+        alu.reset(reset);
+        alu.a(a);
+        alu.b(b);
+        alu.op(op);
+        alu.phase(phase);
+        alu.out(out);
+        alu.remainder(rem);
+        alu.status(status);
+    }
+
+    void toggle_clock()
+    {
+        clk.set(false);
+        digsim::scheduler.run(); // Falling edge
+        clk.set(true);
+        digsim::scheduler.run(); // Rising edge
+    }
+};
+
+void run_alu_test(
+    alu_env_t &env,
     const std::string &label,
-    digsim::signal_t<bs_data_t> &a,
-    digsim::signal_t<bs_data_t> &b,
-    digsim::signal_t<bs_opcode_t> &op,
-    digsim::signal_t<bs_data_t> &out,
-    digsim::signal_t<bs_data_t> &remainder,
-    digsim::signal_t<bs_status_t> &status,
-    digsim::signal_t<bool> &clk,
     bs_data_t a_val,
     bs_data_t b_val,
-    opcode_t op_val,
+    bs_opcode_t opcode,
     bs_data_t expected_out,
     bs_data_t expected_rem      = 0,
     bs_status_t expected_status = 0)
 {
-    a.set(a_val);
-    b.set(b_val);
-    op.set(static_cast<unsigned long>(op_val));
-    toggle_clock(clk);
+    env.a.set(a_val);
+    env.b.set(b_val);
+    env.op.set(opcode);
+    env.toggle_clock();
 
-    if (out.get() != expected_out) {
+    if (env.out.get() != expected_out) {
         digsim::error(
-            "ALU Test", "{}: out mismatch (got 0x{:X}, expected 0x{:X})", label, out.get().to_ulong(),
+            "ALU Test", "{}: out mismatch (got 0x{:X}, expected 0x{:X})", label, env.out.get().to_ulong(),
             expected_out.to_ulong());
-        return 1;
+        test_result = 1;
     }
-    if (remainder.get() != expected_rem) {
+    if (env.rem.get() != expected_rem) {
         digsim::error(
-            "ALU Test", "{}: remainder mismatch (got 0x{:X}, expected 0x{:X})", label, remainder.get().to_ulong(),
+            "ALU Test", "{}: rem mismatch (got 0x{:X}, expected 0x{:X})", label, env.rem.get().to_ulong(),
             expected_rem.to_ulong());
-        return 1;
+        test_result = 1;
     }
-    if (status.get() != expected_status) {
+    if (env.status.get() != expected_status) {
         digsim::error(
-            "ALU Test", "{}: status mismatch (got 0x{:X}, expected 0x{:X})", label, status.get().to_ulong(),
+            "ALU Test", "{}: status mismatch (got 0x{:X}, expected 0x{:X})", label, env.status.get().to_ulong(),
             expected_status.to_ulong());
-        return 1;
+        test_result = 1;
     }
-    return 0;
 }
 
 int main()
 {
     digsim::logger.set_level(digsim::log_level_t::debug);
+    alu_env_t env;
 
-    digsim::signal_t<bool> clk("clk", 0, 0);
-    digsim::signal_t<bool> reset("reset", 0, 0);
-    digsim::signal_t<bs_data_t> a("a", 0, 0);
-    digsim::signal_t<bs_data_t> b("b", 0, 0);
-    digsim::signal_t<bs_opcode_t> op("op", 0, 0);
-    digsim::signal_t<bs_phase_t> phase("phase", static_cast<uint16_t>(phase_t::EXECUTE), 0);
-    digsim::signal_t<bs_data_t> out("out", 0, 0);
-    digsim::signal_t<bs_data_t> remainder("remainder", 0, 0);
-    digsim::signal_t<bs_status_t> status("status", 0, 0);
-
-    // Create the ALU.
-    alu_t alu0("alu0");
-    alu0.clk(clk);
-    alu0.reset(reset);
-    alu0.a(a);
-    alu0.b(b);
-    alu0.op(op);
-    alu0.phase(phase);
-    alu0.out(out);
-    alu0.remainder(remainder);
-    alu0.status(status);
-
-    // Logic operations
-    run_alu_test("AND", a, b, op, out, remainder, status, clk, 0b1100, 0b1010, opcode_t::ALU_AND, 0b1000);
-    run_alu_test("OR", a, b, op, out, remainder, status, clk, 0b1100, 0b1010, opcode_t::ALU_OR, 0b1110);
-    run_alu_test("XOR", a, b, op, out, remainder, status, clk, 0b1100, 0b1010, opcode_t::ALU_XOR, 0b0110);
-    run_alu_test("NOT", a, b, op, out, remainder, status, clk, 0b1100, 0, opcode_t::ALU_NOT, ~bs_data_t(0b1100));
+    // Logic
+    run_alu_test(env, "AND", 0xC, 0xA, ALU_AND, 0x8);
+    run_alu_test(env, "OR", 0xC, 0xA, ALU_OR, 0xE);
+    run_alu_test(env, "XOR", 0xC, 0xA, ALU_XOR, 0x6);
+    run_alu_test(env, "NOT", 0xC, 0x0, ALU_NOT, ~bs_data_t(0xC));
 
     // Arithmetic
-    run_alu_test("ADD", a, b, op, out, remainder, status, clk, 6, 3, opcode_t::ALU_ADD, 9);
-    run_alu_test("SUB", a, b, op, out, remainder, status, clk, 6, 3, opcode_t::ALU_SUB, 3);
-    run_alu_test(
-        "SUB (underflow)", a, b, op, out, remainder, status, clk, 3, 6, opcode_t::ALU_SUB, 0xFFFD, 0,
-        alu_t::FLAG_OVERFLOW);
-    run_alu_test("MUL", a, b, op, out, remainder, status, clk, 3, 3, opcode_t::ALU_MUL, 9);
-    run_alu_test("DIV", a, b, op, out, remainder, status, clk, 7, 3, opcode_t::ALU_DIV, 2, 1);
-    run_alu_test(
-        "DIV by 0", a, b, op, out, remainder, status, clk, 7, 0, opcode_t::ALU_DIV, 0, 0, alu_t::FLAG_DIV_ZERO);
+    run_alu_test(env, "ADD", 6, 3, ALU_ADD, 9);
+    run_alu_test(env, "SUB", 6, 3, ALU_SUB, 3);
+    run_alu_test(env, "SUB (underflow)", 3, 6, ALU_SUB, 0xFFFD, 0, alu_t::FLAG_OVERFLOW);
+    run_alu_test(env, "MUL", 3, 3, ALU_MUL, 9);
+    run_alu_test(env, "MUL (overflow)", 0x1000, 0x1000, ALU_MUL, 0, 0, alu_t::FLAG_OVERFLOW);
+    run_alu_test(env, "ADD (overflow)", 0xFFFF, 0x1, ALU_ADD, 0x0, 0, alu_t::FLAG_CARRY);
+    run_alu_test(env, "DIV", 9, 2, ALU_DIV, 4, 1);
+    run_alu_test(env, "DIV by 0", 7, 0, ALU_DIV, 0, 0, alu_t::FLAG_DIV_ZERO);
 
-    // Shift operations
-    run_alu_test("SHL", a, b, op, out, remainder, status, clk, 0b0001, 2, opcode_t::ALU_SHIFT_LEFT, 0b0100);
-    run_alu_test("SHR", a, b, op, out, remainder, status, clk, 0b1000, 3, opcode_t::ALU_SHIFT_RIGHT, 0b0001);
+    // Shifts
+    run_alu_test(env, "SHL", 0x1, 0x2, SHIFT_LEFT, 0x4);
+    run_alu_test(env, "SHR", 0x8, 0x3, SHIFT_RIGHT, 0x1);
+    run_alu_test(env, "SHL (overflow bitcount)", 0x1, 32, SHIFT_LEFT, 0x0);
+    run_alu_test(env, "SHR (overflow bitcount)", 0x8000, 32, SHIFT_RIGHT, 0x0);
 
     // Comparison
-    run_alu_test("EQ true", a, b, op, out, remainder, status, clk, 0b0101, 0b0101, opcode_t::ALU_EQUAL, 1);
-    run_alu_test("EQ false", a, b, op, out, remainder, status, clk, 0b0011, 0b0110, opcode_t::ALU_EQUAL, 0);
-    run_alu_test("LT true", a, b, op, out, remainder, status, clk, 0b0011, 0b0110, opcode_t::ALU_LT, 1);
-    run_alu_test("LT false", a, b, op, out, remainder, status, clk, 0b1110, 0b0010, opcode_t::ALU_LT, 0);
+    run_alu_test(env, "EQ true", 0x5, 0x5, CMP_EQ, 1);
+    run_alu_test(env, "EQ false", 0x3, 0x6, CMP_EQ, 0);
+    run_alu_test(env, "LT true", 0x3, 0x6, CMP_LT, 1);
+    run_alu_test(env, "LT false", 0xE, 0x2, CMP_LT, 0);
+    run_alu_test(env, "GT true", 0xF, 0x1, CMP_GT, 1);
+    run_alu_test(env, "GT false", 0x1, 0xF, CMP_GT, 0);
+    run_alu_test(env, "NEQ true", 0xAAAA, 0x5555, CMP_NEQ, 1);
+    run_alu_test(env, "NEQ false", 0xDEAD, 0xDEAD, CMP_NEQ, 0);
 
-    return 0;
+    return test_result;
 }

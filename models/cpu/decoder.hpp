@@ -37,42 +37,31 @@ public:
 private:
     void evaluate()
     {
+        // [15:13] opcode
+        // [12:9]  func
+        // [8:5]   rs
+        // [4:1]   rt or imm
+        // [0]     unused (optional flag)
+
         const auto current_phase = static_cast<phase_t>(phase.get().to_ulong());
         if (current_phase != phase_t::DECODE)
             return;
 
-        uint16_t instr = static_cast<uint16_t>(instruction.get().to_ulong());
+        uint16_t raw = static_cast<uint16_t>(instruction.get().to_ulong());
+        uint8_t opcode_val, rs_val, rt_val, rd_val;
 
-        opcode_t op    = static_cast<opcode_t>((instr >> 12) & 0xF);
-        uint16_t rsrc1 = (instr >> 8) & 0xF;
-        uint16_t rsrc2 = (instr >> 4) & 0xF;
-        uint16_t rdest = instr & 0xF;
+        // Decode the instruction.
+        decode_instruction(raw, opcode_val, rs_val, rt_val, rd_val);
 
-        opcode.set(static_cast<uint8_t>(op));
-
-        switch (op) {
-        case opcode_t::STORE:
-            // rs = source data, rd = memory address
-            rs.set(rdest); // r3: memory address
-            rt.set(rsrc1); // r2: data to store
-            rd.set(0);     // not used
-            break;
-        case opcode_t::LOAD:
-            // rs = memory address, rd = destination
-            rs.set(rdest); // r3: address
-            rt.set(0);     // unused
-            rd.set(rsrc1); // r4: destination register
-            break;
-        default:
-            // Default R-type style
-            rs.set(rsrc1);
-            rt.set(rsrc2);
-            rd.set(rdest);
-            break;
-        }
+        // For simplicity, treat all as general-purpose R-type for now
+        opcode.set(opcode_val);
+        rs.set(rs_val);
+        rt.set(rt_val);
+        rd.set(rd_val);
 
         digsim::debug(
-            get_name(), "Decoded instruction 0x{:04X} -> opcode:{:04b}, rs:{:04b}, rt:{:04b}, rd:{:04b}", instr,
-            static_cast<uint16_t>(op), rsrc1, rsrc2, rdest);
+            get_name(),
+            "Decoded instruction 0x{:04X} -> opcode: 0x{:04X} [{:16}], rs: 0x{:04X}, rt: 0x{:04X}, rd: 0x{:04X}", raw,
+            opcode_val, opcode_to_string(opcode_val), rs_val, rt_val, rd_val);
     }
 };
