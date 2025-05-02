@@ -5,6 +5,8 @@
 
 #include "cpu/cpu.hpp"
 
+static int test_result = 0;
+
 void print_registers(cpu_t &cpu)
 {
     std::stringstream ss;
@@ -45,27 +47,27 @@ void run_instruction(digsim::signal_t<bool> &clk)
     }
 }
 
-bool check_reg(cpu_t &cpu, uint8_t reg, uint16_t expected, const std::string &msg)
+void check_reg(cpu_t &cpu, uint8_t reg, uint16_t expected, const std::string &msg)
 {
     uint16_t value = read_register(cpu, reg);
-    if (value != expected) {
-        digsim::error("Test", "FAILED [{:24}]: Expected r{} = 0x{:04X}, got 0x{:04X}", msg, reg, expected, value);
-        return false;
+    if (value == expected) {
+        digsim::info("Test", "OK [{:24}]: r{} = 0x{:04X}", msg, reg, value);
+    } else {
+        digsim::error("Test", "NO [{:24}]: Expected r{} = 0x{:04X}, got 0x{:04X}", msg, reg, expected, value);
+        test_result = 1;
     }
-    digsim::info("Test", "OK     [{:24}]: r{} = 0x{:04X}", msg, reg, value);
-    return true;
 }
 
-bool check_mem(cpu_t &cpu, uint16_t addr, uint16_t expected, const std::string &msg)
+void check_mem(cpu_t &cpu, uint16_t addr, uint16_t expected, const std::string &msg)
 {
     uint16_t value = read_memory(cpu, addr);
-    if (value != expected) {
+    if (value == expected) {
+        digsim::info("Test", "OK [{:24}]: mem[0x{:04X}] = 0x{:04X}", msg, addr, value);
+    } else {
         digsim::error(
-            "Test", "FAILED [{:24}]: Expected mem[0x{:04X}] = 0x{:04X}, got 0x{:04X}", msg, addr, expected, value);
-        return false;
+            "Test", "NO [{:24}]: Expected mem[0x{:04X}] = 0x{:04X}, got 0x{:04X}", msg, addr, expected, value);
+        test_result = 1;
     }
-    digsim::info("Test", "OK     [{:24}]: mem[0x{:04X}] = 0x{:04X}", msg, addr, value);
-    return true;
 }
 
 int main()
@@ -73,12 +75,12 @@ int main()
     digsim::logger.set_level(digsim::log_level_t::info);
 
     std::vector<uint16_t> program = {
-        encode_instruction(opcode_t::ALU_ADD, 1, 2),   // r1 += r2 → 5 + 7 = 12
+        encode_instruction(opcode_t::ALU_ADD, 1, 2),   // r1 += r2 -> 5 + 7 = 12
         encode_instruction(opcode_t::MEM_STORE, 3, 2), // MEM[r2] = r3
         encode_instruction(opcode_t::MEM_LOAD, 3, 4),  // r4 = MEM[r2]
-        encode_instruction(opcode_t::ALU_SUB, 4, 1),   // r4 -= r1 → 7 - 12 = -5
-        encode_instruction(opcode_t::ALU_MUL, 1, 1),   // r1 *= r1 → 12 * 12 = 144
-        encode_instruction(opcode_t::ALU_DIV, 1, 2),   // r1 /= r2 → 144 / 7 = 20
+        encode_instruction(opcode_t::ALU_SUB, 4, 1),   // r4 -= r1 -> 7 - 12 = -5
+        encode_instruction(opcode_t::ALU_MUL, 1, 1),   // r1 *= r1 -> 12 * 12 = 144
+        encode_instruction(opcode_t::ALU_DIV, 1, 2),   // r1 /= r2 -> 144 / 7 = 20
         encode_instruction(opcode_t::SYS_NOP, 0, 0),   // NOP
     };
 
@@ -100,41 +102,39 @@ int main()
     digsim::scheduler.run();
 
     // Initial values
-    set_register(cpu, 0, 0x00); // r0 = 0
     set_register(cpu, 1, 0x05); // r1 = 0
     set_register(cpu, 2, 0x07); // r2 = 7
     set_register(cpu, 3, 0x10); // r3 = 0x10
 
-    bool pass = true;
-
     // ADD
     run_instruction(clk);
-    pass &= check_reg(cpu, 1, 0x0C, "ADD r1 = r1 + r2");
+    check_reg(cpu, 1, 0x0C, "ADD r1 = r1 + r2");
 
     // STORE
     run_instruction(clk);
-    pass &= check_mem(cpu, 0x10, 0x07, "STORE MEM[r2] = r3");
+    check_mem(cpu, 0x10, 0x07, "STORE MEM[r2] = r3");
 
     // LOAD
     run_instruction(clk);
-    pass &= check_reg(cpu, 0x04, 0x07, "LOAD r4 = MEM[r2]");
+    check_reg(cpu, 0x04, 0x07, "LOAD r4 = MEM[r2]");
 
     // SUB
     run_instruction(clk);
-    pass &= check_reg(cpu, 4, 0xFFFB, "SUB r4 = r4 - r1");
+    check_reg(cpu, 4, 0xFFFB, "SUB r4 = r4 - r1");
 
     // MUL
     run_instruction(clk);
-    pass &= check_reg(cpu, 1, 0x0090, "MUL r1 = r1 * r1");
+    check_reg(cpu, 1, 0x0090, "MUL r1 = r1 * r1");
 
     // DIV
     run_instruction(clk);
-    pass &= check_reg(cpu, 1, 0x0014, "DIV r1 = r1 / r2");
+    check_reg(cpu, 1, 0x0014, "DIV r1 = r1 / r2");
 
     // NOP
     run_instruction(clk);
 
-    if (pass)
+    if (test_result == 0) {
         digsim::info("Test", "All tests passed.");
-    return pass ? 0 : 1;
+    }
+    return test_result;
 }

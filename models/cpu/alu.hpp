@@ -16,12 +16,12 @@
 class alu_t : public digsim::module_t
 {
 public:
-    digsim::input_t<bool> clk;         ///< Clock signal.
-    digsim::input_t<bool> reset;       ///< Reset signal.
-    digsim::input_t<bs_data_t> a;      ///< First operand.
-    digsim::input_t<bs_data_t> b;      ///< Second operand.
-    digsim::input_t<bs_opcode_t> op;   ///< Operation code.
-    digsim::input_t<bs_phase_t> phase; ///< Current pipeline phase.
+    digsim::input_t<bool> clk;           ///< Clock signal.
+    digsim::input_t<bool> reset;         ///< Reset signal.
+    digsim::input_t<bs_data_t> a;        ///< First operand.
+    digsim::input_t<bs_data_t> b;        ///< Second operand.
+    digsim::input_t<bs_opcode_t> opcode; ///< Operation code.
+    digsim::input_t<bs_phase_t> phase;   ///< Current pipeline phase.
 
     digsim::output_t<bs_data_t> out;       ///< Output result.
     digsim::output_t<bs_data_t> remainder; ///< Remainder of division.
@@ -33,7 +33,7 @@ public:
         , reset("reset", this)
         , a("a", this)
         , b("b", this)
-        , op("op", this)
+        , opcode("opcode", this)
         , phase("phase", this)
         , out("out", this)
         , remainder("remainder", this)
@@ -45,10 +45,12 @@ public:
 
     /// @brief Status flags.
     enum status_flag_t {
-        FLAG_CARRY    = (1 << 0), ///< Carry flag.
-        FLAG_BORROW   = (1 << 1), ///< Borrow flag.
-        FLAG_DIV_ZERO = (1 << 2), ///< Zero division flag.
-        FLAG_OVERFLOW = (1 << 3), ///< Overflow flag.
+        FLAG_CMP_FALSE = (1 << 0), ///< The comparison result is false.
+        FLAG_CMP_TRUE  = (1 << 1), ///< The comparison result is true.
+        FLAG_CARRY     = (1 << 2), ///< The operation resulted in a carry.
+        FLAG_BORROW    = (1 << 3), ///< The operation resulted in a borrow.
+        FLAG_DIV_ZERO  = (1 << 4), ///< The division by zero occurred.
+        FLAG_OVERFLOW  = (1 << 5), ///< The operation resulted in an overflow.
     };
 
 private:
@@ -75,7 +77,7 @@ private:
 
         const auto a_val  = a.get();
         const auto b_val  = b.get();
-        const auto op_val = op.get();
+        const auto op_val = opcode.get();
         const auto a_u    = a_val.to_ulong();
         const auto b_u    = b_val.to_ulong();
         const auto op_u   = op_val.to_ulong();
@@ -143,18 +145,22 @@ private:
             result = (b_u >= ADDRESS_WIDTH) ? 0 : (a_u >> b_u);
             break;
 
-        // Comparison
+            // Comparison
         case opcode_t::CMP_EQ:
-            result = (a_u == b_u);
-            break;
-        case opcode_t::CMP_LT:
-            result = (a_u < b_u);
-            break;
-        case opcode_t::CMP_GT:
-            result = (a_u > b_u);
+            flags  = (a_u == b_u) ? FLAG_CMP_TRUE : FLAG_CMP_FALSE;
+            result = (flags == FLAG_CMP_TRUE);
             break;
         case opcode_t::CMP_NEQ:
-            result = (a_u != b_u);
+            flags  = (a_u != b_u) ? FLAG_CMP_TRUE : FLAG_CMP_FALSE;
+            result = (flags == FLAG_CMP_TRUE);
+            break;
+        case opcode_t::CMP_LT:
+            flags  = (a_u < b_u) ? FLAG_CMP_TRUE : FLAG_CMP_FALSE;
+            result = (flags == FLAG_CMP_TRUE);
+            break;
+        case opcode_t::CMP_GT:
+            flags  = (a_u > b_u) ? FLAG_CMP_TRUE : FLAG_CMP_FALSE;
+            result = (flags == FLAG_CMP_TRUE);
             break;
 
         // MEM passthrough ops (if you still want to support them here)
@@ -175,7 +181,7 @@ private:
         status.set(flags);
 
         digsim::debug(
-            get_name(), "a: {}, b: {}, op: {} ({:15}) -> out: {}, remainder: {}, status: {}", a.get(), b.get(),
-            op.get(), opcode_to_string(static_cast<opcode_t>(op_u)), out.get(), out.get(), status.get());
+            get_name(), "a: {}, b: {}, opcode: {} ({:15}) -> out: {}, remainder: {}, status: {}", a.get(), b.get(),
+            opcode.get(), opcode_to_string(static_cast<opcode_t>(op_u)), out.get(), out.get(), status.get());
     }
 };

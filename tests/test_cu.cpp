@@ -6,135 +6,141 @@
 #include <tuple>
 #include <vector>
 
-/// @brief Apply input stimulus for the control unit test.
-void apply_inputs(
-    opcode_t opcode_val,
-    digsim::signal_t<bs_opcode_t> &opcode,
-    digsim::signal_t<bs_phase_t> &phase,
-    phase_t phase_val)
-{
-    opcode.set(static_cast<uint8_t>(opcode_val)); // now using flattened opcode
-    phase.set(static_cast<uint8_t>(phase_val));
-}
+int test_result = 0;
 
-/// @brief Execute simulation.
-void execute_cycle() { digsim::scheduler.run(); }
+struct cu_env_t {
+    digsim::signal_t<bs_opcode_t> opcode{"opcode", 0, 0};
+    digsim::signal_t<bs_phase_t> phase{"phase", static_cast<uint16_t>(phase_t::EXECUTE), 0};
+    digsim::signal_t<bool> reg_write{"reg_write", 0, 0};
+    digsim::signal_t<bool> mem_write{"mem_write", 0, 0};
+    digsim::signal_t<bool> mem_to_reg{"mem_to_reg", 0, 0};
+    digsim::signal_t<bool> rt_as_dest{"rt_as_dest", 0, 0};
+    digsim::signal_t<bool> jump_enable{"jump_enable", 0, 0};
+    digsim::signal_t<bool> branch_enable{"branch_enable", 0, 0};
 
-/// @brief Verify expected control unit outputs.
-int verify_outputs(
-    opcode_t opcode_val,
-    bool expected_reg_write,
-    bool expected_mem_write,
-    bool expected_mem_to_reg,
-    bool expected_rt_as_dest,
-    digsim::signal_t<bs_opcode_t> &alu_op,
-    digsim::signal_t<bool> &reg_write,
-    digsim::signal_t<bool> &mem_write,
-    digsim::signal_t<bool> &mem_to_reg,
-    digsim::signal_t<bool> &rt_as_dest)
-{
-    int fail = 0;
+    control_unit_t cu{"cu"};
 
-    if (alu_op.get().to_ulong() != static_cast<uint8_t>(opcode_val)) {
-        digsim::error(
-            "Test", "ALU opcode mismatch: expected 0x{:02X}, got 0x{:02X}", static_cast<uint8_t>(opcode_val),
-            alu_op.get().to_ulong());
-        fail = 1;
+    cu_env_t()
+    {
+        cu.opcode(opcode);
+        cu.phase(phase);
+        cu.reg_write(reg_write);
+        cu.mem_write(mem_write);
+        cu.mem_to_reg(mem_to_reg);
+        cu.rt_as_dest(rt_as_dest);
+        cu.jump_enable(jump_enable);
+        cu.branch_enable(branch_enable);
     }
-    if (reg_write.get() != expected_reg_write) {
-        digsim::error("Test", "reg_write mismatch: expected {}, got {}", expected_reg_write, reg_write.get());
-        fail = 1;
-    }
-    if (mem_write.get() != expected_mem_write) {
-        digsim::error("Test", "mem_write mismatch: expected {}, got {}", expected_mem_write, mem_write.get());
-        fail = 1;
-    }
-    if (mem_to_reg.get() != expected_mem_to_reg) {
-        digsim::error("Test", "mem_to_reg mismatch: expected {}, got {}", expected_mem_to_reg, mem_to_reg.get());
-        fail = 1;
-    }
-    if (rt_as_dest.get() != expected_rt_as_dest) {
-        digsim::error("Test", "rt_as_dest mismatch: expected {}, got {}", expected_rt_as_dest, rt_as_dest.get());
-        fail = 1;
-    }
-    return fail;
-}
 
-/// @brief Run a control unit test with given inputs and expectations.
-int run_test(
-    opcode_t opcode_val,
-    bool expected_reg_write,
-    bool expected_mem_write,
-    bool expected_mem_to_reg,
-    bool expected_rt_as_dest,
-    digsim::signal_t<bs_opcode_t> &opcode,
-    digsim::signal_t<bs_opcode_t> &alu_op,
-    digsim::signal_t<bs_phase_t> &phase,
-    digsim::signal_t<bool> &reg_write,
-    digsim::signal_t<bool> &mem_write,
-    digsim::signal_t<bool> &mem_to_reg,
-    digsim::signal_t<bool> &rt_as_dest)
-{
-    apply_inputs(opcode_val, opcode, phase, phase_t::FETCH);
-    execute_cycle();
-    apply_inputs(opcode_val, opcode, phase, phase_t::EXECUTE);
-    execute_cycle();
-    apply_inputs(opcode_val, opcode, phase, phase_t::WRITEBACK);
-    execute_cycle();
+    void apply_inputs(opcode_t opcode_val, phase_t phase_val)
+    {
+        opcode.set(static_cast<uint8_t>(opcode_val)); // now using flattened opcode
+        phase.set(static_cast<uint8_t>(phase_val));
+    }
 
-    return verify_outputs(
-        opcode_val, expected_reg_write, expected_mem_write, expected_mem_to_reg, expected_rt_as_dest, alu_op, reg_write,
-        mem_write, mem_to_reg, rt_as_dest);
-}
+    void execute_cycle() { digsim::scheduler.run(); }
+
+    void verify_outputs(
+        bool expected_reg_write,
+        bool expected_mem_write,
+        bool expected_mem_to_reg,
+        bool expected_rt_as_dest,
+        bool expected_jump_enable,
+        bool expected_branch_enable)
+    {
+        if (reg_write.get() != expected_reg_write) {
+            digsim::error("Test", "reg_write mismatch: expected {}, got {}", expected_reg_write, reg_write.get());
+            test_result = 1;
+        }
+        if (mem_write.get() != expected_mem_write) {
+            digsim::error("Test", "mem_write mismatch: expected {}, got {}", expected_mem_write, mem_write.get());
+            test_result = 1;
+        }
+        if (mem_to_reg.get() != expected_mem_to_reg) {
+            digsim::error("Test", "mem_to_reg mismatch: expected {}, got {}", expected_mem_to_reg, mem_to_reg.get());
+            test_result = 1;
+        }
+        if (rt_as_dest.get() != expected_rt_as_dest) {
+            digsim::error("Test", "rt_as_dest mismatch: expected {}, got {}", expected_rt_as_dest, rt_as_dest.get());
+            test_result = 1;
+        }
+        if (jump_enable.get() != expected_jump_enable) {
+            digsim::error("Test", "jump_enable mismatch: expected {}, got {}", expected_jump_enable, jump_enable.get());
+            test_result = 1;
+        }
+        if (branch_enable.get() != expected_branch_enable) {
+            digsim::error(
+                "Test", "branch_enable mismatch: expected {}, got {}", expected_branch_enable, branch_enable.get());
+            test_result = 1;
+        }
+    }
+
+    void run_test(
+        opcode_t opcode_val,
+        bool expected_reg_write,
+        bool expected_mem_write,
+        bool expected_mem_to_reg,
+        bool expected_rt_as_dest,
+        bool expected_jump_enable,
+        bool expected_branch_enable)
+    {
+        apply_inputs(opcode_val, phase_t::FETCH);
+        execute_cycle();
+        apply_inputs(opcode_val, phase_t::EXECUTE);
+        execute_cycle();
+        apply_inputs(opcode_val, phase_t::WRITEBACK);
+        execute_cycle();
+        verify_outputs(
+            expected_reg_write, expected_mem_write, expected_mem_to_reg, expected_rt_as_dest, expected_jump_enable,
+            expected_branch_enable);
+    }
+};
 
 int main()
 {
     digsim::logger.set_level(digsim::log_level_t::debug);
 
-    // Signals
-    digsim::signal_t<bs_opcode_t> opcode("opcode", 0, 0);
-    digsim::signal_t<bs_opcode_t> alu_op("alu_op", 0, 0);
-    digsim::signal_t<bs_phase_t> phase("phase", 0, 0);
-    digsim::signal_t<bool> reg_write("reg_write", false, 0);
-    digsim::signal_t<bool> mem_write("mem_write", false, 0);
-    digsim::signal_t<bool> mem_to_reg("mem_to_reg", false, 0);
-    digsim::signal_t<bool> rt_as_dest("rt_as_dest", false, 0);
-
-    // Instantiate the control unit
-    control_unit_t cu0("cu0");
-    cu0.opcode(opcode);
-    cu0.phase(phase);
-    cu0.alu_op(alu_op);
-    cu0.reg_write(reg_write);
-    cu0.mem_write(mem_write);
-    cu0.mem_to_reg(mem_to_reg);
-    cu0.rt_as_dest(rt_as_dest);
+    cu_env_t env;
 
     digsim::scheduler.initialize();
 
-    // List of test cases: (opcode_t, reg_write, mem_write, mem_to_reg)
-    std::vector<std::tuple<opcode_t, bool, bool, bool, bool>> test_cases = {
-        {opcode_t::ALU_ADD, true, false, false, false},   {opcode_t::ALU_SUB, true, false, false, false},
-        {opcode_t::ALU_MUL, true, false, false, false},   {opcode_t::SHIFT_LEFT, true, false, false, false},
-        {opcode_t::CMP_EQ, true, false, false, false},    {opcode_t::MEM_LOAD, true, false, true, true},
-        {opcode_t::MEM_STORE, false, true, false, false}, {opcode_t::SYS_NOP, false, false, false, false},
+    // List of test cases: (opcode_t, reg_write, mem_write, mem_to_reg, rt_as_dest, jump_enable, branch_enable)
+    std::vector<std::tuple<opcode_t, bool, bool, bool, bool, bool, bool>> test_cases = {
+        {opcode_t::ALU_ADD, 1, 0, 0, 0, 0, 0},      //
+        {opcode_t::ALU_SUB, 1, 0, 0, 0, 0, 0},      //
+        {opcode_t::ALU_AND, 1, 0, 0, 0, 0, 0},      //
+        {opcode_t::ALU_OR, 1, 0, 0, 0, 0, 0},       //
+        {opcode_t::ALU_XOR, 1, 0, 0, 0, 0, 0},      //
+        {opcode_t::ALU_NOT, 1, 0, 0, 0, 0, 0},      //
+        {opcode_t::ALU_MUL, 1, 0, 0, 0, 0, 0},      //
+        {opcode_t::ALU_DIV, 1, 0, 0, 0, 0, 0},      //
+        {opcode_t::SHIFT_LEFT, 1, 0, 0, 0, 0, 0},   //
+        {opcode_t::SHIFT_RIGHT, 1, 0, 0, 0, 0, 0},  //
+        {opcode_t::SHIFT_ARITH, 1, 0, 0, 0, 0, 0},  //
+        {opcode_t::SHIFT_ROTATE, 1, 0, 0, 0, 0, 0}, //
+        {opcode_t::CMP_EQ, 1, 0, 0, 0, 0, 0},       //
+        {opcode_t::CMP_LT, 1, 0, 0, 0, 0, 0},       //
+        {opcode_t::CMP_GT, 1, 0, 0, 0, 0, 0},       //
+        {opcode_t::CMP_NEQ, 1, 0, 0, 0, 0, 0},      //
+        {opcode_t::MEM_LOAD, 1, 0, 1, 1, 0, 0},     //
+        {opcode_t::MEM_STORE, 0, 1, 0, 0, 0, 0},    //
+        {opcode_t::MEM_LOADI, 1, 0, 1, 1, 0, 0},    //
+        {opcode_t::MEM_MOVE, 1, 0, 0, 1, 0, 0},     //
+        {opcode_t::BR_JMP, 0, 0, 0, 0, 1, 0},       //
+        {opcode_t::BR_BEQ, 0, 0, 0, 0, 0, 1},       //
+        {opcode_t::BR_BNE, 0, 0, 0, 0, 0, 1},       //
+        {opcode_t::BR_BLT, 0, 0, 0, 0, 0, 1},       //
+        {opcode_t::BR_BGT, 0, 0, 0, 0, 0, 1},       //
+        {opcode_t::SYS_NOP, 0, 0, 0, 0, 0, 0},      //
+        {opcode_t::SYS_HALT, 0, 0, 0, 0, 0, 0},     //
+        {opcode_t::SYS_BREAK, 0, 0, 0, 0, 0, 0},    //
+        {opcode_t::SYS_CALL, 0, 0, 0, 0, 0, 0},     //
+        {opcode_t::RESERVED1, 0, 0, 0, 0, 0, 0},    //
+        {opcode_t::RESERVED2, 0, 0, 0, 0, 0, 0},    //
     };
 
-    for (const auto &[op, rw, mw, mtr, rtd] : test_cases) {
-        if (run_test(op, rw, mw, mtr, rtd, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg, rt_as_dest)) {
-            return 1;
-        }
-    }
-
-    // Test: unknown or illegal opcode
-    uint8_t unknown_opcode = 0x7F; // intentionally invalid
-    phase.set(static_cast<uint8_t>(phase_t::WRITEBACK));
-    opcode.set(unknown_opcode);
-    digsim::scheduler.run();
-
-    if (reg_write.get() || mem_write.get() || mem_to_reg.get()) {
-        digsim::error("Test", "Unknown opcode default FAILED (0x{:02X})", unknown_opcode);
-        return 1;
+    for (const auto &[op, rw, mw, mtr, rtd, je, be] : test_cases) {
+        env.run_test(op, rw, mw, mtr, rtd, je, be);
     }
 
     return 0;

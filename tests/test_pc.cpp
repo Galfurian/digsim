@@ -4,179 +4,166 @@
 
 #include "cpu/program_counter.hpp"
 
-void toggle_clock(digsim::signal_t<bool> &clk)
-{
-    clk.set(false);
-    digsim::scheduler.run(); // Falling edge
-    clk.set(true);
-    digsim::scheduler.run(); // Rising edge
-}
+/// @brief Holds the full environment to test the program counter (PC).
+struct pc_env_t {
+    digsim::signal_t<bool> clk{"clk"};
+    digsim::signal_t<bool> reset{"reset"};
+    digsim::signal_t<bool> load{"load"};
+    digsim::signal_t<bool> jump_enable{"jump_enable"};
+    digsim::signal_t<bool> branch_enable{"branch_enable"};
+    digsim::signal_t<bs_address_t> next_addr{"next_addr"};
+    digsim::signal_t<bs_status_t> alu_status{"alu_status"};
+    digsim::signal_t<bs_opcode_t> opcode{"opcode"};
+    digsim::signal_t<bs_phase_t> phase{"phase"};
+    digsim::signal_t<bs_address_t> addr{"addr"};
 
-void step(digsim::signal_t<bool> &clk, digsim::signal_t<bs_phase_t> &phase)
-{
-    phase.set(static_cast<uint8_t>(phase_t::WRITEBACK));
-    toggle_clock(clk);
-}
+    program_counter_t pc{"pc"};
+
+    pc_env_t()
+    {
+        pc.clk(clk);
+        pc.reset(reset);
+        pc.load(load);
+        pc.jump_enable(jump_enable);
+        pc.branch_enable(branch_enable);
+        pc.next_addr(next_addr);
+        pc.alu_status(alu_status);
+        pc.opcode(opcode);
+        pc.phase(phase);
+        pc.addr(addr);
+        digsim::scheduler.initialize();
+    }
+
+    void toggle_clock()
+    {
+        clk.set(false);
+        digsim::scheduler.run();
+        clk.set(true);
+        digsim::scheduler.run();
+    }
+
+    void step_writeback()
+    {
+        phase.set(static_cast<uint8_t>(phase_t::WRITEBACK));
+        toggle_clock();
+    }
+
+    void reset_pc()
+    {
+        reset.set(true);
+        step_writeback();
+        reset.set(false);
+    }
+
+    void load_address(uint16_t value)
+    {
+        next_addr.set(value);
+        load.set(true);
+        step_writeback();
+        load.set(false);
+    }
+
+    void expect_addr(uint16_t expected, const std::string &label)
+    {
+        if (addr.get().to_ulong() != expected) {
+            digsim::error("Test", "{} FAILED: expected 0x{:04X}, got 0x{:04X}", label, expected, addr.get().to_ulong());
+            std::exit(1);
+        }
+    }
+};
 
 int main()
 {
     digsim::logger.set_level(digsim::log_level_t::debug);
 
-    // Signals
-    digsim::signal_t<bool> clk("clk", 0, 0);
-    digsim::signal_t<bool> reset("reset", 0, 0);
-    digsim::signal_t<bool> load("load", 0, 0);
-    digsim::signal_t<bs_address_t> next_addr("next_addr", 0, 0);
-    digsim::signal_t<bs_phase_t> phase("phase", 0, 0);
-    digsim::signal_t<bs_address_t> addr("addr", 0, 0);
+    pc_env_t env;
 
-    // Instantiate the Program Counter
-    program_counter_t pc0("pc0");
-    pc0.clk(clk);
-    pc0.reset(reset);
-    pc0.load(load);
-    pc0.next_addr(next_addr);
-    pc0.phase(phase);
-    pc0.addr(addr);
+    // === RESET
+    env.reset_pc();
+    env.expect_addr(0x0000, "Reset");
 
-    digsim::scheduler.initialize();
+    // === LOAD + HOLD
+    env.load_address(0x1234);
+    env.expect_addr(0x1234, "Load immediate");
 
-    // ============================================================
-    // Test: Reset
-    reset.set(true);
-    step(clk, phase);
-    reset.set(false);
+    env.step_writeback();
+    env.expect_addr(0x1235, "Increment after load");
 
-    if (addr.get().to_ulong() != 0) {
-        digsim::error("Test", "Reset FAILED: Expected 0x0000, got 0x{:04X}", addr.get().to_ulong());
+    env.step_writeback();
+    env.expect_addr(0x1236, "Increment again");
+
+    // === RESET after increment
+    env.reset_pc();
+    env.expect_addr(0x0000, "Reset after increment");
+
+    // === MULTIPLE LOADS
+    env.load_address(0xAAAA);
+    env.load_address(0x5555); // load again immediately
+    env.expect_addr(0x5555, "Multiple loads");
+
+    // === LOAD disabled — should increment instead
+    env.next_addr.set(0xDEAD);
+    env.load.set(false);
+    env.step_writeback();
+    env.expect_addr(0x5556, "Disabled load -> increment");
+
+    // === Reset with active load — reset wins
+    env.next_addr.set(0xBEEF);
+    env.load.set(true);
+    env.reset.set(true);
+    env.step_writeback();
+    env.load.set(false);
+    env.reset.set(false);
+    env.expect_addr(0x0000, "Reset overrides load");
+
+    // === Max wraparound
+    env.load_address(0xFFFF);
+    env.step_writeback();
+    env.expect_addr(0x0000, "Wraparound after 0xFFFF");
+
+    // === No-op rising clocks still increment
+    env.step_writeback();
+    env.expect_addr(0x0001, "Increment after wrap");
+    env.step_writeback();
+    env.expect_addr(0x0002, "Increment again");
+
+    // === Glitch test: no rising edge, just scheduler run
+    env.next_addr.set(0x1234);
+    env.load.set(true);
+    digsim::scheduler.run(); // no posedge → should NOT latch
+    if (env.addr.get().to_ulong() == 0x1234) {
+        digsim::error("Test", "Glitch: Load latched without rising edge!");
         return 1;
     }
 
-    // ============================================================
-    // Test: Load Specific Address
-    next_addr.set(0x1234);
-    load.set(true);
-    step(clk, phase);
-    load.set(false);
+    env.step_writeback(); // now apply load cleanly
+    env.expect_addr(0x1234, "Proper load after glitch");
+    env.load.set(false);
 
-    if (addr.get().to_ulong() != 0x1234) {
-        digsim::error("Test", "Load FAILED: Expected 0x1234, got 0x{:04X}", addr.get().to_ulong());
-        return 1;
-    }
+    // === Branch test: only if FLAG_CMP_TRUE and enabled
+    env.reset_pc();
+    env.alu_status.set(static_cast<uint8_t>(alu_t::FLAG_CMP_TRUE));
+    env.opcode.set(static_cast<uint8_t>(opcode_t::BR_BEQ));
+    env.branch_enable.set(true);
+    env.next_addr.set(0x2000);
+    env.step_writeback();
+    env.branch_enable.set(false);
+    env.expect_addr(0x2000, "Branch taken (CMP_TRUE)");
 
-    // ============================================================
-    // Test: Increment from Loaded Value
-    step(clk, phase); // Increment
-    if (addr.get().to_ulong() != 0x1235) {
-        digsim::error("Test", "Increment FAILED: Expected 0x1235, got 0x{:04X}", addr.get().to_ulong());
-        return 1;
-    }
+    // === Branch fail: CMP_FALSE → should increment instead
+    env.alu_status.set(static_cast<uint8_t>(alu_t::FLAG_CMP_FALSE));
+    env.next_addr.set(0xDEAD);
+    env.step_writeback();
+    env.expect_addr(0x2001, "Branch NOT taken (CMP_FALSE)");
 
-    step(clk, phase); // Increment again
-    if (addr.get().to_ulong() != 0x1236) {
-        digsim::error("Test", "Increment FAILED: Expected 0x1236, got 0x{:04X}", addr.get().to_ulong());
-        return 1;
-    }
+    // === Jump test: unconditional
+    env.jump_enable.set(true);
+    env.branch_enable.set(false);
+    env.next_addr.set(0x9999);
+    env.step_writeback();
+    env.jump_enable.set(false);
+    env.expect_addr(0x9999, "Jump taken");
 
-    // ============================================================
-    // Test: Reset After Increment
-    reset.set(true);
-    step(clk, phase);
-    reset.set(false);
-
-    if (addr.get().to_ulong() != 0x0000) {
-        digsim::error("Test", "Reset FAILED after increment: Expected 0x0000, got 0x{:04X}", addr.get().to_ulong());
-        return 1;
-    }
-
-    // ============================================================
-    // Test: Multiple Loads
-    next_addr.set(0xAAAA);
-    load.set(true);
-    step(clk, phase);
-
-    next_addr.set(0x5555);
-    step(clk, phase);
-    load.set(false);
-
-    if (addr.get().to_ulong() != 0x5555) {
-        digsim::error("Test", "Multiple Load FAILED: Expected 0x5555, got 0x{:04X}", addr.get().to_ulong());
-        return 1;
-    }
-
-    // ============================================================
-    // Test: Load Disabled Should Not Affect
-    next_addr.set(0xDEAD);
-    load.set(false);
-    step(clk, phase);
-
-    if (addr.get().to_ulong() != 0x5556) {
-        digsim::error(
-            "Test", "Load Inactive FAILED: Expected 0x5556 (incremented), got 0x{:04X}", addr.get().to_ulong());
-        return 1;
-    }
-
-    // ============================================================
-    // Test: Reset While Load Active
-    next_addr.set(0xBEEF);
-    load.set(true);
-    reset.set(true);
-    step(clk, phase); // Reset should override load
-    load.set(false);
-    reset.set(false);
-
-    if (addr.get().to_ulong() != 0x0000) {
-        digsim::error("Test", "Reset While Load FAILED: Expected 0x0000, got 0x{:04X}", addr.get().to_ulong());
-        return 1;
-    }
-
-    // ============================================================
-    // Test: Max value wraparound
-    next_addr.set(0xFFFF);
-    load.set(true);
-    step(clk, phase);
-    load.set(false);
-
-    step(clk, phase); // Should wrap to 0x0000
-    if (addr.get().to_ulong() != 0x0000) {
-        digsim::error("Test", "Wraparound FAILED: Expected 0x0000, got 0x{:04X}", addr.get().to_ulong());
-        return 1;
-    }
-
-    // ============================================================
-    // Test: Multiple rising clocks with no state change
-    bs_address_t prev = addr.get();
-    step(clk, phase);
-    step(clk, phase);
-
-    if (addr.get() != bs_address_t(prev.to_ulong() + 2)) {
-        digsim::error(
-            "Test", "Idle Increment FAILED: Expected 0x{:04X}, got 0x{:04X}", prev.to_ulong() + 2,
-            addr.get().to_ulong());
-        return 1;
-    }
-
-    // ============================================================
-    // Test: Mid-cycle Load Glitch.
-    reset.set(false);
-    load.set(false);
-    next_addr.set(0x1234);
-    step(clk, phase); // normal increment
-
-    // Simulate glitch: set load after posedge but before another clock
-    load.set(true);
-    digsim::scheduler.run(); // No clock edge
-
-    if (addr.get().to_ulong() == 0x1234) {
-        digsim::error("Test", "Glitch: Load occurred without posedge!");
-        return 1;
-    }
-
-    step(clk, phase); // Apply load properly
-    if (addr.get().to_ulong() != 0x1234) {
-        digsim::error("Test", "Load FAILED after being stable before rising edge");
-        return 1;
-    }
-
+    digsim::info("Test", "All program counter tests passed successfully.");
     return 0;
 }

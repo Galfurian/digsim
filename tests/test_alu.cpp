@@ -11,7 +11,7 @@ struct alu_env_t {
     digsim::signal_t<bool> reset{"reset", 0, 0};
     digsim::signal_t<bs_data_t> a{"a", 0, 0};
     digsim::signal_t<bs_data_t> b{"b", 0, 0};
-    digsim::signal_t<bs_opcode_t> op{"op", 0, 0};
+    digsim::signal_t<bs_opcode_t> opcode{"opcode", 0, 0};
     digsim::signal_t<bs_phase_t> phase{"phase", static_cast<uint16_t>(phase_t::EXECUTE), 0};
     digsim::signal_t<bs_data_t> out{"out", 0, 0};
     digsim::signal_t<bs_data_t> rem{"rem", 0, 0};
@@ -24,7 +24,7 @@ struct alu_env_t {
         alu.reset(reset);
         alu.a(a);
         alu.b(b);
-        alu.op(op);
+        alu.opcode(opcode);
         alu.phase(phase);
         alu.out(out);
         alu.remainder(rem);
@@ -52,7 +52,7 @@ void run_alu_test(
 {
     env.a.set(a_val);
     env.b.set(b_val);
-    env.op.set(opcode);
+    env.opcode.set(opcode);
     env.toggle_clock();
 
     if (env.out.get() != expected_out) {
@@ -103,14 +103,14 @@ int main()
     run_alu_test(env, "SHR (overflow bitcount)", 0x8000, 32, SHIFT_RIGHT, 0x0);
 
     // Comparison
-    run_alu_test(env, "EQ true", 0x5, 0x5, CMP_EQ, 1);
-    run_alu_test(env, "EQ false", 0x3, 0x6, CMP_EQ, 0);
-    run_alu_test(env, "LT true", 0x3, 0x6, CMP_LT, 1);
-    run_alu_test(env, "LT false", 0xE, 0x2, CMP_LT, 0);
-    run_alu_test(env, "GT true", 0xF, 0x1, CMP_GT, 1);
-    run_alu_test(env, "GT false", 0x1, 0xF, CMP_GT, 0);
-    run_alu_test(env, "NEQ true", 0xAAAA, 0x5555, CMP_NEQ, 1);
-    run_alu_test(env, "NEQ false", 0xDEAD, 0xDEAD, CMP_NEQ, 0);
+    run_alu_test(env, "EQ true", 0x5, 0x5, CMP_EQ, 1, 0, alu_t::FLAG_CMP_TRUE);
+    run_alu_test(env, "EQ false", 0x3, 0x6, CMP_EQ, 0, 0, alu_t::FLAG_CMP_FALSE);
+    run_alu_test(env, "LT true", 0x3, 0x6, CMP_LT, 1, 0, alu_t::FLAG_CMP_TRUE);
+    run_alu_test(env, "LT false", 0xE, 0x2, CMP_LT, 0, 0, alu_t::FLAG_CMP_FALSE);
+    run_alu_test(env, "GT true", 0xF, 0x1, CMP_GT, 1, 0, alu_t::FLAG_CMP_TRUE);
+    run_alu_test(env, "GT false", 0x1, 0xF, CMP_GT, 0, 0, alu_t::FLAG_CMP_FALSE);
+    run_alu_test(env, "NEQ true", 0xAAAA, 0x5555, CMP_NEQ, 1, 0, alu_t::FLAG_CMP_TRUE);
+    run_alu_test(env, "NEQ false", 0xDEAD, 0xDEAD, CMP_NEQ, 0, 0, alu_t::FLAG_CMP_FALSE);
 
     return test_result;
 }

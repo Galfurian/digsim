@@ -53,11 +53,10 @@ public:
         , phase_fsm("phase_fsm")
         , program_counter_to_rom("program_counter_to_rom")
         , rom_to_decoder("rom_to_decoder")
-        , decoder_to_control_opcode("decoder_to_control_opcode")
+        , decoder_opcode("decoder_opcode")
         , decoder_rs("decoder_rs")
         , decoder_rt("decoder_rt")
         , decoder_flag("decoder_flag")
-        , control_to_aluop("control_to_aluop")
         , control_phase("control_phase")
         , control_to_regwrite("control_to_regwrite")
         , control_to_memwrite("control_to_memwrite")
@@ -71,15 +70,20 @@ public:
         , multiplexer_out("multiplexer_out")
         , reg_write_mux_out("reg_write_mux_out")
         , control_select_rt_as_dest("control_select_rt_as_dest")
+        , control_jump_enable("control_jump_enable")
+        , control_branch_enable("control_branch_enable")
         , pc_load("pc_load")
-        , pc_next_addr("pc_next_addr")
     {
         // === Program Counter ===
         pc.set_parent(this);
         pc.clk(clk);
         pc.reset(reset);
         pc.load(pc_load);
-        pc.next_addr(pc_next_addr);
+        pc.jump_enable(control_jump_enable);
+        pc.branch_enable(control_branch_enable);
+        pc.alu_status(alu_status);
+        pc.opcode(decoder_opcode);
+        pc.next_addr(alu_out);
         pc.phase(control_phase);
         pc.addr(program_counter_to_rom);
 
@@ -92,7 +96,7 @@ public:
         decoder.set_parent(this);
         decoder.instruction(rom_to_decoder);
         decoder.phase(control_phase);
-        decoder.opcode(decoder_to_control_opcode);
+        decoder.opcode(decoder_opcode);
         decoder.rs(decoder_rs);
         decoder.rt(decoder_rt);
         decoder.flag(decoder_flag);
@@ -105,13 +109,14 @@ public:
 
         // === Control Unit ===
         control.set_parent(this);
-        control.opcode(decoder_to_control_opcode);
-        control.alu_op(control_to_aluop);
+        control.opcode(decoder_opcode);
         control.phase(control_phase);
         control.reg_write(control_to_regwrite);
         control.mem_write(control_to_memwrite);
         control.mem_to_reg(control_to_memtoreg);
         control.rt_as_dest(control_select_rt_as_dest);
+        control.jump_enable(control_jump_enable);
+        control.branch_enable(control_branch_enable);
 
         // === Register File ===
         reg.set_parent(this);
@@ -132,7 +137,7 @@ public:
         alu.reset(reset);
         alu.a(reg_a);
         alu.b(reg_b);
-        alu.op(control_to_aluop);
+        alu.opcode(decoder_opcode);
         alu.out(alu_out);
         alu.phase(control_phase);
         alu.remainder(alu_remainder);
@@ -167,11 +172,10 @@ private:
     // === Internal signals ===
     digsim::signal_t<bs_address_t> program_counter_to_rom;
     digsim::signal_t<bs_instruction_t> rom_to_decoder;
-    digsim::signal_t<bs_opcode_t> decoder_to_control_opcode;
+    digsim::signal_t<bs_opcode_t> decoder_opcode;
     digsim::signal_t<bs_register_t> decoder_rs;
     digsim::signal_t<bs_register_t> decoder_rt;
     digsim::signal_t<bool> decoder_flag;
-    digsim::signal_t<bs_opcode_t> control_to_aluop;
     digsim::signal_t<bs_phase_t> control_phase;
     digsim::signal_t<bool> control_to_regwrite;
     digsim::signal_t<bool> control_to_memwrite;
@@ -185,6 +189,7 @@ private:
     digsim::signal_t<bs_address_t> multiplexer_out;
     digsim::signal_t<bs_register_t> reg_write_mux_out;
     digsim::signal_t<bool> control_select_rt_as_dest;
+    digsim::signal_t<bool> control_jump_enable;
+    digsim::signal_t<bool> control_branch_enable;
     digsim::signal_t<bool> pc_load;
-    digsim::signal_t<bs_address_t> pc_next_addr;
 };

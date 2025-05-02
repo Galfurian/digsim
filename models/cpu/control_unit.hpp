@@ -19,24 +19,27 @@ public:
     digsim::input_t<bs_opcode_t> opcode; ///< Decoded operation code.
     digsim::input_t<bs_phase_t> phase;   ///< Current CPU phase.
 
-    digsim::output_t<bs_opcode_t> alu_op; ///< ALU operation code.
     digsim::output_t<bool> reg_write;     ///< Register file write enable.
     digsim::output_t<bool> mem_write;     ///< Memory write enable.
     digsim::output_t<bool> mem_to_reg;    ///< Write-back select: memory or ALU.
     digsim::output_t<bool> rt_as_dest;    ///< Register file write destination: rt or rd.
+    digsim::output_t<bool> jump_enable;   ///< for BR_JMP.
+    digsim::output_t<bool> branch_enable; ///< for BR_* with conditions.
 
     control_unit_t(const std::string &_name)
         : module_t(_name)
         , opcode("opcode", this)
         , phase("phase", this)
-        , alu_op("alu_op", this)
         , reg_write("reg_write", this)
         , mem_write("mem_write", this)
         , mem_to_reg("mem_to_reg", this)
         , rt_as_dest("rt_as_dest", this)
+        , jump_enable("jump_enable", this)
+        , branch_enable("branch_enable", this)
     {
-        ADD_SENSITIVITY(control_unit_t, evaluate, phase); // Only reacts on phase change
-        ADD_PRODUCER(control_unit_t, evaluate, alu_op, reg_write, mem_write, mem_to_reg, rt_as_dest);
+        ADD_SENSITIVITY(control_unit_t, evaluate, phase);
+        ADD_PRODUCER(
+            control_unit_t, evaluate, reg_write, mem_write, mem_to_reg, rt_as_dest, jump_enable, branch_enable);
     }
 
 private:
@@ -45,9 +48,6 @@ private:
         const auto in_op         = static_cast<opcode_t>(opcode.get().to_ulong());
         const auto current_phase = static_cast<phase_t>(phase.get().to_ulong());
 
-        // Always set ALU operation.
-        alu_op.set(opcode.get());
-
         switch (current_phase) {
         case phase_t::FETCH:
             // PC should increment after FETCH
@@ -55,6 +55,8 @@ private:
             mem_write.set(false);
             mem_to_reg.set(false);
             rt_as_dest.set(false);
+            jump_enable.set(false);
+            branch_enable.set(false);
             break;
 
         case phase_t::DECODE:
@@ -62,6 +64,8 @@ private:
             mem_write.set(false);
             mem_to_reg.set(false);
             rt_as_dest.set(false);
+            jump_enable.set(false);
+            branch_enable.set(false);
             break;
 
         case phase_t::EXECUTE:
@@ -69,11 +73,12 @@ private:
             mem_write.set(false);
             mem_to_reg.set(false);
             rt_as_dest.set(false);
+            jump_enable.set(false);
+            branch_enable.set(false);
             break;
 
         case phase_t::WRITEBACK:
             switch (in_op) {
-            // ALU results go to register
             case opcode_t::ALU_ADD:
             case opcode_t::ALU_SUB:
             case opcode_t::ALU_AND:
@@ -84,6 +89,8 @@ private:
             case opcode_t::ALU_DIV:
             case opcode_t::SHIFT_LEFT:
             case opcode_t::SHIFT_RIGHT:
+            case opcode_t::SHIFT_ARITH:
+            case opcode_t::SHIFT_ROTATE:
             case opcode_t::CMP_EQ:
             case opcode_t::CMP_LT:
             case opcode_t::CMP_GT:
@@ -111,12 +118,43 @@ private:
                 rt_as_dest.set(false);
                 break;
 
+            // MOVE: Move reg to reg
+            case opcode_t::MEM_MOVE:
+                reg_write.set(true);
+                mem_write.set(false);
+                mem_to_reg.set(false);
+                rt_as_dest.set(true);
+                break;
+
+            // JUMP: Jump to address.
+            case opcode_t::BR_JMP:
+                reg_write.set(false);
+                mem_write.set(false);
+                mem_to_reg.set(false);
+                jump_enable.set(true);
+                branch_enable.set(false);
+                break;
+
+            // BRANCH: Branch to address if condition is met.
+            case opcode_t::BR_BEQ:
+            case opcode_t::BR_BNE:
+            case opcode_t::BR_BLT:
+            case opcode_t::BR_BGT:
+                reg_write.set(false);
+                mem_write.set(false);
+                mem_to_reg.set(false);
+                jump_enable.set(false);
+                branch_enable.set(true);
+                break;
+
             // Others: no write-back
             default:
                 reg_write.set(false);
                 mem_write.set(false);
                 mem_to_reg.set(false);
                 rt_as_dest.set(false);
+                jump_enable.set(false);
+                branch_enable.set(false);
                 break;
             }
             break;
@@ -124,9 +162,9 @@ private:
 
         digsim::debug(
             get_name(),
-            "{:9}: opcode 0x{:04X} ({:12}) -> reg_write: {}, mem_write: {}, mem_to_reg: {}, rt_as_dest: {}, alu_op: "
-            "0x{:04X}",
+            "{:9}: opcode 0x{:04X} ({:12}) -> reg_write: {:1X}, mem_write: {:1X}, mem_to_reg: {:1X}, rt_as_dest: "
+            "{:1X}, jump_enable: {:1X}, branch_enable: {:1X}",
             phase_to_string(current_phase), opcode.get().to_ulong(), opcode_to_string(in_op), reg_write.get(),
-            mem_write.get(), mem_to_reg.get(), rt_as_dest.get(), alu_op.get().to_ulong());
+            mem_write.get(), mem_to_reg.get(), rt_as_dest.get(), jump_enable.get(), branch_enable.get());
     }
 };

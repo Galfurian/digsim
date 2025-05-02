@@ -6,6 +6,7 @@
 
 #include <digsim/digsim.hpp>
 
+#include "alu.hpp"
 #include "cpu_defines.hpp"
 
 #include <bitset>
@@ -18,7 +19,11 @@ public:
     digsim::input_t<bool> clk;               ///< Clock signal.
     digsim::input_t<bool> reset;             ///< Reset signal.
     digsim::input_t<bool> load;              ///< Load enable.
+    digsim::input_t<bool> jump_enable;       ///< Jump enable.
+    digsim::input_t<bool> branch_enable;     ///< Branch enable.
     digsim::input_t<bs_address_t> next_addr; ///< Address to load if load is active.
+    digsim::input_t<bs_status_t> alu_status; ///< The ALU status flags.
+    digsim::input_t<bs_opcode_t> opcode;     ///< Current opcode.
     digsim::input_t<bs_phase_t> phase;       ///< CPU execution phase.
     digsim::output_t<bs_address_t> addr;     ///< Current PC value.
 
@@ -27,7 +32,11 @@ public:
         , clk("clk", this)
         , reset("reset", this)
         , load("load", this)
+        , jump_enable("jump_enable", this)
+        , branch_enable("branch_enable", this)
         , next_addr("next_addr", this)
+        , alu_status("alu_status", this)
+        , opcode("opcode", this)
         , phase("phase", this)
         , addr("addr", this)
         , pc(0)
@@ -55,20 +64,42 @@ private:
         const auto phase_val = static_cast<phase_t>(phase.get().to_ulong());
 
         // PC should only change in the WRITEBACK phase
-        if (phase_val != phase_t::WRITEBACK) {
-            digsim::debug(get_name(), "hold      -> addr: 0x{:04X}", pc.to_ulong());
-            addr.set(pc);
-            return;
-        }
-
-        if (load.get()) {
-            pc = next_addr.get();
-            digsim::debug(get_name(), "load      -> addr: 0x{:04X}", pc.to_ulong());
+        if (phase_val == phase_t::WRITEBACK) {
+            if (load.get()) {
+                pc = next_addr.get();
+                digsim::debug(get_name(), "load      -> addr: 0x{:04X}", pc.to_ulong());
+            } else if (jump_enable.get()) {
+                pc = next_addr.get();
+                digsim::debug(get_name(), "jump      -> addr: 0x{:04X}", pc.to_ulong());
+            } else if (branch_enable.get() && condition_met()) {
+                pc = next_addr.get();
+                digsim::debug(get_name(), "branch    -> addr: 0x{:04X}", pc.to_ulong());
+            } else {
+                pc = pc.to_ulong() + 1;
+                digsim::debug(get_name(), "increment -> addr: 0x{:04X}", pc.to_ulong());
+            }
         } else {
-            pc = pc.to_ulong() + 1;
-            digsim::debug(get_name(), "increment -> addr: 0x{:04X}", pc.to_ulong());
+            digsim::debug(get_name(), "hold      -> addr: 0x{:04X}", pc.to_ulong());
         }
-
         addr.set(pc);
+    }
+
+    bool condition_met()
+    {
+        auto status_val = static_cast<uint16_t>(alu_status.get().to_ulong());
+        auto opc        = static_cast<opcode_t>(opcode.get().to_ulong());
+
+        switch (opc) {
+        case opcode_t::BR_BEQ:
+            return (status_val & alu_t::FLAG_CMP_TRUE);
+        case opcode_t::BR_BNE:
+            return (status_val & alu_t::FLAG_CMP_TRUE);
+        case opcode_t::BR_BLT:
+            return (status_val & alu_t::FLAG_CMP_TRUE);
+        case opcode_t::BR_BGT:
+            return (status_val & alu_t::FLAG_CMP_TRUE);
+        default:
+            return false;
+        }
     }
 };
