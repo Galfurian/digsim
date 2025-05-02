@@ -39,7 +39,9 @@ public:
         ADD_PRODUCER(ram_t, evaluate, data_out);
     }
 
-    /// @brief Debug read from memory.
+    /// @brief Read from memory.
+    /// @param index The index to read from.
+    /// @return The value at the specified index.
     uint16_t debug_read(std::size_t index) const
     {
         if (index >= memory.size()) {
@@ -47,6 +49,19 @@ public:
             return 0;
         }
         return static_cast<uint16_t>(memory[index].to_ulong());
+    }
+
+    /// @brief Debug write to memory.
+    /// @param index The index to write to.
+    /// @param value The value to write.
+    void debug_write(std::size_t index, uint16_t value)
+    {
+        if (index >= memory.size()) {
+            digsim::error(get_name(), "debug_write: out-of-bounds access to memory {}", index);
+            return;
+        }
+        memory[index] = value;
+        digsim::debug(get_name(), "debug_write: memory[{}] = 0x{:04X}", index, value);
     }
 
 private:
