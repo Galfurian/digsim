@@ -33,10 +33,22 @@ struct cpu_env_t {
 
     void run_instruction()
     {
-        digsim::info("Test", "");
-        digsim::info("Test", "Snapshot before instruction:");
+        uint16_t instruction = static_cast<uint16_t>(cpu.rom.debug_read(cpu.pc.addr.get().to_ulong()));
+        uint8_t op, rs, rt, flag;
+        decode_instruction(instruction, op, rs, rt, flag);
+
+        digsim::debug("Test", "");
+        digsim::debug("Test", "==============================================================================");
+        digsim::debug("Test", "Executing instruction at PC: 0x{:04X}", cpu.pc.addr.get().to_ulong());
+        digsim::debug("Test", "Instruction: 0x{:04X}", instruction);
+        digsim::debug(
+            "Test", "OP: 0x{:04X}, RS: 0x{:04X}, RT: 0x{:04X}, FLAG: 0x{:04X} ({})", op, rs, rt, flag,
+            opcode_to_string(op));
+        digsim::debug("Test", "Snapshot before instruction:");
         print_registers();
         for (std::size_t i = 0; i < NUM_PHASES; ++i) {
+            digsim::debug("Test", "");
+            digsim::debug("Test", "----- Phase {} -----", i);
             toggle_clock();
         }
     }
@@ -102,9 +114,10 @@ struct cpu_env_t {
     }
 };
 
-int main()
+int test_01()
 {
-    digsim::logger.set_level(digsim::log_level_t::info);
+    digsim::info("Test", "=========================");
+    digsim::info("Test", "Test 01: ALU and Memory Operations");
 
     std::vector<uint16_t> program = {
         encode_instruction(opcode_t::ALU_ADD, 1, 2),     // r1 = r1 + r2 (5 + 7 = 12)
@@ -121,7 +134,7 @@ int main()
         encode_instruction(opcode_t::CMP_LT, 1, 2),      // r1 <  r2 → 1 (true)
         encode_instruction(opcode_t::CMP_GT, 1, 2),      // r1 >  r2 → 0 (false)
         encode_instruction(opcode_t::CMP_NEQ, 1, 2),     // r1 != r2 → 1 (true)
-        encode_instruction(opcode_t::MEM_STORE, 3, 2),   // MEM[r2] = r3
+        encode_instruction(opcode_t::MEM_STORE, 2, 3),   // MEM[r2] = r3
         encode_instruction(opcode_t::MEM_LOAD, 2, 4),    // r4 = MEM[r2]
         encode_instruction(opcode_t::SYS_NOP, 0, 0),     // NOP
     };
@@ -208,7 +221,63 @@ int main()
     // Final NOP (no effect)
     env.run_instruction();
 
-    if (env.test_result == 0)
-        digsim::info("Test", "All CPU tests passed.");
     return env.test_result;
+}
+
+int test_02()
+{
+    digsim::info("Test", "=========================");
+    digsim::info("Test", "Test 02: Branching");
+
+    // Program layout:
+    // [0] NOP
+    // [1] CMP_EQ r1 = (r1 == r1) → sets r1 = 1
+    // [2] BR_BRT (if r1) → jump to r2 (addr 4)
+    // [3] ADD r3 = r3 + r3 → should be skipped
+    // [4] ADD r6 = r4 + r5 → should be executed
+    std::vector<uint16_t> program = {
+        encode_instruction(opcode_t::SYS_NOP, 0, 0), // [0] NOP
+        encode_instruction(opcode_t::CMP_EQ, 1, 1),  // [1] r1 = (r1 == r1)
+        encode_instruction(opcode_t::BR_BRT, 1, 2),  // [2] branch to r2 if r1 is true
+        encode_instruction(opcode_t::ALU_ADD, 3, 3), // [3] skipped if branch taken
+        encode_instruction(opcode_t::ALU_ADD, 4, 5)  // [4] r4 = r4 + r5
+    };
+
+    cpu_env_t env(program);
+
+    // Preload registers with meaningful values
+    env.set_register(0, 0x0000); // r0 = 0 (unused)
+    env.set_register(1, 0x0002); // r1 = 2 (equal to itself → CMP_EQ true)
+    env.set_register(2, 0x0004); // r2 = 4 (branch target)
+    env.set_register(3, 0x9999); // r3 = garbage (to confirm it remains unchanged)
+    env.set_register(4, 0x000A); // r4 = 10
+    env.set_register(5, 0x000B); // r5 = 11
+
+    // Execute instructions
+    env.run_instruction(); // [0] NOP
+    env.run_instruction(); // [1] CMP_EQ (r1 = 1)
+    env.run_instruction(); // [2] BR_BRT → should jump to [4]
+    env.run_instruction(); // [4] r4 = r4 + r5
+
+    // Validate result
+    env.check_reg(3, 0x9999, "r3 should be untouched (branch taken)");
+    env.check_reg(4, 0x0015, "r4 = r4 + r5 should be executed"); // 10 + 11 = 21
+
+    return env.test_result;
+}
+
+int main()
+{
+    digsim::logger.set_level(digsim::log_level_t::info);
+
+    int result = 0;
+    if (test_01() != 0) {
+        digsim::error("Test", "Test 01 failed.");
+        result = 1;
+    }
+    if (test_02() != 0) {
+        digsim::error("Test", "Test 02 failed.");
+        result = 1;
+    }
+    return result;
 }

@@ -68,7 +68,7 @@ int main()
     std::vector<uint16_t> raw_instructions = {
         encode_instruction(opcode_t::ALU_DIV, 0x8, 0x7),  // 0x0F0F
         encode_instruction(opcode_t::CMP_GT, 0xB, 0x3),   // 0x4567
-        encode_instruction(opcode_t::BR_BGT, 0xD, 0x5),   // 0x89AB
+        encode_instruction(opcode_t::BR_BRT, 0xD, 0x5),   // 0x89AB
         encode_instruction(opcode_t::MEM_LOAD, 0x3, 0x4), // r4 = MEM[r3]
         encode_instruction(opcode_t::ALU_ADD, 0x1, 0x2),  // 0x0000
     };

@@ -127,10 +127,7 @@ int main()
         {opcode_t::MEM_LOADI, 1, 0, 1, 1, 0, 0},    //
         {opcode_t::MEM_MOVE, 1, 0, 0, 1, 0, 0},     //
         {opcode_t::BR_JMP, 0, 0, 0, 0, 1, 0},       //
-        {opcode_t::BR_BEQ, 0, 0, 0, 0, 0, 1},       //
-        {opcode_t::BR_BNE, 0, 0, 0, 0, 0, 1},       //
-        {opcode_t::BR_BLT, 0, 0, 0, 0, 0, 1},       //
-        {opcode_t::BR_BGT, 0, 0, 0, 0, 0, 1},       //
+        {opcode_t::BR_BRT, 0, 0, 0, 0, 0, 1},       //
         {opcode_t::SYS_NOP, 0, 0, 0, 0, 0, 0},      //
         {opcode_t::SYS_HALT, 0, 0, 0, 0, 0, 0},     //
         {opcode_t::SYS_BREAK, 0, 0, 0, 0, 0, 0},    //

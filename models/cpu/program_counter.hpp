@@ -61,7 +61,8 @@ private:
             return;
         }
 
-        const auto phase_val = static_cast<phase_t>(phase.get().to_ulong());
+        const auto phase_val  = static_cast<phase_t>(phase.get().to_ulong());
+        const auto status_val = static_cast<uint16_t>(alu_status.get().to_ulong());
 
         // PC should only change in the WRITEBACK phase
         if (phase_val == phase_t::WRITEBACK) {
@@ -71,7 +72,7 @@ private:
             } else if (jump_enable.get()) {
                 pc = next_addr.get();
                 digsim::debug(get_name(), "jump      -> addr: 0x{:04X}", pc.to_ulong());
-            } else if (branch_enable.get() && condition_met()) {
+            } else if (branch_enable.get() && (status_val & alu_t::FLAG_CMP_TRUE)) {
                 pc = next_addr.get();
                 digsim::debug(get_name(), "branch    -> addr: 0x{:04X}", pc.to_ulong());
             } else {
@@ -82,24 +83,5 @@ private:
             digsim::debug(get_name(), "hold      -> addr: 0x{:04X}", pc.to_ulong());
         }
         addr.set(pc);
-    }
-
-    bool condition_met()
-    {
-        auto status_val = static_cast<uint16_t>(alu_status.get().to_ulong());
-        auto opc        = static_cast<opcode_t>(opcode.get().to_ulong());
-
-        switch (opc) {
-        case opcode_t::BR_BEQ:
-            return (status_val & alu_t::FLAG_CMP_TRUE);
-        case opcode_t::BR_BNE:
-            return (status_val & alu_t::FLAG_CMP_TRUE);
-        case opcode_t::BR_BLT:
-            return (status_val & alu_t::FLAG_CMP_TRUE);
-        case opcode_t::BR_BGT:
-            return (status_val & alu_t::FLAG_CMP_TRUE);
-        default:
-            return false;
-        }
     }
 };

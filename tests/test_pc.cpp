@@ -143,7 +143,7 @@ int main()
     // === Branch test: only if FLAG_CMP_TRUE and enabled
     env.reset_pc();
     env.alu_status.set(static_cast<uint8_t>(alu_t::FLAG_CMP_TRUE));
-    env.opcode.set(static_cast<uint8_t>(opcode_t::BR_BEQ));
+    env.opcode.set(static_cast<uint8_t>(opcode_t::BR_BRT));
     env.branch_enable.set(true);
     env.next_addr.set(0x2000);
     env.step_writeback();

@@ -136,10 +136,7 @@ private:
                 break;
 
             // BRANCH: Branch to address if condition is met.
-            case opcode_t::BR_BEQ:
-            case opcode_t::BR_BNE:
-            case opcode_t::BR_BLT:
-            case opcode_t::BR_BGT:
+            case opcode_t::BR_BRT:
                 reg_write.set(false);
                 mem_write.set(false);
                 mem_to_reg.set(false);

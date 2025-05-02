@@ -52,12 +52,9 @@ enum opcode_t : uint8_t {
     MEM_STORE    = 0x31,
     MEM_LOADI    = 0x32,
     MEM_MOVE     = 0x33,
-    // BRANCH (0x40–0x44)
+    // BRANCH (0x40–0x41)
     BR_JMP       = 0x40,
-    BR_BEQ       = 0x41,
-    BR_BNE       = 0x42,
-    BR_BLT       = 0x43,
-    BR_BGT       = 0x44,
+    BR_BRT       = 0x41,
     // SYSTEM (0x50–0x53)
     SYS_NOP      = 0x50,
     SYS_HALT     = 0x51,
@@ -149,14 +146,8 @@ inline const char *opcode_to_string(uint8_t op)
         return "MEM_MOVE";
     case opcode_t::BR_JMP:
         return "BR_JMP";
-    case opcode_t::BR_BEQ:
-        return "BR_BEQ";
-    case opcode_t::BR_BNE:
-        return "BR_BNE";
-    case opcode_t::BR_BLT:
-        return "BR_BLT";
-    case opcode_t::BR_BGT:
-        return "BR_BGT";
+    case opcode_t::BR_BRT:
+        return "BR_BRT";
     case opcode_t::SYS_NOP:
         return "SYS_NOP";
     case opcode_t::SYS_HALT:

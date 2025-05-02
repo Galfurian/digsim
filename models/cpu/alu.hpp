@@ -163,6 +163,16 @@ private:
             result = (flags == FLAG_CMP_TRUE);
             break;
 
+        case opcode_t::BR_BRT:
+            if (a_u != 0) {
+                result = b_u;
+                flags  = FLAG_CMP_TRUE;
+            } else {
+                result = 0;
+                flags  = FLAG_CMP_FALSE;
+            }
+            break;
+
         // MEM passthrough ops (if you still want to support them here)
         case opcode_t::MEM_LOAD:
         case opcode_t::MEM_STORE:
