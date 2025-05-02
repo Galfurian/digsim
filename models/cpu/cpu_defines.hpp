@@ -76,66 +76,32 @@ enum class phase_t : uint8_t {
     WRITEBACK = 0x3  ///< Write back result.
 };
 
-/// @brief Encodes a 16-bit instruction.
-/// @param op The 3-bit opcode.
-/// @param fn The 4-bit function code.
-/// @param rs The first source register.
-/// @param rt The second source register.
-/// @param rd The destination register (optional, default is 0).
-/// @return The 16-bit encoded instruction.
-inline uint16_t encode_instruction(uint8_t op, uint8_t fn, uint8_t rs, uint8_t rt, uint8_t rd)
-{
-    return static_cast<uint16_t>((op & 0x7) << 13) | //
-           static_cast<uint16_t>((fn & 0xF) << 9) |  //
-           static_cast<uint16_t>((rs & 0xF) << 5) |  //
-           static_cast<uint16_t>((rt & 0xF) << 1) |  //
-           static_cast<uint16_t>((rd & 0x1));
-}
-
-/// @brief Decodes a 16-bit instruction.
-/// @param instr  The 16-bit encoded instruction.
-/// @param op     The opcode (3 bits).
-/// @param fn     The function code (4 bits).
-/// @param rs     The first source register.
-/// @param rt     The second source register.
-/// @param rd     The destination register (optional, default is 0).
-inline void decode_instruction(uint16_t instr, uint8_t &op, uint8_t &fn, uint8_t &rs, uint8_t &rt, uint8_t &rd)
-{
-    op = (instr >> 13) & 0x7;
-    fn = (instr >> 9) & 0xF;
-    rs = (instr >> 5) & 0xF;
-    rt = (instr >> 1) & 0xF;
-    rd = instr & 0x1;
-}
-
 /// @brief Encodes a 16-bit instruction with opcode and function code.
-/// @param full_op The opcode (3 bits) and function code (4 bits).
+/// @param op The opcode (7 bits).
 /// @param rs The first source register.
 /// @param rt The second source register.
-/// @param rd The destination register (optional, default is 0).
+/// @param flag The flag (optional, default is 0).
 /// @return The 16-bit encoded instruction.
-inline uint16_t encode_instruction(opcode_t full_op, uint8_t rs, uint8_t rt, uint8_t rd = 0)
+inline uint16_t encode_instruction(opcode_t op, uint8_t rs, uint8_t rt, uint8_t flag = 0)
 {
-    uint8_t op = static_cast<uint8_t>(full_op) >> 4;
-    uint8_t fn = static_cast<uint8_t>(full_op) & 0xF;
-    return encode_instruction(op, fn, rs, rt, rd);
+    return static_cast<uint16_t>((static_cast<uint8_t>(op) & 0x7F) << 9) | //
+           static_cast<uint16_t>((rs & 0xF) << 5) |                        //
+           static_cast<uint16_t>((rt & 0xF) << 1) |                        //
+           static_cast<uint16_t>((flag & 0x1));
 }
 
 /// @brief Decodes a 16-bit instruction.
-/// @param instr  The 16-bit encoded instruction.
-/// @param op     The full opcode (3 bits + 4 bits).
-/// @param rs     The first source register.
-/// @param rt     The second source register.
-/// @param rd     The destination register (optional, default is 0).
-/// @return The 16-bit encoded instruction.
-inline void decode_instruction(uint16_t instr, uint8_t &full_op, uint8_t &rs, uint8_t &rt, uint8_t &rd)
+/// @param instruction The 16-bit encoded instruction.
+/// @param op The opcode (7 bits).
+/// @param rs The first source register.
+/// @param rt The second source register.
+/// @param flag The flag (optional, default is 0).
+inline void decode_instruction(uint16_t instruction, uint8_t &op, uint8_t &rs, uint8_t &rt, uint8_t &flag)
 {
-    auto opcode = static_cast<uint8_t>(instr >> 13) & 0x7; // bits 15–13
-    auto func   = static_cast<uint8_t>(instr >> 9) & 0xF;  // bits 12–9
-    full_op     = static_cast<uint8_t>(((opcode << 4) | func));
-    rs          = static_cast<uint8_t>((instr >> 5) & 0xF); // bits 8–5
-    rt          = static_cast<uint8_t>((instr >> 1) & 0xF); // bits 4–1
-    rd          = static_cast<uint8_t>(instr & 0x1);        // bit 0
+    op   = static_cast<opcode_t>((instruction >> 9) & 0x7F);
+    rs   = (instruction >> 5) & 0xF;
+    rt   = (instruction >> 1) & 0xF;
+    flag = instruction & 0x1;
 }
 
 inline const char *opcode_to_string(uint8_t op)

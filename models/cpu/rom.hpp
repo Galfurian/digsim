@@ -55,14 +55,14 @@ private:
         instruction.set(instr);
 
         // Decode instruction for debugging
-        auto opcode = (instr >> 12U) & 0xF;
-        auto rs     = (instr >> 8U) & 0xF;
-        auto rt     = (instr >> 4U) & 0xF;
-        auto rd     = instr & 0xF;
+        auto opcode = (instr >> 9U) & 0x7F;
+        auto rs     = (instr >> 5U) & 0xF;
+        auto rt     = (instr >> 1U) & 0xF;
+        auto flag   = instr & 0x1;
 
         digsim::debug(
             get_name(),
-            "address: 0x{:04X}, instruction: 0x{:04X} => opcode: 0x{:04X}, rs: 0x{:04X}, rt: 0x{:04X}, rd: 0x{:04X}",
-            address, instr, opcode, rs, rt, rd);
+            "address: 0x{:04X}, instruction: 0x{:04X} => opcode: 0x{:04X}, rs: 0x{:04X}, rt: 0x{:04X}, flag: 0x{:01X}",
+            address, instr, opcode, rs, rt, flag);
     }
 };

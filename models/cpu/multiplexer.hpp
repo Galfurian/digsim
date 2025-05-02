@@ -9,13 +9,13 @@
 #include <iomanip>
 #include <sstream>
 
-class multiplexer_t : public digsim::module_t
+template <typename T> class multiplexer_t : public digsim::module_t
 {
 public:
-    digsim::input_t<bs_data_t> a;
-    digsim::input_t<bs_data_t> b;
+    digsim::input_t<T> a;
+    digsim::input_t<T> b;
     digsim::input_t<bool> sel;
-    digsim::output_t<bs_data_t> out;
+    digsim::output_t<T> out;
 
     multiplexer_t(const std::string &_name)
         : digsim::module_t(_name)

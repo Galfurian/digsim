@@ -26,10 +26,12 @@ int verify_outputs(
     bool expected_reg_write,
     bool expected_mem_write,
     bool expected_mem_to_reg,
+    bool expected_rt_as_dest,
     digsim::signal_t<bs_opcode_t> &alu_op,
     digsim::signal_t<bool> &reg_write,
     digsim::signal_t<bool> &mem_write,
-    digsim::signal_t<bool> &mem_to_reg)
+    digsim::signal_t<bool> &mem_to_reg,
+    digsim::signal_t<bool> &rt_as_dest)
 {
     int fail = 0;
 
@@ -51,7 +53,10 @@ int verify_outputs(
         digsim::error("Test", "mem_to_reg mismatch: expected {}, got {}", expected_mem_to_reg, mem_to_reg.get());
         fail = 1;
     }
-
+    if (rt_as_dest.get() != expected_rt_as_dest) {
+        digsim::error("Test", "rt_as_dest mismatch: expected {}, got {}", expected_rt_as_dest, rt_as_dest.get());
+        fail = 1;
+    }
     return fail;
 }
 
@@ -61,12 +66,14 @@ int run_test(
     bool expected_reg_write,
     bool expected_mem_write,
     bool expected_mem_to_reg,
+    bool expected_rt_as_dest,
     digsim::signal_t<bs_opcode_t> &opcode,
     digsim::signal_t<bs_opcode_t> &alu_op,
     digsim::signal_t<bs_phase_t> &phase,
     digsim::signal_t<bool> &reg_write,
     digsim::signal_t<bool> &mem_write,
-    digsim::signal_t<bool> &mem_to_reg)
+    digsim::signal_t<bool> &mem_to_reg,
+    digsim::signal_t<bool> &rt_as_dest)
 {
     apply_inputs(opcode_val, opcode, phase, phase_t::FETCH);
     execute_cycle();
@@ -76,8 +83,8 @@ int run_test(
     execute_cycle();
 
     return verify_outputs(
-        opcode_val, expected_reg_write, expected_mem_write, expected_mem_to_reg, alu_op, reg_write, mem_write,
-        mem_to_reg);
+        opcode_val, expected_reg_write, expected_mem_write, expected_mem_to_reg, expected_rt_as_dest, alu_op, reg_write,
+        mem_write, mem_to_reg, rt_as_dest);
 }
 
 int main()
@@ -91,6 +98,7 @@ int main()
     digsim::signal_t<bool> reg_write("reg_write", false, 0);
     digsim::signal_t<bool> mem_write("mem_write", false, 0);
     digsim::signal_t<bool> mem_to_reg("mem_to_reg", false, 0);
+    digsim::signal_t<bool> rt_as_dest("rt_as_dest", false, 0);
 
     // Instantiate the control unit
     control_unit_t cu0("cu0");
@@ -100,19 +108,20 @@ int main()
     cu0.reg_write(reg_write);
     cu0.mem_write(mem_write);
     cu0.mem_to_reg(mem_to_reg);
+    cu0.rt_as_dest(rt_as_dest);
 
     digsim::scheduler.initialize();
 
     // List of test cases: (opcode_t, reg_write, mem_write, mem_to_reg)
-    std::vector<std::tuple<opcode_t, bool, bool, bool>> test_cases = {
-        {opcode_t::ALU_ADD, true, false, false},   {opcode_t::ALU_SUB, true, false, false},
-        {opcode_t::ALU_MUL, true, false, false},   {opcode_t::SHIFT_LEFT, true, false, false},
-        {opcode_t::CMP_EQ, true, false, false},    {opcode_t::MEM_LOAD, true, false, true},
-        {opcode_t::MEM_STORE, false, true, false}, {opcode_t::SYS_NOP, false, false, false},
+    std::vector<std::tuple<opcode_t, bool, bool, bool, bool>> test_cases = {
+        {opcode_t::ALU_ADD, true, false, false, false},   {opcode_t::ALU_SUB, true, false, false, false},
+        {opcode_t::ALU_MUL, true, false, false, false},   {opcode_t::SHIFT_LEFT, true, false, false, false},
+        {opcode_t::CMP_EQ, true, false, false, false},    {opcode_t::MEM_LOAD, true, false, true, true},
+        {opcode_t::MEM_STORE, false, true, false, false}, {opcode_t::SYS_NOP, false, false, false, false},
     };
 
-    for (const auto &[op, rw, mw, mtr] : test_cases) {
-        if (run_test(op, rw, mw, mtr, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg)) {
+    for (const auto &[op, rw, mw, mtr, rtd] : test_cases) {
+        if (run_test(op, rw, mw, mtr, rtd, opcode, alu_op, phase, reg_write, mem_write, mem_to_reg, rt_as_dest)) {
             return 1;
         }
     }

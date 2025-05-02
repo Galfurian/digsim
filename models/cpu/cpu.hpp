@@ -33,7 +33,8 @@ public:
     reg_file_t reg;
     alu_t alu;
     ram_t ram;
-    multiplexer_t multiplexer;
+    multiplexer_t<bs_data_t> multiplexer;
+    multiplexer_t<bs_register_t> reg_write_mux;
     phase_fsm_t phase_fsm;
 
     cpu_t(const std::string &_name, const std::vector<uint16_t> &_rom_contents)
@@ -48,13 +49,14 @@ public:
         , alu("alu")
         , ram("ram")
         , multiplexer("multiplexer")
+        , reg_write_mux("reg_write_mux")
         , phase_fsm("phase_fsm")
         , program_counter_to_rom("program_counter_to_rom")
         , rom_to_decoder("rom_to_decoder")
         , decoder_to_control_opcode("decoder_to_control_opcode")
         , decoder_rs("decoder_rs")
         , decoder_rt("decoder_rt")
-        , decoder_rd("decoder_rd")
+        , decoder_flag("decoder_flag")
         , control_to_aluop("control_to_aluop")
         , control_phase("control_phase")
         , control_to_regwrite("control_to_regwrite")
@@ -67,6 +69,8 @@ public:
         , alu_status("alu_status")
         , ram_out("ram_out")
         , multiplexer_out("multiplexer_out")
+        , reg_write_mux_out("reg_write_mux_out")
+        , control_select_rt_as_dest("control_select_rt_as_dest")
         , pc_load("pc_load")
         , pc_next_addr("pc_next_addr")
     {
@@ -91,7 +95,7 @@ public:
         decoder.opcode(decoder_to_control_opcode);
         decoder.rs(decoder_rs);
         decoder.rt(decoder_rt);
-        decoder.rd(decoder_rd);
+        decoder.flag(decoder_flag);
 
         // === Phase FSM ===
         phase_fsm.set_parent(this);
@@ -107,6 +111,7 @@ public:
         control.reg_write(control_to_regwrite);
         control.mem_write(control_to_memwrite);
         control.mem_to_reg(control_to_memtoreg);
+        control.rt_as_dest(control_select_rt_as_dest);
 
         // === Register File ===
         reg.set_parent(this);
@@ -115,7 +120,7 @@ public:
         reg.phase(control_phase);
         reg.addr_a(decoder_rs);
         reg.addr_b(decoder_rt);
-        reg.addr_w(decoder_rd);
+        reg.addr_w(reg_write_mux_out);
         reg.write_enable(control_to_regwrite);
         reg.data_in(multiplexer_out);
         reg.data_a(reg_a);
@@ -149,6 +154,13 @@ public:
         multiplexer.b(ram_out);
         multiplexer.sel(control_to_memtoreg);
         multiplexer.out(multiplexer_out);
+
+        // === Register Write MUX ===
+        reg_write_mux.set_parent(this);
+        reg_write_mux.sel(control_select_rt_as_dest);
+        reg_write_mux.a(decoder_rs);
+        reg_write_mux.b(decoder_rt);
+        reg_write_mux.out(reg_write_mux_out);
     }
 
 private:
@@ -158,7 +170,7 @@ private:
     digsim::signal_t<bs_opcode_t> decoder_to_control_opcode;
     digsim::signal_t<bs_register_t> decoder_rs;
     digsim::signal_t<bs_register_t> decoder_rt;
-    digsim::signal_t<bs_register_t> decoder_rd;
+    digsim::signal_t<bool> decoder_flag;
     digsim::signal_t<bs_opcode_t> control_to_aluop;
     digsim::signal_t<bs_phase_t> control_phase;
     digsim::signal_t<bool> control_to_regwrite;
@@ -171,6 +183,8 @@ private:
     digsim::signal_t<bs_status_t> alu_status;
     digsim::signal_t<bs_address_t> ram_out;
     digsim::signal_t<bs_address_t> multiplexer_out;
+    digsim::signal_t<bs_register_t> reg_write_mux_out;
+    digsim::signal_t<bool> control_select_rt_as_dest;
     digsim::signal_t<bool> pc_load;
     digsim::signal_t<bs_address_t> pc_next_addr;
 };

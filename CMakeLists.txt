@@ -253,6 +253,11 @@ if(BUILD_TESTS)
     target_include_directories(test_cpu PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(test_cpu ${PROJECT_NAME})
     add_test(test_cpu_run test_cpu)
+    
+    add_executable(test_cpu_support ${PROJECT_SOURCE_DIR}/tests/test_cpu_support.cpp)
+    target_include_directories(test_cpu_support PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(test_cpu_support ${PROJECT_NAME})
+    add_test(test_cpu_support_run test_cpu_support)
 
 endif()
 

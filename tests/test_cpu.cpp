@@ -14,8 +14,6 @@ void toggle_clock(digsim::signal_t<bool> &clk)
     digsim::scheduler.run(); // rising edge
 }
 
-#if 0
-
 /// @brief Runs the instruction for a given number of clock phases.
 /// @param clk The clock signal to toggle.
 /// @param phases The number of clock phases to run.
@@ -30,13 +28,6 @@ void run_instruction(digsim::signal_t<bool> &clk)
     }
 }
 
-inline uint16_t encode_instruction(opcode_t op, uint8_t rs, uint8_t rt_or_imm)
-{
-    uint8_t opcode = static_cast<uint8_t>(op) >> 4;
-    uint8_t func   = static_cast<uint8_t>(op) & 0xF;
-    return encode_instruction(opcode, func, rs, rt_or_imm);
-}
-
 int main()
 {
     digsim::logger.set_level(digsim::log_level_t::debug);
@@ -45,10 +36,13 @@ int main()
     // ROM Program
     std::vector<uint16_t> program = {
         encode_instruction(opcode_t::ALU_ADD, 1, 2),   // r1 + r2 → r1
-        encode_instruction(opcode_t::MEM_STORE, 2, 3), // MEM[r2 + imm] = r3
-        encode_instruction(opcode_t::MEM_LOAD, 3, 4),  // r4 = MEM[r3 + imm]
+        encode_instruction(opcode_t::MEM_STORE, 3, 2), // MEM[r2] = r3
+        encode_instruction(opcode_t::MEM_LOAD, 3, 4),  // r4 = MEM[r3]
         encode_instruction(opcode_t::SYS_NOP, 0, 0),   // NOP
     };
+
+    for (size_t i = 0; i < program.size(); ++i)
+        digsim::debug("Program", "Instr[{}] = 0x{:04X}", i, program[i]);
 
     // Clock and reset signals
     digsim::signal_t<bool> clk("clk");
@@ -99,10 +93,10 @@ int main()
 
     run_instruction(clk);
 
-    uint16_t r0 = cpu.reg.debug_read(0);
-    digsim::info("Test", "ADD result: r0 = 0x{:02X}", r0);
-    if (r0 != 0x0C) {
-        digsim::error("Test", "ADD FAILED: Expected r0 = 0x0C, got 0x{:02X}", r0);
+    uint16_t r1 = cpu.reg.debug_read(1);
+    digsim::info("Test", "ADD result: r1 = 0x{:02X}", r1);
+    if (r1 != 0x0C) {
+        digsim::error("Test", "ADD FAILED: Expected r1 = 0x0C, got 0x{:02X}", r1);
         return 1;
     }
 
@@ -141,6 +135,3 @@ int main()
     digsim::info("Test", "All CPU instruction tests passed.");
     return 0;
 }
-#else
-int main() { return 0; }
-#endif

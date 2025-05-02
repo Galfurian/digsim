@@ -41,7 +41,7 @@ int main()
     digsim::signal_t<bs_data_t> out("out");
 
     // Instantiate the multiplexer
-    multiplexer_t mux("mux");
+    multiplexer_t<bs_data_t> mux("mux");
     mux.a(a);
     mux.b(b);
     mux.sel(sel);
