@@ -9,6 +9,7 @@
 struct cpu_env_t {
     digsim::signal_t<bool> clk{"clk"};
     digsim::signal_t<bool> reset{"reset"};
+    digsim::signal_t<bool> halted{"halted"};
     cpu_t cpu;
 
     int test_result = 0;
@@ -18,6 +19,7 @@ struct cpu_env_t {
     {
         cpu.clk(clk);
         cpu.reset(reset);
+        cpu.halted(halted);
         digsim::scheduler.initialize();
         toggle_clock();
         reset_pc();
@@ -137,6 +139,8 @@ int test_01()
         encode_instruction(opcode_t::MEM_STORE, 2, 3),   // MEM[r2] = r3
         encode_instruction(opcode_t::MEM_LOAD, 2, 4),    // r4 = MEM[r2]
         encode_instruction(opcode_t::SYS_NOP, 0, 0),     // NOP
+        encode_instruction(opcode_t::MEM_MOVE, 3, 1),    // r1 = r3 (move r3 to r1)
+        encode_instruction(opcode_t::SYS_NOP, 0, 0),     // NOP
     };
 
     cpu_env_t env(program);
@@ -221,6 +225,10 @@ int test_01()
     // Final NOP (no effect)
     env.run_instruction();
 
+    // MOVE: r1 = r3 (move r3 to r1)
+    env.run_instruction();
+    env.check_reg(1, 0x1234, "MOVE r1 = r3");
+
     return env.test_result;
 }
 
@@ -266,6 +274,69 @@ int test_02()
     return env.test_result;
 }
 
+int test_jmp()
+{
+    digsim::info("Test", "=========================");
+    digsim::info("Test", "Test 03: Unconditional Jump");
+
+    // Program layout:
+    // [0] NOP
+    // [1] BR_JMP r0, r2     → Jump to addr in r2 (i.e., 4)
+    // [2] ADD r3 = r3 + r3  → should be skipped
+    // [3] NOP               → should be skipped
+    // [4] ADD r6 = r4 + r5  → should execute
+
+    std::vector<uint16_t> program = {
+        encode_instruction(opcode_t::SYS_NOP, 0, 0), // [0] NOP
+        encode_instruction(opcode_t::BR_JMP, 0, 2),  // [1] jump to r2
+        encode_instruction(opcode_t::ALU_ADD, 3, 3), // [2] skipped
+        encode_instruction(opcode_t::SYS_NOP, 0, 0), // [3] skipped
+        encode_instruction(opcode_t::ALU_ADD, 4, 5), // [4] r4 = r4 + r5
+    };
+
+    cpu_env_t env(program);
+
+    // Preload registers
+    env.set_register(2, 0x0004); // r2 = address to jump to
+    env.set_register(3, 0xBEEF); // r3 = garbage, to confirm it doesn't change
+    env.set_register(4, 0x000A); // r4 = 10
+    env.set_register(5, 0x000B); // r5 = 11
+
+    // Execute
+    env.run_instruction(); // [0] NOP
+    env.run_instruction(); // [1] BR_JMP to r2 = 4
+    env.run_instruction(); // [4] ADD r4 = r4 + r5
+
+    // Checks
+    env.check_reg(3, 0xBEEF, "r3 should be untouched (jump taken)");
+    env.check_reg(4, 0x0015, "r4 = r4 + r5 should be executed");
+
+    return env.test_result;
+}
+
+int test_halt()
+{
+    digsim::info("Test", "=========================");
+    digsim::info("Test", "Test HALT");
+
+    std::vector<uint16_t> program = {
+        encode_instruction(opcode_t::SYS_NOP, 0, 0),  // [0] NOP
+        encode_instruction(opcode_t::SYS_HALT, 0, 0), // [1] HALT
+        encode_instruction(opcode_t::ALU_ADD, 1, 1),  // [2] Should not be executed.
+    };
+
+    cpu_env_t env(program);
+
+    env.set_register(1, 0x1234);
+    while (!env.halted.get()) {
+        env.run_instruction();
+    }
+
+    env.check_reg(1, 0x1234, "r1 should be unchanged after HALT");
+
+    return env.test_result;
+}
+
 int main()
 {
     digsim::logger.set_level(digsim::log_level_t::info);
@@ -277,6 +348,14 @@ int main()
     }
     if (test_02() != 0) {
         digsim::error("Test", "Test 02 failed.");
+        result = 1;
+    }
+    if (test_jmp() != 0) {
+        digsim::error("Test", "Test 03 failed.");
+        result = 1;
+    }
+    if (test_halt() != 0) {
+        digsim::error("Test", "Test 04 failed.");
         result = 1;
     }
     return result;

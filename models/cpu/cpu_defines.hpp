@@ -180,3 +180,58 @@ const char *phase_to_string(phase_t phase)
         return "UNKNOWN";
     }
 }
+
+template <std::size_t N> inline std::bitset<N> operator+(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+{
+    return std::bitset<N>(lhs.to_ulong() + rhs.to_ulong());
+}
+
+template <std::size_t N> inline std::bitset<N> operator-(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+{
+    return std::bitset<N>(lhs.to_ulong() - rhs.to_ulong());
+}
+
+template <std::size_t N> inline std::bitset<N> operator*(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+{
+    return std::bitset<N>(lhs.to_ulong() * rhs.to_ulong());
+}
+
+template <std::size_t N> inline std::bitset<N> operator/(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+{
+    return std::bitset<N>(lhs.to_ulong() / rhs.to_ulong());
+}
+
+template <std::size_t N> inline bool operator<(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+{
+    return lhs.to_ulong() < rhs.to_ulong();
+}
+
+template <std::size_t N> inline bool operator>(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+{
+    return lhs.to_ulong() > rhs.to_ulong();
+}
+
+// template <std::size_t N> inline std::bitset<N> operator|(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+// {
+//     return std::bitset<N>(lhs.to_ulong() | rhs.to_ulong());
+// }
+
+// template <std::size_t N> inline std::bitset<N> operator^(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+// {
+//     return std::bitset<N>(lhs.to_ulong() ^ rhs.to_ulong());
+// }
+
+// template <std::size_t N> inline std::bitset<N> operator~(const std::bitset<N> &lhs)
+// {
+//     return std::bitset<N>(~lhs.to_ulong());
+// }
+
+template <std::size_t N> inline std::bitset<N> operator<<(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+{
+    return std::bitset<N>(lhs.to_ulong() << rhs.to_ulong());
+}
+
+template <std::size_t N> inline std::bitset<N> operator>>(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+{
+    return std::bitset<N>(lhs.to_ulong() >> rhs.to_ulong());
+}

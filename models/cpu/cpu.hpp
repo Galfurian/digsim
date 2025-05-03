@@ -24,6 +24,7 @@ public:
     // Ports
     digsim::input_t<bool> clk;
     digsim::input_t<bool> reset;
+    digsim::output_t<bool> halted;
 
     // Submodules.
     program_counter_t pc;
@@ -41,6 +42,7 @@ public:
         : module_t(_name)
         , clk("clk", this)
         , reset("reset", this)
+        , halted("halted", this)
         , pc("pc")
         , rom("rom", _rom_contents)
         , decoder("decoder")
@@ -117,6 +119,7 @@ public:
         control.rt_as_dest(control_select_rt_as_dest);
         control.jump_enable(control_jump_enable);
         control.branch_enable(control_branch_enable);
+        control.halt(halted);
 
         // === Register File ===
         reg.set_parent(this);

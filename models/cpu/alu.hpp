@@ -16,13 +16,12 @@
 class alu_t : public digsim::module_t
 {
 public:
-    digsim::input_t<bool> clk;           ///< Clock signal.
-    digsim::input_t<bool> reset;         ///< Reset signal.
-    digsim::input_t<bs_data_t> a;        ///< First operand.
-    digsim::input_t<bs_data_t> b;        ///< Second operand.
-    digsim::input_t<bs_opcode_t> opcode; ///< Operation code.
-    digsim::input_t<bs_phase_t> phase;   ///< Current pipeline phase.
-
+    digsim::input_t<bool> clk;             ///< Clock signal.
+    digsim::input_t<bool> reset;           ///< Reset signal.
+    digsim::input_t<bs_data_t> a;          ///< First operand.
+    digsim::input_t<bs_data_t> b;          ///< Second operand.
+    digsim::input_t<bs_opcode_t> opcode;   ///< Operation code.
+    digsim::input_t<bs_phase_t> phase;     ///< Current pipeline phase.
     digsim::output_t<bs_data_t> out;       ///< Output result.
     digsim::output_t<bs_data_t> remainder; ///< Remainder of division.
     digsim::output_t<bs_status_t> status;  ///< Status flags.
@@ -103,22 +102,32 @@ private:
 
         // Arithmetic
         case opcode_t::ALU_ADD: {
+            // Compute the sum using a wider type.
             auto sum = a_u + b_u;
+            // Store the sum into result.
             result   = sum;
-            if (sum >= (1UL << ADDRESS_WIDTH))
+            // Check if carry-out occurred (i.e., bit DATA_WIDTH was set).
+            if (sum >> DATA_WIDTH) {
                 flags = FLAG_CARRY;
+            }
             break;
         }
         case opcode_t::ALU_SUB: {
-            auto diff = static_cast<long>(a_u) - static_cast<long>(b_u);
-            result    = static_cast<unsigned long>(diff);
-            if (diff < 0)
-                flags = FLAG_OVERFLOW;
+            // Perform the subtraction in a wider type
+            auto diff = static_cast<int32_t>(a_u) - static_cast<int32_t>(b_u);
+            // Assign the truncated result to the 16-bit result
+            result    = static_cast<uint32_t>(diff);
+            // Detect borrow (i.e., if unsigned a < b)
+            if (a_u < b_u) {
+                flags = FLAG_BORROW;
+            }
             break;
         }
         case opcode_t::ALU_MUL: {
+            // Perform the multiplication in a wider type.
             auto prod = a_u * b_u;
-            if (prod >= (1UL << ADDRESS_WIDTH)) {
+            // If the higher bits of the product are set, it means overflow occurred.
+            if (prod >> DATA_WIDTH) {
                 result = 0;
                 flags  = FLAG_OVERFLOW;
             } else {
@@ -126,7 +135,7 @@ private:
             }
             break;
         }
-        case opcode_t::ALU_DIV:
+        case opcode_t::ALU_DIV: {
             if (b_u == 0) {
                 result = 0;
                 rem    = 0;
@@ -136,16 +145,17 @@ private:
                 rem    = a_u % b_u;
             }
             break;
+        }
 
         // Shift
         case opcode_t::SHIFT_LEFT:
-            result = (b_u >= ADDRESS_WIDTH) ? 0 : (a_u << b_u);
+            result = (b_u >= DATA_WIDTH) ? 0 : (a_u << b_u);
             break;
         case opcode_t::SHIFT_RIGHT:
-            result = (b_u >= ADDRESS_WIDTH) ? 0 : (a_u >> b_u);
+            result = (b_u >= DATA_WIDTH) ? 0 : (a_u >> b_u);
             break;
 
-            // Comparison
+        // Comparison.
         case opcode_t::CMP_EQ:
             flags  = (a_u == b_u) ? FLAG_CMP_TRUE : FLAG_CMP_FALSE;
             result = (flags == FLAG_CMP_TRUE);
@@ -173,11 +183,24 @@ private:
             }
             break;
 
+        case opcode_t::BR_JMP:
+            result = b_u;
+            flags  = FLAG_CMP_TRUE;
+            break;
+
         // MEM passthrough ops (if you still want to support them here)
         case opcode_t::MEM_LOAD:
         case opcode_t::MEM_STORE:
         case opcode_t::MEM_LOADI:
             result = a_val;
+            break;
+
+        case opcode_t::MEM_MOVE:
+            result = a_val;
+            break;
+
+        case opcode_t::SYS_HALT:
+            flags = 0xFFFF;
             break;
 
         // Default
