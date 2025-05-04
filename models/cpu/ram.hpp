@@ -79,32 +79,31 @@ private:
             data_out.set(0);
             return;
         }
-
+        // Read the inputs.
         const auto index     = addr.get().to_ulong();
         const auto wdata     = data_in.get();
         const auto phase_val = static_cast<phase_t>(phase.get().to_ulong());
+        const bool write     = (phase_val == phase_t::WRITEBACK && write_enable.get());
+        bs_data_t rdata      = 0;
 
-        bool write = (phase_val == phase_t::WRITEBACK && write_enable.get());
+        // Check the address.
+        if (index >= RAM_SIZE) {
+            digsim::error(get_name(), "Address out of bounds: 0x{:04X}", index);
+            return;
+        }
 
+        // Perform the read or write operation.
         if (write) {
             if (index < RAM_SIZE) {
                 memory[index] = wdata;
-                digsim::debug(get_name(), "WRITE @ 0x{:04X} <= 0x{:02X}", index, wdata.to_ulong());
-            } else {
-                digsim::error(get_name(), "WRITE out-of-bounds: address 0x{:04X}", index);
             }
         }
-
-        bs_data_t rdata = 0;
         if (index < RAM_SIZE) {
             rdata = memory[index];
-        } else {
-            digsim::error(get_name(), "READ out-of-bounds: address 0x{:04X}", index);
         }
-
+        // Set the output.
         data_out.set(rdata);
-        digsim::debug(
-            get_name(), "address: 0x{:02X}, data_in: 0x{:02X}, data_out: 0x{:02X}, write_enable: {}", index,
-            wdata.to_ulong(), rdata.to_ulong(), write_enable.get());
+
+        digsim::debug(get_name(), "[{:5}] address: 0x{:04X}, data_in : 0x{:04X}, data_out : 0x{:04X}", (write ? "WR/RD" : "READ"), index, wdata.to_ulong(), rdata.to_ulong());
     }
 };

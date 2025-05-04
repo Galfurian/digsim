@@ -12,20 +12,6 @@
 #include <iomanip>
 #include <sstream>
 
-/// @file reg.hpp
-/// @brief Register module with phase awareness.
-/// @author ...
-
-#pragma once
-
-#include "cpu_defines.hpp"
-#include <digsim/digsim.hpp>
-
-#include <array>
-#include <bitset>
-#include <iomanip>
-#include <sstream>
-
 /// @brief Register module with phase awareness.
 class reg_file_t : public digsim::module_t
 {
@@ -62,7 +48,7 @@ public:
     uint16_t debug_read(std::size_t index) const
     {
         if (index >= regs.size()) {
-            digsim::error(get_name(), "debug_read: out of bounds access to register {}", index);
+            digsim::error(get_name(), "debug_read: out of bounds access to register 0x{:04X}", index);
             return 0;
         }
         return static_cast<uint16_t>(regs[index].to_ulong());
@@ -72,13 +58,13 @@ public:
     void debug_write(std::size_t index, uint16_t value)
     {
         if (index >= regs.size()) {
-            digsim::error(get_name(), "debug_write: out of bounds access to register {}", index);
+            digsim::error(get_name(), "debug_write: out of bounds access to register 0x{:04X}", index);
             return;
         }
         regs[index] = value;
 
         digsim::debug(
-            get_name(), "debug_write: writing 0x{:02X} to register 0x{:02X}, verify: 0x{:02X}.", value, index,
+            get_name(), "debug_write: writing 0x{:04X} to register 0x{:04X}, verify: 0x{:04X}.", value, index,
             regs[index].to_ulong());
     }
 
@@ -107,28 +93,40 @@ private:
         const auto u_addr_b      = addr_b.get().to_ulong();
         const auto u_addr_w      = addr_w.get().to_ulong();
 
-        if (u_addr_a >= NUM_REGS || u_addr_b >= NUM_REGS || u_addr_w >= NUM_REGS) {
-            digsim::error(get_name(), "Register address out of bounds");
+        // Check the register addresses.
+        if (u_addr_a >= NUM_REGS) {
+            digsim::error(get_name(), "Register A address is out of bounds: 0x{:04X}", u_addr_a);
+            return;
+        }
+        if (u_addr_b >= NUM_REGS) {
+            digsim::error(get_name(), "Register B address is out of bounds: 0x{:04X}", u_addr_b);
+            return;
+        }
+        if (u_addr_w >= NUM_REGS) {
+            digsim::error(get_name(), "Register W address is out of bounds: 0x{:04X}", u_addr_w);
             return;
         }
 
-        // Always expose read values
+        // Always expose read values,
         data_a.set(regs[u_addr_a]);
         data_b.set(regs[u_addr_b]);
 
         // Only perform write during WRITEBACK phase
         if (current_phase == phase_t::WRITEBACK && write_enable.get()) {
             regs[u_addr_w] = data_in.get();
-            digsim::debug(get_name(), "WRITEBACK phase: wrote 0x{:04X} to r{}", data_in.get().to_ulong(), u_addr_w);
         }
 
         digsim::debug(
             get_name(),
-            "addr_a: 0x{:02X}, data_a: 0x{:02X}, "
-            "addr_b: 0x{:02X}, data_b: 0x{:02X}, "
-            "addr_w: 0x{:02X}, data_w: 0x{:02X}, phase: {}",
-            u_addr_a, regs[u_addr_a].to_ulong(), //
-            u_addr_b, regs[u_addr_b].to_ulong(), //
-            u_addr_w, data_in.get().to_ulong(), static_cast<int>(current_phase));
+            "[{:5}] "
+            "A: 0x{:04X} (out: 0x{:04X}), "
+            "B: 0x{:04X} (out: 0x{:04X}), "
+            "W: 0x{:04X} (in: 0x{:04X}), "
+            "phase: {}",
+            (current_phase == phase_t::WRITEBACK) ? "RD/WR" : "READ",
+            u_addr_a, regs[u_addr_a].to_ulong(),
+            u_addr_b, regs[u_addr_b].to_ulong(),
+            u_addr_w, data_in.get().to_ulong(),
+            static_cast<int>(current_phase));
     }
 };

@@ -5,121 +5,95 @@
 #include "cpu/cpu_defines.hpp"
 #include "cpu/multiplexer.hpp"
 
-int run_test(
-    uint16_t val_a,
-    uint16_t val_b,
-    bool sel_val,
-    uint16_t expected_out,
-    digsim::signal_t<bs_data_t> &a,
-    digsim::signal_t<bs_data_t> &b,
-    digsim::signal_t<bool> &sel,
-    digsim::signal_t<bs_data_t> &out)
-{
-    a.set(val_a);
-    b.set(val_b);
-    sel.set(sel_val);
-    digsim::scheduler.run();
+struct multipleser_env_t {
+    digsim::signal_t<bs_data_t> a{"a", 0, 0};
+    digsim::signal_t<bs_data_t> b{"b", 0, 0};
+    digsim::signal_t<bool> sel{"sel", 0, 0};
+    digsim::signal_t<bs_data_t> out{"out", 0, 0};
 
-    if (out.get().to_ulong() != expected_out) {
-        digsim::error(
-            "Test", "MUX FAILED: a=0x{:04X}, b=0x{:04X}, sel={} -> expected 0x{:04X}, got 0x{:04X}", val_a, val_b,
-            sel_val, expected_out, out.get().to_ulong());
-        return 1;
+    multiplexer_t<bs_data_t> mux{"mux"};
+
+    int test_result = 0;
+
+    multipleser_env_t()
+    {
+        mux.a(a);
+        mux.b(b);
+        mux.sel(sel);
+        mux.out(out);
     }
 
-    return 0;
-}
+    void apply_inputs(uint16_t a_val, uint16_t b_val, bool sel_val)
+    {
+        a.set(a_val);
+        b.set(b_val);
+        sel.set(sel_val);
+    }
+
+    void execute_cycle() { digsim::scheduler.run(); }
+
+    void run_test(uint16_t a_val, uint16_t b_val, bool sel_val, bs_data_t expected_out)
+    {
+        // Apply inputs.
+        apply_inputs(a_val, b_val, sel_val);
+        // Execute the cycle.
+        execute_cycle();
+        // Validate the output.
+        validate_output(expected_out);
+    }
+
+    void validate_output(bs_data_t expected_out)
+    {
+        auto a_val   = a.get().to_ulong();
+        auto b_val   = b.get().to_ulong();
+        auto sel_val = sel.get();
+        auto got_out = out.get().to_ulong();
+        auto exp_out = expected_out.to_ulong();
+        if (got_out != exp_out) {
+            digsim::error("Test", "MUX FAILED: a=0x{:04X}, b=0x{:04X}, sel={} -> expected 0x{:04X}, got 0x{:04X}", a_val, b_val, sel_val, exp_out, got_out);
+            test_result = 1;
+        }
+    }
+};
 
 int main()
 {
     digsim::logger.set_level(digsim::log_level_t::debug);
 
-    // Signals
-    digsim::signal_t<bs_data_t> a("a");
-    digsim::signal_t<bs_data_t> b("b");
-    digsim::signal_t<bool> sel("sel");
-    digsim::signal_t<bs_data_t> out("out");
-
-    // Instantiate the multiplexer
-    multiplexer_t<bs_data_t> mux("mux");
-    mux.a(a);
-    mux.b(b);
-    mux.sel(sel);
-    mux.out(out);
+    multipleser_env_t env;
 
     digsim::scheduler.initialize();
 
-    // --------------------------------------------------
-    // Test: sel = 0, expect output = a
-
-    if (run_test(0x1234, 0xABCD, false, 0x1234, a, b, sel, out))
-        return 1;
-
-    // --------------------------------------------------
-    // Test: sel = 1, expect output = b
-
-    if (run_test(0x1234, 0xABCD, true, 0xABCD, a, b, sel, out))
-        return 1;
-
-    // --------------------------------------------------
-    // Test: a == b, sel = 0
-
-    if (run_test(0x5555, 0x5555, false, 0x5555, a, b, sel, out))
-        return 1;
-
-    // --------------------------------------------------
-    // Test: a == b, sel = 1
-
-    if (run_test(0x5555, 0x5555, true, 0x5555, a, b, sel, out))
-        return 1;
-
-    // --------------------------------------------------
-    // Test: All zeros
-
-    if (run_test(0x0000, 0x0000, false, 0x0000, a, b, sel, out))
-        return 1;
-    if (run_test(0x0000, 0x0000, true, 0x0000, a, b, sel, out))
-        return 1;
-
-    // --------------------------------------------------
-    // Test: All ones
-
-    if (run_test(0xFFFF, 0xFFFF, false, 0xFFFF, a, b, sel, out))
-        return 1;
-    if (run_test(0xFFFF, 0xFFFF, true, 0xFFFF, a, b, sel, out))
-        return 1;
+    env.run_test(0x1234, 0xABCD, false, 0x1234);
+    env.run_test(0x1234, 0xABCD, true, 0xABCD);
+    env.run_test(0x5555, 0x5555, false, 0x5555);
+    env.run_test(0x5555, 0x5555, true, 0x5555);
+    env.run_test(0x0000, 0x0000, false, 0x0000);
+    env.run_test(0x0000, 0x0000, true, 0x0000);
+    env.run_test(0xFFFF, 0xFFFF, false, 0xFFFF);
+    env.run_test(0xFFFF, 0xFFFF, true, 0xFFFF);
 
     // --------------------------------------------------
     // Test: Changing a, sel = 0
 
-    a.set(0xAAAA);
-    b.set(0xBBBB);
-    sel.set(false);
+    env.a.set(0xAAAA);
+    env.b.set(0xBBBB);
+    env.sel.set(false);
     digsim::scheduler.run();
-    a.set(0xCCCC); // Change input 'a' only
+    env.a.set(0xCCCC);
     digsim::scheduler.run();
-
-    if (out.get().to_ulong() != 0xCCCC) {
-        digsim::error(
-            "Test", "Change in A not reflected when sel=0: expected 0xCCCC, got 0x{:04X}", out.get().to_ulong());
-        return 1;
-    }
+    env.validate_output(0xCCCC);
 
     // --------------------------------------------------
     // Test: Changing b, sel = 1
 
-    a.set(0x1111);
-    b.set(0x2222);
-    sel.set(true);
+    env.a.set(0x1111);
+    env.b.set(0x2222);
+    env.sel.set(true);
     digsim::scheduler.run();
-    b.set(0x3333); // Change input 'b' only
+    env.b.set(0x3333);
     digsim::scheduler.run();
-
-    if (out.get().to_ulong() != 0x3333) {
-        digsim::error(
-            "Test", "Change in B not reflected when sel=1: expected 0x3333, got 0x{:04X}", out.get().to_ulong());
-        return 1;
-    }
+    env.validate_output(0x3333);
 
     return 0;
 }

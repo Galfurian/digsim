@@ -45,7 +45,7 @@ private:
             phase_t prev = state;
             state        = static_cast<phase_t>((static_cast<uint8_t>(state) + 1) % NUM_PHASES);
             phase.set(static_cast<uint8_t>(state));
-            digsim::debug(get_name(), "Phase changed from {} to {}", phase_to_string(prev), phase_to_string(state));
+            digsim::debug(get_name(), "Phase changed from {:10} to {:10}", phase_to_string(prev), phase_to_string(state));
         }
     }
 };

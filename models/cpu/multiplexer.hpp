@@ -9,7 +9,8 @@
 #include <iomanip>
 #include <sstream>
 
-template <typename T> class multiplexer_t : public digsim::module_t
+template <typename T>
+class multiplexer_t : public digsim::module_t
 {
 public:
     digsim::input_t<T> a;
@@ -35,7 +36,10 @@ private:
         out.set(result);
 
         digsim::debug(
-            get_name(), "a: 0x{:04X}, b: 0x{:04X}, sel: {}, out: 0x{:04X}", a.get().to_ulong(), b.get().to_ulong(),
-            sel.get(), result.to_ulong());
+            get_name(),
+            "a: 0x{:04X}, b: 0x{:04X}, sel: {} ({}), out: 0x{:04X}",
+            a.get().to_ulong(), b.get().to_ulong(),
+            static_cast<uint32_t>(sel.get()), (sel.get() ? "b" : "a"),
+            result.to_ulong());
     }
 };

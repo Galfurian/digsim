@@ -44,12 +44,12 @@ public:
 
     /// @brief Status flags.
     enum status_flag_t {
-        FLAG_CMP_FALSE = (1 << 0), ///< The comparison result is false.
-        FLAG_CMP_TRUE  = (1 << 1), ///< The comparison result is true.
-        FLAG_CARRY     = (1 << 2), ///< The operation resulted in a carry.
-        FLAG_BORROW    = (1 << 3), ///< The operation resulted in a borrow.
-        FLAG_DIV_ZERO  = (1 << 4), ///< The division by zero occurred.
-        FLAG_OVERFLOW  = (1 << 5), ///< The operation resulted in an overflow.
+        FLAG_CMP_FALSE = 0, ///< The comparison result is false.
+        FLAG_CMP_TRUE  = 1, ///< The comparison result is true.
+        FLAG_CARRY     = 2, ///< The operation resulted in a carry.
+        FLAG_BORROW    = 3, ///< The operation resulted in a borrow.
+        FLAG_DIV_ZERO  = 4, ///< The division by zero occurred.
+        FLAG_OVERFLOW  = 5, ///< The operation resulted in an overflow.
     };
 
 private:
@@ -214,7 +214,9 @@ private:
         status.set(flags);
 
         digsim::debug(
-            get_name(), "a: {}, b: {}, opcode: {} ({:15}) -> out: {}, remainder: {}, status: {}", a.get(), b.get(),
-            opcode.get(), opcode_to_string(static_cast<opcode_t>(op_u)), out.get(), out.get(), status.get());
+            get_name(),
+            "a: 0x{:04X}, b: 0x{:04X}, opcode: 0x{:04X} ({:15}) -> out: 0x{:04X}, remainder: 0x{:04X}, status: 0x{:04X}",
+            a_u, b_u, op_u, opcode_to_string(static_cast<opcode_t>(op_u)),
+            result.to_ulong(), rem.to_ulong(), flags.to_ulong());
     }
 };
