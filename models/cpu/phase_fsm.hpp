@@ -39,13 +39,10 @@ private:
         }
         if (reset.get()) {
             state = phase_t::FETCH;
-            phase.set(static_cast<uint8_t>(state));
-            digsim::debug(get_name(), "Resetting FSM... Phase set to {}", phase_to_string(state));
         } else {
-            phase_t prev = state;
-            state        = static_cast<phase_t>((static_cast<uint8_t>(state) + 1) % NUM_PHASES);
-            phase.set(static_cast<uint8_t>(state));
-            digsim::debug(get_name(), "Phase changed from {:10} to {:10}", phase_to_string(prev), phase_to_string(state));
+            state = static_cast<phase_t>((state + 1) % NUM_PHASES);
         }
+        phase.set(state);
+        digsim::debug(get_name(), "Phase changed to [{:2}] {:10}", static_cast<uint8_t>(state), phase_to_string(state));
     }
 };

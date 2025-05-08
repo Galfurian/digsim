@@ -66,7 +66,7 @@ enum opcode_t : uint8_t {
 };
 
 /// @brief The phase of the CPU FSM.
-enum class phase_t : uint8_t {
+enum phase_t : uint8_t {
     FETCH     = 0x0, ///< Fetch instruction.
     DECODE    = 0x1, ///< Decode instruction.
     EXECUTE   = 0x2, ///< Execute instruction.
@@ -181,32 +181,38 @@ const char *phase_to_string(phase_t phase)
     }
 }
 
-template <std::size_t N> inline std::bitset<N> operator+(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+template <std::size_t N>
+inline std::bitset<N> operator+(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
 {
     return std::bitset<N>(lhs.to_ulong() + rhs.to_ulong());
 }
 
-template <std::size_t N> inline std::bitset<N> operator-(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+template <std::size_t N>
+inline std::bitset<N> operator-(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
 {
     return std::bitset<N>(lhs.to_ulong() - rhs.to_ulong());
 }
 
-template <std::size_t N> inline std::bitset<N> operator*(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+template <std::size_t N>
+inline std::bitset<N> operator*(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
 {
     return std::bitset<N>(lhs.to_ulong() * rhs.to_ulong());
 }
 
-template <std::size_t N> inline std::bitset<N> operator/(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+template <std::size_t N>
+inline std::bitset<N> operator/(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
 {
     return std::bitset<N>(lhs.to_ulong() / rhs.to_ulong());
 }
 
-template <std::size_t N> inline bool operator<(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+template <std::size_t N>
+inline bool operator<(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
 {
     return lhs.to_ulong() < rhs.to_ulong();
 }
 
-template <std::size_t N> inline bool operator>(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+template <std::size_t N>
+inline bool operator>(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
 {
     return lhs.to_ulong() > rhs.to_ulong();
 }
@@ -226,12 +232,14 @@ template <std::size_t N> inline bool operator>(const std::bitset<N> &lhs, const 
 //     return std::bitset<N>(~lhs.to_ulong());
 // }
 
-template <std::size_t N> inline std::bitset<N> operator<<(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+template <std::size_t N>
+inline std::bitset<N> operator<<(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
 {
     return std::bitset<N>(lhs.to_ulong() << rhs.to_ulong());
 }
 
-template <std::size_t N> inline std::bitset<N> operator>>(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
+template <std::size_t N>
+inline std::bitset<N> operator>>(const std::bitset<N> &lhs, const std::bitset<N> &rhs)
 {
     return std::bitset<N>(lhs.to_ulong() >> rhs.to_ulong());
 }

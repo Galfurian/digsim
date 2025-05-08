@@ -7,7 +7,7 @@
 
 /// @brief Holds the full environment to test a CPU program.
 struct cpu_env_t {
-    digsim::signal_t<bool> clk{"clk"};
+    digsim::signal_t<bool> clk{"clk", false, 1UL};
     digsim::signal_t<bool> reset{"reset"};
     digsim::signal_t<bool> halted{"halted"};
     cpu_t cpu;
