@@ -1,6 +1,6 @@
-# DigSim
+# SimCore
 
-DigSim is a lightweight and extensible event-driven digital circuit simulator written in modern C++.
+SimCore is a lightweight and extensible event-driven digital circuit simulator written in modern C++.
 
 ## Features
 

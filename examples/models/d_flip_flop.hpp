@@ -4,23 +4,23 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include <iomanip>
 #include <sstream>
 
-class DFlipFlop : public digsim::module_t
+class DFlipFlop : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> clk;
-    digsim::input_t<bool> d;
-    digsim::input_t<bool> enable;
-    digsim::input_t<bool> reset;
-    digsim::output_t<bool> q;
-    digsim::output_t<bool> q_not;
+    simcore::input_t<bool> clk;
+    simcore::input_t<bool> d;
+    simcore::input_t<bool> enable;
+    simcore::input_t<bool> reset;
+    simcore::output_t<bool> q;
+    simcore::output_t<bool> q_not;
 
-    DFlipFlop(const std::string &_name, digsim::module_t *_parent = nullptr)
-        : digsim::module_t(_name, _parent)
+    DFlipFlop(const std::string &_name, simcore::module_t *_parent = nullptr)
+        : simcore::module_t(_name, _parent)
         , clk("clk", this)
         , d("d", this)
         , enable("enable", this)
@@ -61,7 +61,7 @@ private:
         if (q_not.get_delay() > 0) {
             ss << " (+" << q_not.get_delay() << "t)";
         }
-        digsim::info(get_name(), ss.str());
+        simcore::info(get_name(), ss.str());
 
         q.set(next_q);
         q_not.set(!next_q);

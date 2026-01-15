@@ -4,21 +4,21 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include <iomanip>
 #include <sstream>
 
-template <typename T> class Mux2to1 : public digsim::module_t
+template <typename T> class Mux2to1 : public simcore::module_t
 {
 public:
-    digsim::input_t<T> a;
-    digsim::input_t<T> b;
-    digsim::input_t<bool> sel;
-    digsim::output_t<T> out;
+    simcore::input_t<T> a;
+    simcore::input_t<T> b;
+    simcore::input_t<bool> sel;
+    simcore::output_t<T> out;
 
-    Mux2to1(const std::string &_name, digsim::module_t *_parent = nullptr)
-        : digsim::module_t(_name, _parent)
+    Mux2to1(const std::string &_name, simcore::module_t *_parent = nullptr)
+        : simcore::module_t(_name, _parent)
         , a("a", this)
         , b("b", this)
         , sel("sel", this)
@@ -41,7 +41,7 @@ private:
         if (out.get_delay() > 0) {
             ss << " (+" << out.get_delay() << "t)";
         }
-        digsim::info(get_name(), ss.str());
+        simcore::info(get_name(), ss.str());
 
         out.set(result);
     }

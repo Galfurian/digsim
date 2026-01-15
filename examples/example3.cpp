@@ -1,6 +1,6 @@
 /// @file example3.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "models/clock.hpp"
 #include "models/d_flip_flop.hpp"
@@ -8,17 +8,17 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
-    digsim::info("Main", "=== Initializing simulation ===");
+    simcore::info("Main", "=== Initializing simulation ===");
 
     // Signals
-    digsim::signal_t<bool> clk_out("clk_out");
-    digsim::signal_t<bool> d("d");
-    digsim::signal_t<bool> en("en");
-    digsim::signal_t<bool> rst("rst");
-    digsim::signal_t<bool> q("q");
-    digsim::signal_t<bool> q_not("q_not");
+    simcore::signal_t<bool> clk_out("clk_out");
+    simcore::signal_t<bool> d("d");
+    simcore::signal_t<bool> en("en");
+    simcore::signal_t<bool> rst("rst");
+    simcore::signal_t<bool> q("q");
+    simcore::signal_t<bool> q_not("q_not");
 
     // Clock with 2ns period (1ns high, 1ns low)
     Clock clk("clk", 2, 1);
@@ -40,14 +40,14 @@ int main()
 
     d.set(1); // preload D
 
-    digsim::dependency_graph.export_dot("example3.dot");
+    simcore::dependency_graph.export_dot("example3.dot");
 
-    digsim::info("Main", "=== Running simulation ===");
+    simcore::info("Main", "=== Running simulation ===");
 
-    digsim::scheduler.initialize();
-    digsim::scheduler.run(4);
+    simcore::scheduler.initialize();
+    simcore::scheduler.run(4);
 
-    digsim::info("Main", "=== Simulation finished ===");
+    simcore::info("Main", "=== Simulation finished ===");
 
     return 0;
 }

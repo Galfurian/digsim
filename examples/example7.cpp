@@ -1,20 +1,20 @@
 /// @file example7.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "models/clock.hpp"
 #include "models/probe.hpp"
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
-class ping_module : public digsim::module_t
+class ping_module : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> trigger;
-    digsim::input_t<bool> clk;
+    simcore::input_t<bool> trigger;
+    simcore::input_t<bool> clk;
 
     ping_module(const std::string &_name)
-        : digsim::module_t(_name)
+        : simcore::module_t(_name)
         , trigger("trigger")
         , clk("clk")
         , waiting(false)
@@ -32,7 +32,7 @@ private:
     void on_trigger()
     {
         if (waiting) {
-            digsim::info(get_name(), "Already waiting for a trigger, ignoring new one.");
+            simcore::info(get_name(), "Already waiting for a trigger, ignoring new one.");
             return;
         }
 
@@ -40,18 +40,18 @@ private:
         waiting       = true;
         counter       = 0;
 
-        digsim::info(get_name(), "Trigger {} received, will report after 5 clock cycles...", trigger_value);
+        simcore::info(get_name(), "Trigger {} received, will report after 5 clock cycles...", trigger_value);
     }
 
     void on_clock()
     {
         if (!waiting) {
-            digsim::info(get_name(), "Received clock signal but not waiting for a trigger.");
+            simcore::info(get_name(), "Received clock signal but not waiting for a trigger.");
             return;
         }
         if (clk.get()) {
             if (counter++ == 5) {
-                digsim::info(
+                simcore::info(
                     get_name(), "Wake up after wait (value that triggered " + std::to_string(trigger_value) + ")!");
                 waiting = false;
             }
@@ -61,11 +61,11 @@ private:
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
     // === Signals ===
-    digsim::signal_t<bool> trigger("trigger");
-    digsim::signal_t<bool> clk_out("clk_out");
+    simcore::signal_t<bool> trigger("trigger");
+    simcore::signal_t<bool> clk_out("clk_out");
 
     // === Modules ===
     Clock clock("clock");
@@ -82,15 +82,15 @@ int main()
     trigger.set(true);
 
     // === Output Graph ===
-    digsim::dependency_graph.export_dot("example7.dot");
+    simcore::dependency_graph.export_dot("example7.dot");
 
-    digsim::scheduler.initialize();
+    simcore::scheduler.initialize();
 
-    digsim::info("Main", "=== Begin wait_for test ===");
+    simcore::info("Main", "=== Begin wait_for test ===");
 
-    digsim::scheduler.run(20); // Enough time to see all events
+    simcore::scheduler.run(20); // Enough time to see all events
 
-    digsim::info("Main", "=== Simulation finished ===");
+    simcore::info("Main", "=== Simulation finished ===");
 
     return 0;
 }

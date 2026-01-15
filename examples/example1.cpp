@@ -1,6 +1,6 @@
 /// @file example1.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "models/full_adder.hpp"
 #include "models/gates/not_gate.hpp"
@@ -8,21 +8,21 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
     // Inputs
-    digsim::signal_t<bool> a("a");
-    digsim::signal_t<bool> b("b");
-    digsim::signal_t<bool> cin("cin");
+    simcore::signal_t<bool> a("a");
+    simcore::signal_t<bool> b("b");
+    simcore::signal_t<bool> cin("cin");
 
-    digsim::signal_t<bool> sum("sum");
-    digsim::signal_t<bool> count("count");
+    simcore::signal_t<bool> sum("sum");
+    simcore::signal_t<bool> count("count");
 
-    digsim::signal_t<bool> not_sum("not_sum", false, 1);
-    digsim::signal_t<bool> not_cout("not_cout", false, 1);
+    simcore::signal_t<bool> not_sum("not_sum", false, 1);
+    simcore::signal_t<bool> not_cout("not_cout", false, 1);
 
-    digsim::signal_t<bool> sum_out("sum_out", false, 1);
-    digsim::signal_t<bool> cout_out("cout_out", false, 1);
+    simcore::signal_t<bool> sum_out("sum_out", false, 1);
+    simcore::signal_t<bool> cout_out("cout_out", false, 1);
 
     // Full Adder
     FullAdder fa("fa");
@@ -59,22 +59,22 @@ int main()
     p2.in(cout_out);
 
     // Export graph.
-    digsim::dependency_graph.export_dot("example1.dot");
+    simcore::dependency_graph.export_dot("example1.dot");
 
-    digsim::info("Main", "=== Initializing simulation ===");
+    simcore::info("Main", "=== Initializing simulation ===");
 
-    digsim::scheduler.initialize();
+    simcore::scheduler.initialize();
 
-    digsim::info("Main", "=== Running simulation ===");
+    simcore::info("Main", "=== Running simulation ===");
 
     // Apply input pattern (e.g., a=1, b=1, cin=0)
     a.set(true);
     b.set(true);
     cin.set(false);
 
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
-    digsim::info("Main", "=== Simulation finished ===");
+    simcore::info("Main", "=== Simulation finished ===");
 
     return 0;
 }

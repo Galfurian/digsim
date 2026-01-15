@@ -1,18 +1,18 @@
 /// @file example17.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "cpu/decoder.hpp"
 
 static int test_result = 0;
 
 struct decoder_env_t {
-    digsim::signal_t<bs_instruction_t> instruction{"instruction", 0, 0};
-    digsim::signal_t<bs_phase_t> phase{"phase", static_cast<uint16_t>(phase_t::DECODE), 0};
-    digsim::signal_t<bs_opcode_t> opcode{"opcode", 0, 0};
-    digsim::signal_t<bs_register_t> rs{"rs", 0, 0};
-    digsim::signal_t<bs_register_t> rt{"rt", 0, 0};
-    digsim::signal_t<bool> flag{"flag", 0, 0};
+    simcore::signal_t<bs_instruction_t> instruction{"instruction", 0, 0};
+    simcore::signal_t<bs_phase_t> phase{"phase", static_cast<uint16_t>(phase_t::DECODE), 0};
+    simcore::signal_t<bs_opcode_t> opcode{"opcode", 0, 0};
+    simcore::signal_t<bs_register_t> rs{"rs", 0, 0};
+    simcore::signal_t<bs_register_t> rt{"rt", 0, 0};
+    simcore::signal_t<bool> flag{"flag", 0, 0};
     decoder_t decoder{"decoder"};
 
     decoder_env_t()
@@ -28,40 +28,40 @@ struct decoder_env_t {
     void set_instruction(bs_instruction_t instr)
     {
         instruction.set(instr);
-        digsim::scheduler.run();
+        simcore::scheduler.run();
     }
 };
 
 void run_test(decoder_env_t &env, uint16_t instruction)
 {
     env.set_instruction(instruction);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
     uint8_t opcode, rs, rt, flag;
     decode_instruction(instruction, opcode, rs, rt, flag);
 
     if (env.opcode.get() != opcode) {
-        digsim::error("Test", "OP mismatch (got 0x{:X}, expected 0x{:X})", env.opcode.get().to_ulong(), opcode);
+        simcore::error("Test", "OP mismatch (got 0x{:X}, expected 0x{:X})", env.opcode.get().to_ulong(), opcode);
         test_result = 1;
     }
     if (env.rs.get() != rs) {
-        digsim::error("Test", "RS mismatch (got 0x{:X}, expected 0x{:X})", env.rs.get().to_ulong(), rs);
+        simcore::error("Test", "RS mismatch (got 0x{:X}, expected 0x{:X})", env.rs.get().to_ulong(), rs);
         test_result = 1;
     }
     if (env.rt.get() != rt) {
-        digsim::error("Test", "RT mismatch (got 0x{:X}, expected 0x{:X})", env.rt.get().to_ulong(), rt);
+        simcore::error("Test", "RT mismatch (got 0x{:X}, expected 0x{:X})", env.rt.get().to_ulong(), rt);
         test_result = 1;
     }
     if (env.flag.get() != flag) {
-        digsim::error("Test", "flag mismatch (got 0x{:1X}, expected 0x{:1X})", env.flag.get(), flag);
+        simcore::error("Test", "flag mismatch (got 0x{:1X}, expected 0x{:1X})", env.flag.get(), flag);
         test_result = 1;
     }
 }
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
-    digsim::scheduler.initialize();
+    simcore::logger.set_level(simcore::log_level_t::debug);
+    simcore::scheduler.initialize();
 
     decoder_env_t env;
 

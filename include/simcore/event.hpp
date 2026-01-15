@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "digsim/common.hpp"
+#include "simcore/common.hpp"
 
-namespace digsim
+namespace simcore
 {
 
 /// @brief An event in the simulation, which consists of a time and a callback process.
@@ -24,4 +24,4 @@ struct event_t {
     bool operator>(const event_t &other) const { return time > other.time; }
 };
 
-} // namespace digsim
+} // namespace simcore

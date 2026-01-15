@@ -1,11 +1,11 @@
 /// @file isignal.cpp
 /// @brief
 
-#include "digsim/isignal.hpp"
+#include "simcore/isignal.hpp"
 
-#include "digsim/module.hpp"
+#include "simcore/module.hpp"
 
-namespace digsim
+namespace simcore
 {
 
 std::string get_signal_location_string(const isignal_t *signal)
@@ -35,4 +35,4 @@ std::string get_signal_location_string(const isignal_t *signal)
     return ss.str();
 }
 
-} // namespace digsim
+} // namespace simcore

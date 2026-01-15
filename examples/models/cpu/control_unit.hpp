@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include "cpu_defines.hpp"
 
@@ -13,19 +13,19 @@
 #include <sstream>
 
 /// @brief A simple control unit for a 4-phase CPU pipeline.
-class control_unit_t : public digsim::module_t
+class control_unit_t : public simcore::module_t
 {
 public:
-    digsim::input_t<bs_opcode_t> opcode; ///< Decoded operation code.
-    digsim::input_t<bs_phase_t> phase;   ///< Current CPU phase.
+    simcore::input_t<bs_opcode_t> opcode; ///< Decoded operation code.
+    simcore::input_t<bs_phase_t> phase;   ///< Current CPU phase.
 
-    digsim::output_t<bool> reg_write;     ///< Register file write enable.
-    digsim::output_t<bool> mem_write;     ///< Memory write enable.
-    digsim::output_t<bool> mem_to_reg;    ///< Write-back select: memory or ALU.
-    digsim::output_t<bool> rt_as_dest;    ///< Register file write destination: rt or rd.
-    digsim::output_t<bool> jump_enable;   ///< for BR_JMP.
-    digsim::output_t<bool> branch_enable; ///< for BR_* with conditions.
-    digsim::output_t<bool> halt;          ///< Halt signal.
+    simcore::output_t<bool> reg_write;     ///< Register file write enable.
+    simcore::output_t<bool> mem_write;     ///< Memory write enable.
+    simcore::output_t<bool> mem_to_reg;    ///< Write-back select: memory or ALU.
+    simcore::output_t<bool> rt_as_dest;    ///< Register file write destination: rt or rd.
+    simcore::output_t<bool> jump_enable;   ///< for BR_JMP.
+    simcore::output_t<bool> branch_enable; ///< for BR_* with conditions.
+    simcore::output_t<bool> halt;          ///< Halt signal.
 
     control_unit_t(const std::string &_name)
         : module_t(_name)
@@ -180,7 +180,7 @@ private:
             break;
         }
 
-        digsim::debug(
+        simcore::debug(
             get_name(),
             "{:9}: opcode 0x{:04X} ({:12}) -> reg_write: {:1X}, mem_write: {:1X}, mem_to_reg: {:1X}, rt_as_dest: "
             "{:1X}, jump_enable: {:1X}, branch_enable: {:1X}, halt: {:1X}",

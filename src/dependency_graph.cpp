@@ -4,15 +4,15 @@
 /// This file is distributed under the terms of the MIT License.
 /// See the full license in the root directory at LICENSE.md.
 
-#include "digsim/dependency_graph.hpp"
+#include "simcore/dependency_graph.hpp"
 
-#include "digsim/module.hpp"
+#include "simcore/module.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <random>
 
-namespace digsim
+namespace simcore
 {
 
 dependency_graph_t &dependency_graph_t::instance()
@@ -33,7 +33,7 @@ void dependency_graph_t::register_signal_producer(const isignal_t *signal, const
         // Add the signal to the module's outputs.
         if (module_outputs[module].count(signal) == 0) {
             module_outputs[module].insert(signal);
-            digsim::trace(
+            simcore::trace(
                 "dependency_graph_t", "Module `{}` produces signal `{}`", module->get_name(), signal->get_name());
         }
     }
@@ -51,7 +51,7 @@ void dependency_graph_t::register_signal_consumer(const isignal_t *signal, const
         // Add the signal to the module's inputs.
         if (module_inputs[module].count(signal) == 0) {
             module_inputs[module].insert(signal);
-            digsim::trace(
+            simcore::trace(
                 "dependency_graph_t", "Module `{}` consumes signal `{}`", module->get_name(), signal->get_name());
         }
     }
@@ -168,7 +168,7 @@ void dependency_graph_t::compute_cycles()
 
 void dependency_graph_t::print_cycle_report(const path_t &cycle) const
 {
-    digsim::info("dependency_graph_t", "Cycle:");
+    simcore::info("dependency_graph_t", "Cycle:");
     for (const auto *signal : cycle) {
         const isignal_t *output_port    = nullptr;
         const module_t *signal_producer = nullptr;
@@ -193,17 +193,17 @@ void dependency_graph_t::print_cycle_report(const path_t &cycle) const
         }
         if (signal_producer && output_port) {
             // If a producer is found, print the signal name and its producer.
-            digsim::info(
+            simcore::info(
                 "dependency_graph_t", "  - {} [{}.{}, delay: {}]", signal->get_name(), signal_producer->get_name(),
                 output_port->get_name(), signal->get_delay());
         } else {
             // If no producer is found, just print the signal name.
-            digsim::info("dependency_graph_t", "  - {} [delay: {}]", signal->get_name(), signal->get_delay());
+            simcore::info("dependency_graph_t", "  - {} [delay: {}]", signal->get_name(), signal->get_delay());
         }
     }
     // Close the loop
     if (!cycle.empty()) {
-        digsim::info("dependency_graph_t", "  - Back to {}.", cycle.front()->get_name());
+        simcore::info("dependency_graph_t", "  - Back to {}.", cycle.front()->get_name());
     }
 }
 
@@ -304,7 +304,7 @@ void dependency_graph_t::update_signal_graph()
         if (!signal) {
             continue;
         }
-        digsim::trace(
+        simcore::trace(
             "dependency_graph_t", "Output signal `{}` is bound to `{}`...", iface_signal->get_name(),
             signal->get_name());
         // For each signal interface in consumers...
@@ -314,7 +314,7 @@ void dependency_graph_t::update_signal_graph()
             if (!consumer_signal || consumer_signal != signal) {
                 continue;
             }
-            digsim::trace(
+            simcore::trace(
                 "dependency_graph_t", "    Signal `{}` is in turn bound to input signal `{}`...", signal->get_name(),
                 consumer_iface->get_name());
             // Now we know signal is bound to both an output and input — it connects them.
@@ -329,7 +329,7 @@ void dependency_graph_t::update_signal_graph()
                 for (const auto *out_port : get_outputs(consumer_module)) {
                     if (auto *bound = out_port->get_bound_signal()) {
                         signal_graph[signal].push_back(bound);
-                        digsim::trace(
+                        simcore::trace(
                             "dependency_graph_t", "        Link resolved signal `{}` -> `{}`...", signal->get_name(),
                             bound->get_name());
                     }
@@ -362,4 +362,4 @@ void dependency_graph_t::dfs_cycle(
     path.pop_back();
 }
 
-} // namespace digsim
+} // namespace simcore

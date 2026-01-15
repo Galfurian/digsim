@@ -1,12 +1,12 @@
 /// @file example14.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "cpu/rom.hpp"
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
     // --------------------------------------------------
     // Create ROM contents (simple test program).
@@ -19,28 +19,28 @@ int main()
     };
 
     // Signals
-    digsim::signal_t<bs_address_t> addr("addr", 0);
-    digsim::signal_t<bs_instruction_t> instr("instr");
+    simcore::signal_t<bs_address_t> addr("addr", 0);
+    simcore::signal_t<bs_instruction_t> instr("instr");
 
     // Instantiate the ROM
     rom_t rom0("rom0", program);
     rom0.addr(addr);
     rom0.instruction(instr);
 
-    digsim::scheduler.initialize();
+    simcore::scheduler.initialize();
 
     // --------------------------------------------------
     // Test: Sequential Valid Reads.
 
     for (std::size_t i = 0; i < program.size(); ++i) {
         addr.set(i);
-        digsim::scheduler.run();
+        simcore::scheduler.run();
 
         uint16_t actual   = static_cast<uint16_t>(instr.get().to_ulong());
         uint16_t expected = program[i];
 
         if (actual != expected) {
-            digsim::error("Test", "Mismatch at 0x{:02X}: expected 0x{:04X}, got 0x{:04X}", i, expected, actual);
+            simcore::error("Test", "Mismatch at 0x{:02X}: expected 0x{:04X}, got 0x{:04X}", i, expected, actual);
             return 1;
         }
     }
@@ -49,10 +49,10 @@ int main()
     // Test: Out-of-Bounds Read.
 
     addr.set(program.size()); // First invalid address
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
     if (instr.get().to_ulong() != 0x0000) {
-        digsim::error("Test", "Out-of-bounds read FAILED: Expected 0x0000, got 0x{:04X}", instr.get().to_ulong());
+        simcore::error("Test", "Out-of-bounds read FAILED: Expected 0x0000, got 0x{:04X}", instr.get().to_ulong());
         return 1;
     }
 
@@ -60,10 +60,10 @@ int main()
     // Test: High Out-of-Bounds Read.
 
     addr.set(0xFFFF); // Far out-of-bounds
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
     if (instr.get().to_ulong() != 0x0000) {
-        digsim::error("Test", "High OOB read FAILED: Expected 0x0000, got 0x{:04X}", instr.get().to_ulong());
+        simcore::error("Test", "High OOB read FAILED: Expected 0x0000, got 0x{:04X}", instr.get().to_ulong());
         return 1;
     }
 
@@ -71,15 +71,15 @@ int main()
     // Test: Repeated Access (No Change).
 
     addr.set(2); // Valid address
-    digsim::scheduler.run();
+    simcore::scheduler.run();
     uint16_t expected = program[2];
 
     // Set the same address again
     addr.set(2);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
     if (instr.get().to_ulong() != expected) {
-        digsim::error(
+        simcore::error(
             "Test", "Repeated read FAILED at 0x02: Expected 0x{:04X}, got 0x{:04X}", expected, instr.get().to_ulong());
         return 1;
     }
@@ -91,11 +91,11 @@ int main()
     for (int k = 0; k < 10; ++k) {
         std::size_t random_addr = static_cast<std::size_t>(std::rand()) % program.size();
         addr.set(random_addr);
-        digsim::scheduler.run();
+        simcore::scheduler.run();
         uint16_t actual = static_cast<uint16_t>(instr.get().to_ulong());
         expected        = program[random_addr];
         if (actual != expected) {
-            digsim::error(
+            simcore::error(
                 "Test", "Mismatch at 0x{:02X}: expected 0x{:04X}, got 0x{:04X}", random_addr, expected, actual);
             return 1;
         }
@@ -105,12 +105,12 @@ int main()
     // Test: Stable Reads at Same Address.
 
     addr.set(1); // Use a valid address, e.g., address 1
-    digsim::scheduler.run();
+    simcore::scheduler.run();
     expected = static_cast<uint16_t>(instr.get().to_ulong());
     for (int i = 0; i < 5; ++i) {
-        digsim::scheduler.run();
+        simcore::scheduler.run();
         if (instr.get().to_ulong() != expected) {
-            digsim::error(
+            simcore::error(
                 "Test", "Stable read FAILED at iteration {}: expected 0x{:04X}, got 0x{:04X}", i, expected,
                 instr.get().to_ulong());
             return 1;
@@ -123,9 +123,9 @@ int main()
     for (int pass = 0; pass < 3; ++pass) {
         for (std::size_t i = 0; i < program.size(); ++i) {
             addr.set(i);
-            digsim::scheduler.run();
+            simcore::scheduler.run();
             if (instr.get().to_ulong() != program[i]) {
-                digsim::error(
+                simcore::error(
                     "Test", "Pass {}: Mismatch at 0x{:02X}: expected 0x{:04X}, got 0x{:04X}", pass, i, program[i],
                     instr.get().to_ulong());
                 return 1;
@@ -140,9 +140,9 @@ int main()
         addr.set(i);
         // Not calling scheduler.run() immediately for each address change
     }
-    digsim::scheduler.run(); // Process the final address update
+    simcore::scheduler.run(); // Process the final address update
     if (instr.get().to_ulong() != program.back()) {
-        digsim::error(
+        simcore::error(
             "Test", "Rapid update FAILED: expected 0x{:04X}, got 0x{:04X}", program.back(), instr.get().to_ulong());
         return 1;
     }

@@ -4,14 +4,14 @@
 /// This file is distributed under the terms of the MIT License.
 /// See the full license in the root directory at LICENSE.md.
 
-#include "digsim/common.hpp"
+#include "simcore/common.hpp"
 
-#include "digsim/module.hpp"
+#include "simcore/module.hpp"
 
 #include <iostream>
 #include <sstream>
 
-namespace digsim
+namespace simcore
 {
 
 std::string object_ref_t::name() const { return ptr ? ptr->get_name() : "(anonymous)"; }
@@ -83,4 +83,4 @@ std::string format_time(discrete_time_t nanoseconds)
     }
 }
 
-} // namespace digsim
+} // namespace simcore

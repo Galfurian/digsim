@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "digsim/common.hpp"
-#include "digsim/signal.hpp"
+#include "simcore/common.hpp"
+#include "simcore/signal.hpp"
 
-namespace digsim
+namespace simcore
 {
 
 /// @brief Base class for all modules in the digital simulator.
@@ -38,7 +38,7 @@ public:
     void add_sensitivity(void (Module::*method)(), const std::string _name, isignal_t &signal)
     {
         // Get the process information for the method.
-        auto proc_info = digsim::get_or_create_process<Module>(static_cast<Module *>(this), method, _name);
+        auto proc_info = simcore::get_or_create_process<Module>(static_cast<Module *>(this), method, _name);
         // Adds the signal to the process sensitivity list.
         add_sensitivity(proc_info, signal);
         // Registers the process as a consumer of the signal.
@@ -68,7 +68,7 @@ public:
     template <typename Module> void add_consumer(void (Module::*method)(), const std::string _name, isignal_t &signal)
     {
         // Get the process information for the method.
-        auto proc_info = digsim::get_or_create_process<Module>(static_cast<Module *>(this), method, _name);
+        auto proc_info = simcore::get_or_create_process<Module>(static_cast<Module *>(this), method, _name);
         // Registers the signal as a consumer.
         add_consumer(proc_info, signal);
     }
@@ -95,7 +95,7 @@ public:
     template <typename Module> void add_producer(void (Module::*method)(), const std::string _name, isignal_t &signal)
     {
         // Get the process information for the method.
-        auto proc_info = digsim::get_or_create_process<Module>(static_cast<Module *>(this), method, _name);
+        auto proc_info = simcore::get_or_create_process<Module>(static_cast<Module *>(this), method, _name);
         // Registers the signal as a producer.
         add_producer(proc_info, signal);
     }
@@ -138,7 +138,7 @@ private:
     module_t *parent_module = nullptr;
 };
 
-} // namespace digsim
+} // namespace simcore
 
 /// @brief Helper macro to add a sensitivity to a process.
 #define ADD_SENSITIVITY(object, method, ...) add_sensitivity(&object::method, #method, __VA_ARGS__)

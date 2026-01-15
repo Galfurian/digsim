@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "digsim/isignal.hpp"
+#include "simcore/isignal.hpp"
 
-namespace digsim
+namespace simcore
 {
 
 /// @brief The output_t class represents an output signal in a digital simulation.
@@ -81,14 +81,14 @@ template <typename T> T output_t<T>::get() const
 template <typename T> void output_t<T>::operator()(isignal_t &binding)
 {
     if (auto *output = dynamic_cast<output_t<T> *>(&binding)) {
-        digsim::trace(
+        simcore::trace(
             "output_t", "Binding output `{}` to output `{}`", get_signal_location_string(this),
             get_signal_location_string(output));
         // Binding a submodule output to this output (chaining).
         // Track the sub-output so we can propagate signal binding later.
         output->sub_outputs.insert(this);
     } else if (auto *signal = dynamic_cast<signal_t<T> *>(&binding)) {
-        digsim::trace(
+        simcore::trace(
             "output_t", "Binding output `{}` to signal `{}`", get_signal_location_string(this), signal->get_name());
         // Set the bound signal.
         bound_signal = signal;
@@ -121,4 +121,4 @@ template <typename T> const isignal_t *output_t<T>::get_bound_signal() const { r
 
 template <typename T> inline const char *output_t<T>::get_type_name() const { return typeid(T).name(); }
 
-} // namespace digsim
+} // namespace simcore

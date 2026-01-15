@@ -1,19 +1,19 @@
 /// @file example5.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "models/clock.hpp"
 #include "models/probe.hpp"
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
-    digsim::info("Main", "=== Initializing simulation ===");
+    simcore::info("Main", "=== Initializing simulation ===");
 
-    digsim::signal_t<bool> clk_out("clk_out");
+    simcore::signal_t<bool> clk_out("clk_out");
 
     // Clock: 2ns period (1ns high, 1ns low)
     Clock clk("clk");
@@ -22,14 +22,14 @@ int main()
     Probe<bool> probe("probe");
     probe.in(clk_out);
 
-    digsim::dependency_graph.export_dot("example5.dot");
+    simcore::dependency_graph.export_dot("example5.dot");
 
-    digsim::info("Main", "=== Running simulation ===");
+    simcore::info("Main", "=== Running simulation ===");
 
-    digsim::scheduler.initialize();
+    simcore::scheduler.initialize();
 
-    digsim::scheduler.run(10);
+    simcore::scheduler.run(10);
 
-    digsim::info("Main", "=== Simulation finished ===");
+    simcore::info("Main", "=== Simulation finished ===");
     return 0;
 }

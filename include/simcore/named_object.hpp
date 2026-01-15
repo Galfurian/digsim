@@ -8,7 +8,7 @@
 
 #include <string>
 
-namespace digsim
+namespace simcore
 {
 
 /// @brief A class that represents an object with a name.
@@ -35,4 +35,4 @@ public:
     const std::string &get_name() const { return name; }
 };
 
-} // namespace digsim
+} // namespace simcore

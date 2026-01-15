@@ -4,13 +4,13 @@
 /// This file is distributed under the terms of the MIT License.
 /// See the full license in the root directory at LICENSE.md.
 
-#include "digsim/module.hpp"
+#include "simcore/module.hpp"
 
-#include "digsim/dependency_graph.hpp"
-#include "digsim/scheduler.hpp"
-#include "digsim/signal.hpp"
+#include "simcore/dependency_graph.hpp"
+#include "simcore/scheduler.hpp"
+#include "simcore/signal.hpp"
 
-namespace digsim
+namespace simcore
 {
 
 module_t::module_t(const std::string &_name, module_t *_parent_module)
@@ -36,4 +36,4 @@ void module_t::add_producer(const process_info_t &proc_info, isignal_t &signal)
     dependency_graph.register_signal_producer(&signal, proc_info);
 }
 
-} // namespace digsim
+} // namespace simcore

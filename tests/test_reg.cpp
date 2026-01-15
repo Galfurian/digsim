@@ -1,15 +1,15 @@
 /// @file example15.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "cpu/reg_file.hpp"
 
-void toggle_clock(digsim::signal_t<bool> &clk)
+void toggle_clock(simcore::signal_t<bool> &clk)
 {
     clk.set(false);
-    digsim::scheduler.run(); // Falling edge
+    simcore::scheduler.run(); // Falling edge
     clk.set(true);
-    digsim::scheduler.run(); // Rising edge (posedge)
+    simcore::scheduler.run(); // Rising edge (posedge)
 }
 
 // --------------------------------------------------
@@ -17,11 +17,11 @@ void toggle_clock(digsim::signal_t<bool> &clk)
 // --------------------------------------------------
 
 void run_write(
-    digsim::signal_t<bs_register_t> &addr_w,
-    digsim::signal_t<bs_data_t> &data_in,
-    digsim::signal_t<bool> &write_enable,
-    digsim::signal_t<bs_phase_t> &phase,
-    digsim::signal_t<bool> &clk,
+    simcore::signal_t<bs_register_t> &addr_w,
+    simcore::signal_t<bs_data_t> &data_in,
+    simcore::signal_t<bool> &write_enable,
+    simcore::signal_t<bs_phase_t> &phase,
+    simcore::signal_t<bool> &clk,
     uint8_t reg,
     uint8_t value)
 {
@@ -34,10 +34,10 @@ void run_write(
 }
 
 void run_read(
-    digsim::signal_t<bs_register_t> &addr_a,
-    digsim::signal_t<bs_register_t> &addr_b,
-    digsim::signal_t<bs_phase_t> &phase,
-    digsim::signal_t<bool> &clk,
+    simcore::signal_t<bs_register_t> &addr_a,
+    simcore::signal_t<bs_register_t> &addr_b,
+    simcore::signal_t<bs_phase_t> &phase,
+    simcore::signal_t<bool> &clk,
     uint8_t reg_a,
     uint8_t reg_b)
 {
@@ -49,22 +49,22 @@ void run_read(
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
     // --------------------------------------------------
     // Setup
     // --------------------------------------------------
 
-    digsim::signal_t<bool> clk("clk");
-    digsim::signal_t<bool> reset("reset", false);
-    digsim::signal_t<bs_phase_t> phase("phase", 0);
-    digsim::signal_t<bs_register_t> addr_a("addr_a");
-    digsim::signal_t<bs_register_t> addr_b("addr_b");
-    digsim::signal_t<bs_register_t> addr_w("addr_w");
-    digsim::signal_t<bool> write_enable("write_enable");
-    digsim::signal_t<bs_data_t> data_in("data_in");
-    digsim::signal_t<bs_data_t> data_a("data_a");
-    digsim::signal_t<bs_data_t> data_b("data_b");
+    simcore::signal_t<bool> clk("clk");
+    simcore::signal_t<bool> reset("reset", false);
+    simcore::signal_t<bs_phase_t> phase("phase", 0);
+    simcore::signal_t<bs_register_t> addr_a("addr_a");
+    simcore::signal_t<bs_register_t> addr_b("addr_b");
+    simcore::signal_t<bs_register_t> addr_w("addr_w");
+    simcore::signal_t<bool> write_enable("write_enable");
+    simcore::signal_t<bs_data_t> data_in("data_in");
+    simcore::signal_t<bs_data_t> data_a("data_a");
+    simcore::signal_t<bs_data_t> data_b("data_b");
 
     reg_file_t reg0("reg0");
     reg0.clk(clk);
@@ -78,7 +78,7 @@ int main()
     reg0.data_a(data_a);
     reg0.data_b(data_b);
 
-    digsim::scheduler.initialize();
+    simcore::scheduler.initialize();
 
     // --------------------------------------------------
     // Test 1: Basic write and readback
@@ -88,7 +88,7 @@ int main()
     run_read(addr_a, addr_b, phase, clk, 1, 2);
 
     if (data_a.get().to_ulong() != 0xAB || data_b.get().to_ulong() != 0xCD) {
-        digsim::error(
+        simcore::error(
             "Test", "Readback FAILED: r1=0x{:02X}, r2=0x{:02X}", data_a.get().to_ulong(), data_b.get().to_ulong());
         return 1;
     }
@@ -98,7 +98,7 @@ int main()
     // --------------------------------------------------
     run_read(addr_a, addr_b, phase, clk, 3, 3);
     if (data_a.get().to_ulong() != 0x00) {
-        digsim::error("Test", "Uninitialized read FAILED: r3 = 0x{:02X}", data_a.get().to_ulong());
+        simcore::error("Test", "Uninitialized read FAILED: r3 = 0x{:02X}", data_a.get().to_ulong());
         return 1;
     }
 
@@ -112,7 +112,7 @@ int main()
     toggle_clock(clk);
     run_read(addr_a, addr_b, phase, clk, 4, 4);
     if (data_a.get().to_ulong() != 0x00) {
-        digsim::error("Test", "Write-disabled register changed! r4 = 0x{:02X}", data_a.get().to_ulong());
+        simcore::error("Test", "Write-disabled register changed! r4 = 0x{:02X}", data_a.get().to_ulong());
         return 1;
     }
 
@@ -122,7 +122,7 @@ int main()
     run_write(addr_w, data_in, write_enable, phase, clk, 1, 0x11);
     run_read(addr_a, addr_b, phase, clk, 1, 1);
     if (data_a.get().to_ulong() != 0x11) {
-        digsim::error("Test", "Overwrite FAILED: r1 = 0x{:02X}", data_a.get().to_ulong());
+        simcore::error("Test", "Overwrite FAILED: r1 = 0x{:02X}", data_a.get().to_ulong());
         return 1;
     }
 
@@ -134,7 +134,7 @@ int main()
     reset.set(false);
     run_read(addr_a, addr_b, phase, clk, 1, 2);
     if (data_a.get().to_ulong() != 0x00 || data_b.get().to_ulong() != 0x00) {
-        digsim::error(
+        simcore::error(
             "Test", "Reset FAILED: r1 = 0x{:02X}, r2 = 0x{:02X}", data_a.get().to_ulong(), data_b.get().to_ulong());
         return 1;
     }
@@ -166,7 +166,7 @@ int main()
     toggle_clock(clk); // Read occurs after write applied
 
     if (data_a.get().to_ulong() != 0xAA) {
-        digsim::error("Test", "Immediate read FAILED: expected 0xAA, got 0x{:02X}", data_a.get().to_ulong());
+        simcore::error("Test", "Immediate read FAILED: expected 0xAA, got 0x{:02X}", data_a.get().to_ulong());
         return 1;
     }
 
@@ -175,7 +175,7 @@ int main()
     toggle_clock(clk);
 
     if (data_a.get().to_ulong() != 0xAA) {
-        digsim::error("Test", "Post-write read FAILED: expected 0xAA, got 0x{:02X}", data_a.get().to_ulong());
+        simcore::error("Test", "Post-write read FAILED: expected 0xAA, got 0x{:02X}", data_a.get().to_ulong());
         return 1;
     }
 
@@ -186,7 +186,7 @@ int main()
     run_write(addr_w, data_in, write_enable, phase, clk, 7, 0x77);
     run_read(addr_a, addr_b, phase, clk, 6, 7);
     if (data_a.get().to_ulong() != 0x66 || data_b.get().to_ulong() != 0x77) {
-        digsim::error(
+        simcore::error(
             "Test", "Back-to-back write FAILED: r6=0x{:02X}, r7=0x{:02X}", data_a.get().to_ulong(),
             data_b.get().to_ulong());
         return 1;
@@ -198,7 +198,7 @@ int main()
     run_write(addr_w, data_in, write_enable, phase, clk, 0, 0xFF);
     run_read(addr_a, addr_b, phase, clk, 0, 0);
     if (data_a.get().to_ulong() != 0xFF) {
-        digsim::error("Test", "Write to r0 FAILED: expected 0xFF, got 0x{:02X}", data_a.get().to_ulong());
+        simcore::error("Test", "Write to r0 FAILED: expected 0xFF, got 0x{:02X}", data_a.get().to_ulong());
         return 1;
     }
 
@@ -213,7 +213,7 @@ int main()
     run_write(addr_w, data_in, write_enable, phase, clk, 1, 0x12);
     run_read(addr_a, addr_b, phase, clk, 1, 1);
     if (data_a.get().to_ulong() != 0x12) {
-        digsim::error("Test", "Valid write after invalid FAILED: got 0x{:02X}", data_a.get().to_ulong());
+        simcore::error("Test", "Valid write after invalid FAILED: got 0x{:02X}", data_a.get().to_ulong());
         return 1;
     }
 

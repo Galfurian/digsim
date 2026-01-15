@@ -1,21 +1,21 @@
 /// @file test_pc.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "cpu/program_counter.hpp"
 
 /// @brief Holds the full environment to test the program counter (PC).
 struct pc_env_t {
-    digsim::signal_t<bool> clk{"clk"};
-    digsim::signal_t<bool> reset{"reset"};
-    digsim::signal_t<bool> load{"load"};
-    digsim::signal_t<bool> jump_enable{"jump_enable"};
-    digsim::signal_t<bool> branch_enable{"branch_enable"};
-    digsim::signal_t<bs_address_t> next_addr{"next_addr"};
-    digsim::signal_t<bs_status_t> alu_status{"alu_status"};
-    digsim::signal_t<bs_opcode_t> opcode{"opcode"};
-    digsim::signal_t<bs_phase_t> phase{"phase"};
-    digsim::signal_t<bs_address_t> addr{"addr"};
+    simcore::signal_t<bool> clk{"clk"};
+    simcore::signal_t<bool> reset{"reset"};
+    simcore::signal_t<bool> load{"load"};
+    simcore::signal_t<bool> jump_enable{"jump_enable"};
+    simcore::signal_t<bool> branch_enable{"branch_enable"};
+    simcore::signal_t<bs_address_t> next_addr{"next_addr"};
+    simcore::signal_t<bs_status_t> alu_status{"alu_status"};
+    simcore::signal_t<bs_opcode_t> opcode{"opcode"};
+    simcore::signal_t<bs_phase_t> phase{"phase"};
+    simcore::signal_t<bs_address_t> addr{"addr"};
 
     program_counter_t pc{"pc"};
 
@@ -31,15 +31,15 @@ struct pc_env_t {
         pc.opcode(opcode);
         pc.phase(phase);
         pc.addr(addr);
-        digsim::scheduler.initialize();
+        simcore::scheduler.initialize();
     }
 
     void toggle_clock()
     {
         clk.set(false);
-        digsim::scheduler.run();
+        simcore::scheduler.run();
         clk.set(true);
-        digsim::scheduler.run();
+        simcore::scheduler.run();
     }
 
     void step_writeback()
@@ -66,7 +66,7 @@ struct pc_env_t {
     void expect_addr(uint16_t expected, const std::string &label)
     {
         if (addr.get().to_ulong() != expected) {
-            digsim::error("Test", "{} FAILED: expected 0x{:04X}, got 0x{:04X}", label, expected, addr.get().to_ulong());
+            simcore::error("Test", "{} FAILED: expected 0x{:04X}, got 0x{:04X}", label, expected, addr.get().to_ulong());
             std::exit(1);
         }
     }
@@ -74,7 +74,7 @@ struct pc_env_t {
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
     pc_env_t env;
 
@@ -130,9 +130,9 @@ int main()
     // === Glitch test: no rising edge, just scheduler run
     env.next_addr.set(0x1234);
     env.load.set(true);
-    digsim::scheduler.run(); // no posedge → should NOT latch
+    simcore::scheduler.run(); // no posedge → should NOT latch
     if (env.addr.get().to_ulong() == 0x1234) {
-        digsim::error("Test", "Glitch: Load latched without rising edge!");
+        simcore::error("Test", "Glitch: Load latched without rising edge!");
         return 1;
     }
 
@@ -164,6 +164,6 @@ int main()
     env.jump_enable.set(false);
     env.expect_addr(0x9999, "Jump taken");
 
-    digsim::info("Test", "All program counter tests passed successfully.");
+    simcore::info("Test", "All program counter tests passed successfully.");
     return 0;
 }

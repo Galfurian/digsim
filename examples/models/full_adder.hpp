@@ -4,22 +4,22 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include <iomanip>
 #include <sstream>
 
-class FullAdder : public digsim::module_t
+class FullAdder : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> a;
-    digsim::input_t<bool> b;
-    digsim::input_t<bool> cin;
-    digsim::output_t<bool> sum;
-    digsim::output_t<bool> cout;
+    simcore::input_t<bool> a;
+    simcore::input_t<bool> b;
+    simcore::input_t<bool> cin;
+    simcore::output_t<bool> sum;
+    simcore::output_t<bool> cout;
 
-    FullAdder(const std::string &_name, digsim::module_t *_parent = nullptr)
-        : digsim::module_t(_name, _parent)
+    FullAdder(const std::string &_name, simcore::module_t *_parent = nullptr)
+        : simcore::module_t(_name, _parent)
         , a("a", this)
         , b("b", this)
         , cin("cin", this)
@@ -52,7 +52,7 @@ private:
         if (cout.get_delay() > 0) {
             ss << " (+" << cout.get_delay() << "t)";
         }
-        digsim::info(get_name(), ss.str());
+        simcore::info(get_name(), ss.str());
 
         sum.set(s);
         cout.set(c);

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include "cpu_defines.hpp"
 
@@ -12,11 +12,11 @@
 #include <iomanip>
 #include <sstream>
 
-class rom_t : public digsim::module_t
+class rom_t : public simcore::module_t
 {
 public:
-    digsim::input_t<bs_address_t> addr;             ///< Address input.
-    digsim::output_t<bs_instruction_t> instruction; ///< Output instruction.
+    simcore::input_t<bs_address_t> addr;             ///< Address input.
+    simcore::output_t<bs_instruction_t> instruction; ///< Output instruction.
 
     rom_t(const std::string &_name, const std::vector<uint16_t> &_contents)
         : module_t(_name)
@@ -32,7 +32,7 @@ public:
     uint16_t debug_read(std::size_t read_addr) const
     {
         if (read_addr >= contents.size()) {
-            digsim::error(get_name(), "debug_read: out of bounds access to address {}", read_addr);
+            simcore::error(get_name(), "debug_read: out of bounds access to address {}", read_addr);
             return 0;
         }
         return contents[read_addr];
@@ -60,7 +60,7 @@ private:
         auto rt     = (instr >> 1U) & 0xF;
         auto flag   = instr & 0x1;
 
-        digsim::debug(
+        simcore::debug(
             get_name(),
             "address: 0x{:04X}, instruction: 0x{:04X} => opcode: 0x{:04X}, rs: 0x{:04X}, rt: 0x{:04X}, flag: 0x{:01X}",
             address, instr, opcode, rs, rt, flag);

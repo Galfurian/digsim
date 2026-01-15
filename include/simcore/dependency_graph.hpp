@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "digsim/common.hpp"
+#include "simcore/common.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
 
-namespace digsim
+namespace simcore
 {
 
 class module_t;  // Forward declare module base.
@@ -130,4 +130,4 @@ private:
 /// @brief A reference to the singleton instance of the scheduler, for convenience.
 inline dependency_graph_t &dependency_graph = dependency_graph_t::instance();
 
-} // namespace digsim
+} // namespace simcore

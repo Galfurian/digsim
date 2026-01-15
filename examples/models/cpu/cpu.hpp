@@ -18,13 +18,13 @@
 #include <iomanip>
 #include <sstream>
 
-class cpu_t : public digsim::module_t
+class cpu_t : public simcore::module_t
 {
 public:
     // Ports
-    digsim::input_t<bool> clk;
-    digsim::input_t<bool> reset;
-    digsim::output_t<bool> halted;
+    simcore::input_t<bool> clk;
+    simcore::input_t<bool> reset;
+    simcore::output_t<bool> halted;
 
     // Submodules.
     program_counter_t pc;
@@ -173,26 +173,26 @@ public:
 
 private:
     // === Internal signals ===
-    digsim::signal_t<bs_address_t> program_counter_to_rom;
-    digsim::signal_t<bs_instruction_t> rom_to_decoder;
-    digsim::signal_t<bs_opcode_t> decoder_opcode;
-    digsim::signal_t<bs_register_t> decoder_rs;
-    digsim::signal_t<bs_register_t> decoder_rt;
-    digsim::signal_t<bool> decoder_flag;
-    digsim::signal_t<bs_phase_t> control_phase;
-    digsim::signal_t<bool> control_to_regwrite;
-    digsim::signal_t<bool> control_to_memwrite;
-    digsim::signal_t<bool> control_to_memtoreg;
-    digsim::signal_t<bs_address_t> reg_a;
-    digsim::signal_t<bs_address_t> reg_b;
-    digsim::signal_t<bs_address_t> alu_out;
-    digsim::signal_t<bs_address_t> alu_remainder;
-    digsim::signal_t<bs_status_t> alu_status;
-    digsim::signal_t<bs_address_t> ram_out;
-    digsim::signal_t<bs_address_t> multiplexer_out;
-    digsim::signal_t<bs_register_t> reg_write_mux_out;
-    digsim::signal_t<bool> control_select_rt_as_dest;
-    digsim::signal_t<bool> control_jump_enable;
-    digsim::signal_t<bool> control_branch_enable;
-    digsim::signal_t<bool> pc_load;
+    simcore::signal_t<bs_address_t> program_counter_to_rom;
+    simcore::signal_t<bs_instruction_t> rom_to_decoder;
+    simcore::signal_t<bs_opcode_t> decoder_opcode;
+    simcore::signal_t<bs_register_t> decoder_rs;
+    simcore::signal_t<bs_register_t> decoder_rt;
+    simcore::signal_t<bool> decoder_flag;
+    simcore::signal_t<bs_phase_t> control_phase;
+    simcore::signal_t<bool> control_to_regwrite;
+    simcore::signal_t<bool> control_to_memwrite;
+    simcore::signal_t<bool> control_to_memtoreg;
+    simcore::signal_t<bs_address_t> reg_a;
+    simcore::signal_t<bs_address_t> reg_b;
+    simcore::signal_t<bs_address_t> alu_out;
+    simcore::signal_t<bs_address_t> alu_remainder;
+    simcore::signal_t<bs_status_t> alu_status;
+    simcore::signal_t<bs_address_t> ram_out;
+    simcore::signal_t<bs_address_t> multiplexer_out;
+    simcore::signal_t<bs_register_t> reg_write_mux_out;
+    simcore::signal_t<bool> control_select_rt_as_dest;
+    simcore::signal_t<bool> control_jump_enable;
+    simcore::signal_t<bool> control_branch_enable;
+    simcore::signal_t<bool> pc_load;
 };

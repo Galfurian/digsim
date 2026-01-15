@@ -4,20 +4,20 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include <iomanip>
 #include <sstream>
 
-class OrGate : public digsim::module_t
+class OrGate : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> a;
-    digsim::input_t<bool> b;
-    digsim::output_t<bool> out;
+    simcore::input_t<bool> a;
+    simcore::input_t<bool> b;
+    simcore::output_t<bool> out;
 
-    OrGate(const std::string &_name, digsim::module_t *_parent = nullptr)
-        : digsim::module_t(_name, _parent)
+    OrGate(const std::string &_name, simcore::module_t *_parent = nullptr)
+        : simcore::module_t(_name, _parent)
         , a("a", this)
         , b("b", this)
         , out("out", this)
@@ -38,7 +38,7 @@ private:
         if (out.get_delay() > 0) {
             ss << " (+" << out.get_delay() << "t)";
         }
-        digsim::info(get_name(), ss.str());
+        simcore::info(get_name(), ss.str());
 
         out.set(result);
     }

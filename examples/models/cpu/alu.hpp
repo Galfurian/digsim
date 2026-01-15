@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include "cpu_defines.hpp"
 
@@ -13,18 +13,18 @@
 #include <sstream>
 
 /// @brief ALU (Arithmetic Logic Unit) supporting 4-phase CPU pipeline.
-class alu_t : public digsim::module_t
+class alu_t : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> clk;             ///< Clock signal.
-    digsim::input_t<bool> reset;           ///< Reset signal.
-    digsim::input_t<bs_data_t> a;          ///< First operand.
-    digsim::input_t<bs_data_t> b;          ///< Second operand.
-    digsim::input_t<bs_opcode_t> opcode;   ///< Operation code.
-    digsim::input_t<bs_phase_t> phase;     ///< Current pipeline phase.
-    digsim::output_t<bs_data_t> out;       ///< Output result.
-    digsim::output_t<bs_data_t> remainder; ///< Remainder of division.
-    digsim::output_t<bs_status_t> status;  ///< Status flags.
+    simcore::input_t<bool> clk;             ///< Clock signal.
+    simcore::input_t<bool> reset;           ///< Reset signal.
+    simcore::input_t<bs_data_t> a;          ///< First operand.
+    simcore::input_t<bs_data_t> b;          ///< Second operand.
+    simcore::input_t<bs_opcode_t> opcode;   ///< Operation code.
+    simcore::input_t<bs_phase_t> phase;     ///< Current pipeline phase.
+    simcore::output_t<bs_data_t> out;       ///< Output result.
+    simcore::output_t<bs_data_t> remainder; ///< Remainder of division.
+    simcore::output_t<bs_status_t> status;  ///< Status flags.
 
     alu_t(const std::string &_name)
         : module_t(_name)
@@ -213,7 +213,7 @@ private:
         remainder.set(rem);
         status.set(flags);
 
-        digsim::debug(
+        simcore::debug(
             get_name(),
             "a: 0x{:04X}, b: 0x{:04X}, opcode: 0x{:04X} ({:15}) -> out: 0x{:04X}, remainder: 0x{:04X}, status: 0x{:04X}",
             a_u, b_u, op_u, opcode_to_string(static_cast<opcode_t>(op_u)),

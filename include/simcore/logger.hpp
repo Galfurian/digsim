@@ -31,7 +31,7 @@ template <std::size_t N> struct formatter<std::bitset<N>, char> {
 };
 } // namespace std
 
-namespace digsim
+namespace simcore
 {
 
 /// @brief Enumeration for log levels.
@@ -79,7 +79,7 @@ private:
 };
 
 /// @brief Global logger instance for easy access.
-inline digsim::logger_t &logger = digsim::logger_t::instance();
+inline simcore::logger_t &logger = simcore::logger_t::instance();
 
 /// @brief Logs a message with the specified log level and source.
 /// @param level the log level of the message.
@@ -116,7 +116,7 @@ void trace(const std::string &src, const std::string &msg);
 template <typename... Args>
 inline void log(log_level_t level, const std::string &source, std::format_string<Args...> fmt, Args &&...args)
 {
-    digsim::log(level, source, std::format(fmt, std::forward<Args>(args)...));
+    simcore::log(level, source, std::format(fmt, std::forward<Args>(args)...));
 }
 
 /// @brief Logs an error message with the specified source using a format string.
@@ -127,7 +127,7 @@ inline void log(log_level_t level, const std::string &source, std::format_string
 template <typename... Args>
 inline void error(const std::string &source, std::format_string<Args...> fmt, Args &&...args)
 {
-    digsim::error(source, std::format(fmt, std::forward<Args>(args)...));
+    simcore::error(source, std::format(fmt, std::forward<Args>(args)...));
 }
 
 /// @brief Logs an informational message with the specified source using a format string.
@@ -137,7 +137,7 @@ inline void error(const std::string &source, std::format_string<Args...> fmt, Ar
 /// @param ...args the arguments to format the message.
 template <typename... Args> inline void info(const std::string &source, std::format_string<Args...> fmt, Args &&...args)
 {
-    digsim::info(source, std::format(fmt, std::forward<Args>(args)...));
+    simcore::info(source, std::format(fmt, std::forward<Args>(args)...));
 }
 
 /// @brief Logs a debug message with the specified source using a format string.
@@ -148,7 +148,7 @@ template <typename... Args> inline void info(const std::string &source, std::for
 template <typename... Args>
 inline void debug(const std::string &source, std::format_string<Args...> fmt, Args &&...args)
 {
-    digsim::debug(source, std::format(fmt, std::forward<Args>(args)...));
+    simcore::debug(source, std::format(fmt, std::forward<Args>(args)...));
 }
 
 /// @brief Logs an error message with the specified source using a format string.
@@ -159,7 +159,7 @@ inline void debug(const std::string &source, std::format_string<Args...> fmt, Ar
 template <typename... Args>
 inline void trace(const std::string &source, std::format_string<Args...> fmt, Args &&...args)
 {
-    digsim::trace(source, std::format(fmt, std::forward<Args>(args)...));
+    simcore::trace(source, std::format(fmt, std::forward<Args>(args)...));
 }
 
-} // namespace digsim
+} // namespace simcore

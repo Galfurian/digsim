@@ -1,6 +1,6 @@
 /// @file example6.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "models/clock.hpp"
 #include "models/gates/and_gate.hpp"
@@ -9,16 +9,16 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
-    digsim::info("Main", "=== Initializing simulation ===");
+    simcore::info("Main", "=== Initializing simulation ===");
 
     // Signals
-    digsim::signal_t<bool> a("a");
-    digsim::signal_t<bool> b("b");
-    digsim::signal_t<bool> x("x");
-    digsim::signal_t<bool> and_out("and_out");
-    digsim::signal_t<bool> not_out("not_out");
+    simcore::signal_t<bool> a("a");
+    simcore::signal_t<bool> b("b");
+    simcore::signal_t<bool> x("x");
+    simcore::signal_t<bool> and_out("and_out");
+    simcore::signal_t<bool> not_out("not_out");
 
     // Gates
     AndGate gate_and("and_gate");
@@ -40,37 +40,37 @@ int main()
     probe_not.in(not_out);
 
     // Export the dependency graph
-    digsim::dependency_graph.export_dot("example6.dot");
+    simcore::dependency_graph.export_dot("example6.dot");
 
-    digsim::info("Main", "=== Begin gate test ===");
+    simcore::info("Main", "=== Begin gate test ===");
 
-    digsim::scheduler.initialize();
+    simcore::scheduler.initialize();
 
     // Test all combinations for AND gate
     a.set(false);
     b.set(false);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
     a.set(false);
     b.set(true);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
     a.set(true);
     b.set(false);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
     a.set(true);
     b.set(true);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
     // Test NOT gate
     x.set(false);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
     x.set(true);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
-    digsim::info("Main", "=== Simulation finished ===");
+    simcore::info("Main", "=== Simulation finished ===");
     return 0;
 }
 

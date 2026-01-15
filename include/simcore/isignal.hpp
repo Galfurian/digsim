@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "digsim/common.hpp"
+#include "simcore/common.hpp"
 
-namespace digsim
+namespace simcore
 {
 
 class module_t;
@@ -62,4 +62,4 @@ template <typename T> class signal_t;
 template <typename T> class input_t;
 template <typename T> class output_t;
 
-} // namespace digsim
+} // namespace simcore

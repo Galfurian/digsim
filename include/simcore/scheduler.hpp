@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "digsim/common.hpp"
-#include "digsim/event.hpp"
+#include "simcore/common.hpp"
+#include "simcore/event.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -19,7 +19,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace digsim
+namespace simcore
 {
 
 /// @brief The scheduler class is responsible for managing the simulation time and scheduling events.
@@ -83,4 +83,4 @@ private:
 /// @brief A reference to the singleton instance of the scheduler, for convenience.
 inline scheduler_t &scheduler = scheduler_t::instance();
 
-} // namespace digsim
+} // namespace simcore

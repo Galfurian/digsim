@@ -6,7 +6,7 @@
 cmake_minimum_required(VERSION 3.1...3.18)
 
 # Set the project name.
-project(digsim CXX)
+project(simcore CXX)
 
 # Set the default build type to Debug.
 if(NOT CMAKE_BUILD_TYPE)
@@ -288,18 +288,18 @@ if(DOXYGEN_FOUND)
     )
 
     # Read the file with the version.
-    file(READ ${PROJECT_SOURCE_DIR}/include/digsim/digsim.hpp version_file)
+    file(READ ${PROJECT_SOURCE_DIR}/include/simcore/simcore.hpp version_file)
     # Extract the version.
-    string(REGEX MATCH "DIGSIM_MAJOR_VERSION ([0-9]*)" _ ${version_file})
+    string(REGEX MATCH "SIMCORE_MAJOR_VERSION ([0-9]*)" _ ${version_file})
     set(PROJECT_MAJOR_VERSION ${CMAKE_MATCH_1})
-    string(REGEX MATCH "DIGSIM_MINOR_VERSION ([0-9]*)" _ ${version_file})
+    string(REGEX MATCH "SIMCORE_MINOR_VERSION ([0-9]*)" _ ${version_file})
     set(PROJECT_MINOR_VERSION ${CMAKE_MATCH_1})
-    string(REGEX MATCH "DIGSIM_MICRO_VERSION ([0-9]*)" _ ${version_file})
+    string(REGEX MATCH "SIMCORE_MICRO_VERSION ([0-9]*)" _ ${version_file})
     set(PROJECT_MICRO_VERSION ${CMAKE_MATCH_1})
 
     # Customization: Doxygen Configuration
     set(DOXYGEN_WARN_FORMAT "$file:$line:1: $text")
-    set(DOXYGEN_PROJECT_NAME DigSim)
+    set(DOXYGEN_PROJECT_NAME SimCore)
     set(DOXYGEN_PROJECT_BRIEF "Event-driven logic simulator for digital systems.")
     set(DOXYGEN_PROJECT_NUMBER "${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_MICRO_VERSION}")
     set(DOXYGEN_USE_MDFILE_AS_MAINPAGE ${PROJECT_SOURCE_DIR}/README.md)

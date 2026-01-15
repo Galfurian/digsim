@@ -4,22 +4,22 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include <iomanip>
 #include <sstream>
 
 template <typename T>
-class multiplexer_t : public digsim::module_t
+class multiplexer_t : public simcore::module_t
 {
 public:
-    digsim::input_t<T> a;
-    digsim::input_t<T> b;
-    digsim::input_t<bool> sel;
-    digsim::output_t<T> out;
+    simcore::input_t<T> a;
+    simcore::input_t<T> b;
+    simcore::input_t<bool> sel;
+    simcore::output_t<T> out;
 
     multiplexer_t(const std::string &_name)
-        : digsim::module_t(_name)
+        : simcore::module_t(_name)
         , a("a", this)
         , b("b", this)
         , sel("sel", this)
@@ -35,7 +35,7 @@ private:
         auto result = sel.get() ? b.get() : a.get();
         out.set(result);
 
-        digsim::debug(
+        simcore::debug(
             get_name(),
             "a: 0x{:04X}, b: 0x{:04X}, sel: {} ({}), out: 0x{:04X}",
             a.get().to_ulong(), b.get().to_ulong(),

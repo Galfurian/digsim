@@ -4,16 +4,16 @@
 /// This file is distributed under the terms of the MIT License.
 /// See the full license in the root directory at LICENSE.md.
 
-#include "digsim/logger.hpp"
+#include "simcore/logger.hpp"
 
-#include "digsim/common.hpp"
-#include "digsim/scheduler.hpp"
+#include "simcore/common.hpp"
+#include "simcore/scheduler.hpp"
 
-namespace digsim
+namespace simcore
 {
 
 logger_t::logger_t()
-    : global_level(digsim::log_level_t::info)
+    : global_level(simcore::log_level_t::info)
 {
     // Nothing to do here.
 }
@@ -54,14 +54,14 @@ std::string logger_t::level_to_str(log_level_t level) const noexcept
     }
 }
 
-void log(log_level_t level, const std::string &src, const std::string &msg) { digsim::logger.log(level, src, msg); }
+void log(log_level_t level, const std::string &src, const std::string &msg) { simcore::logger.log(level, src, msg); }
 
-void error(const std::string &src, const std::string &msg) { digsim::logger.log(log_level_t::error, src, msg); }
+void error(const std::string &src, const std::string &msg) { simcore::logger.log(log_level_t::error, src, msg); }
 
-void info(const std::string &src, const std::string &msg) { digsim::logger.log(log_level_t::info, src, msg); }
+void info(const std::string &src, const std::string &msg) { simcore::logger.log(log_level_t::info, src, msg); }
 
-void debug(const std::string &src, const std::string &msg) { digsim::logger.log(log_level_t::debug, src, msg); }
+void debug(const std::string &src, const std::string &msg) { simcore::logger.log(log_level_t::debug, src, msg); }
 
-void trace(const std::string &src, const std::string &msg) { digsim::logger.log(log_level_t::trace, src, msg); }
+void trace(const std::string &src, const std::string &msg) { simcore::logger.log(log_level_t::trace, src, msg); }
 
-} // namespace digsim
+} // namespace simcore

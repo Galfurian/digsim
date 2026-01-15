@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include "cpu_defines.hpp"
 
@@ -12,19 +12,19 @@
 #include <iomanip>
 #include <sstream>
 
-class ram_t : public digsim::module_t
+class ram_t : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> clk;            ///< Clock signal.
-    digsim::input_t<bool> reset;          ///< Reset signal.
-    digsim::input_t<bs_address_t> addr;   ///< Address input.
-    digsim::input_t<bs_data_t> data_in;   ///< Data input for write.
-    digsim::input_t<bool> write_enable;   ///< Write enable signal.
-    digsim::input_t<bs_phase_t> phase;    ///< Current CPU phase.
-    digsim::output_t<bs_data_t> data_out; ///< Data output for read.
+    simcore::input_t<bool> clk;            ///< Clock signal.
+    simcore::input_t<bool> reset;          ///< Reset signal.
+    simcore::input_t<bs_address_t> addr;   ///< Address input.
+    simcore::input_t<bs_data_t> data_in;   ///< Data input for write.
+    simcore::input_t<bool> write_enable;   ///< Write enable signal.
+    simcore::input_t<bs_phase_t> phase;    ///< Current CPU phase.
+    simcore::output_t<bs_data_t> data_out; ///< Data output for read.
 
     ram_t(const std::string &_name)
-        : digsim::module_t(_name)
+        : simcore::module_t(_name)
         , clk("clk", this)
         , reset("reset", this)
         , addr("addr", this)
@@ -45,7 +45,7 @@ public:
     uint16_t debug_read(std::size_t index) const
     {
         if (index >= memory.size()) {
-            digsim::error(get_name(), "debug_read: out-of-bounds access to memory {}", index);
+            simcore::error(get_name(), "debug_read: out-of-bounds access to memory {}", index);
             return 0;
         }
         return static_cast<uint16_t>(memory[index].to_ulong());
@@ -57,11 +57,11 @@ public:
     void debug_write(std::size_t index, uint16_t value)
     {
         if (index >= memory.size()) {
-            digsim::error(get_name(), "debug_write: out-of-bounds access to memory {}", index);
+            simcore::error(get_name(), "debug_write: out-of-bounds access to memory {}", index);
             return;
         }
         memory[index] = value;
-        digsim::debug(get_name(), "debug_write: memory[{}] = 0x{:04X}", index, value);
+        simcore::debug(get_name(), "debug_write: memory[{}] = 0x{:04X}", index, value);
     }
 
 private:
@@ -74,7 +74,7 @@ private:
         }
 
         if (reset.get()) {
-            digsim::debug(get_name(), "Resetting RAM...");
+            simcore::debug(get_name(), "Resetting RAM...");
             memory.fill(0);
             data_out.set(0);
             return;
@@ -88,7 +88,7 @@ private:
 
         // Check the address.
         if (index >= RAM_SIZE) {
-            digsim::error(get_name(), "Address out of bounds: 0x{:04X}", index);
+            simcore::error(get_name(), "Address out of bounds: 0x{:04X}", index);
             return;
         }
 
@@ -104,6 +104,6 @@ private:
         // Set the output.
         data_out.set(rdata);
 
-        digsim::debug(get_name(), "[{:5}] address: 0x{:04X}, data_in : 0x{:04X}, data_out : 0x{:04X}", (write ? "WR/RD" : "READ"), index, wdata.to_ulong(), rdata.to_ulong());
+        simcore::debug(get_name(), "[{:5}] address: 0x{:04X}, data_in : 0x{:04X}, data_out : 0x{:04X}", (write ? "WR/RD" : "READ"), index, wdata.to_ulong(), rdata.to_ulong());
     }
 };

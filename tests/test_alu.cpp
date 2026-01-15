@@ -1,21 +1,21 @@
 /// @file test_alu.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "cpu/alu.hpp"
 
 static int test_result = 0;
 
 struct alu_env_t {
-    digsim::signal_t<bool> clk{"clk", 0, 0};
-    digsim::signal_t<bool> reset{"reset", 0, 0};
-    digsim::signal_t<bs_data_t> a{"a", 0, 0};
-    digsim::signal_t<bs_data_t> b{"b", 0, 0};
-    digsim::signal_t<bs_opcode_t> opcode{"opcode", 0, 0};
-    digsim::signal_t<bs_phase_t> phase{"phase", static_cast<uint16_t>(phase_t::EXECUTE), 0};
-    digsim::signal_t<bs_data_t> out{"out", 0, 0};
-    digsim::signal_t<bs_data_t> rem{"rem", 0, 0};
-    digsim::signal_t<bs_status_t> status{"status", 0, 0};
+    simcore::signal_t<bool> clk{"clk", 0, 0};
+    simcore::signal_t<bool> reset{"reset", 0, 0};
+    simcore::signal_t<bs_data_t> a{"a", 0, 0};
+    simcore::signal_t<bs_data_t> b{"b", 0, 0};
+    simcore::signal_t<bs_opcode_t> opcode{"opcode", 0, 0};
+    simcore::signal_t<bs_phase_t> phase{"phase", static_cast<uint16_t>(phase_t::EXECUTE), 0};
+    simcore::signal_t<bs_data_t> out{"out", 0, 0};
+    simcore::signal_t<bs_data_t> rem{"rem", 0, 0};
+    simcore::signal_t<bs_status_t> status{"status", 0, 0};
     alu_t alu{"alu"};
 
     alu_env_t()
@@ -34,9 +34,9 @@ struct alu_env_t {
     void toggle_clock()
     {
         clk.set(false);
-        digsim::scheduler.run(); // Falling edge
+        simcore::scheduler.run(); // Falling edge
         clk.set(true);
-        digsim::scheduler.run(); // Rising edge
+        simcore::scheduler.run(); // Rising edge
     }
 
     void run_test(
@@ -64,15 +64,15 @@ struct alu_env_t {
         auto exp_status = expected_status.to_ulong();
         // Check the output values.
         if (got_out != exp_out) {
-            digsim::error("ALU Test", "{}: out mismatch    (got 0x{:04X}, expected 0x{:04X})", label, got_out, exp_out);
+            simcore::error("ALU Test", "{}: out mismatch    (got 0x{:04X}, expected 0x{:04X})", label, got_out, exp_out);
             test_result = 1;
         }
         if (got_rem != exp_rem) {
-            digsim::error("ALU Test", "{}: rem mismatch    (got 0x{:04X}, expected 0x{:04X})", label, got_rem, exp_rem);
+            simcore::error("ALU Test", "{}: rem mismatch    (got 0x{:04X}, expected 0x{:04X})", label, got_rem, exp_rem);
             test_result = 1;
         }
         if (got_status != exp_status) {
-            digsim::error("ALU Test", "{}: status mismatch (got 0x{:04X}, expected 0x{:04X})", label, got_status, exp_status);
+            simcore::error("ALU Test", "{}: status mismatch (got 0x{:04X}, expected 0x{:04X})", label, got_status, exp_status);
             test_result = 1;
         }
     }
@@ -80,7 +80,7 @@ struct alu_env_t {
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
     alu_env_t env;
 
     // Logic

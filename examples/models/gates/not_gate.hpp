@@ -4,19 +4,19 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include <iomanip>
 #include <sstream>
 
-class NotGate : public digsim::module_t
+class NotGate : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> in;
-    digsim::output_t<bool> out;
+    simcore::input_t<bool> in;
+    simcore::output_t<bool> out;
 
-    NotGate(const std::string &_name, digsim::module_t *_parent = nullptr)
-        : digsim::module_t(_name, _parent)
+    NotGate(const std::string &_name, simcore::module_t *_parent = nullptr)
+        : simcore::module_t(_name, _parent)
         , in("in", this)
         , out("out", this)
     {
@@ -34,7 +34,7 @@ public:
         if (out.get_delay() > 0) {
             ss << " (+" << out.get_delay() << "t)";
         }
-        digsim::info(get_name(), ss.str());
+        simcore::info(get_name(), ss.str());
 
         out.set(result);
     }

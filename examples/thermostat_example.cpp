@@ -1,35 +1,35 @@
 /// @file thermostat_example.cpp
-/// @brief A simple thermostat simulation example using DigSim.
+/// @brief A simple thermostat simulation example using SimCore.
 /// @details This example models an environment with temperature, a thermostat that controls a heater,
 /// and the heater that affects the environment temperature.
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 #include <iomanip>
 #include <sstream>
 
 /// @brief Timer module that generates periodic trigger signals.
 /// @details A simple timer that sets its output to true at regular intervals,
 /// providing a cleaner alternative to the full clock module for periodic events.
-class Timer : public digsim::module_t
+class Timer : public simcore::module_t
 {
 public:
-    digsim::output_t<bool> trigger; ///< Periodic trigger output.
+    simcore::output_t<bool> trigger; ///< Periodic trigger output.
 
-    Timer(const std::string &_name, digsim::discrete_time_t period)
-        : digsim::module_t(_name)
+    Timer(const std::string &_name, simcore::discrete_time_t period)
+        : simcore::module_t(_name)
         , trigger("trigger", this)
         , period(period)
     {
         // Register the output signal in the dependency graph.
         ADD_PRODUCER(Timer, evaluate, trigger);
         // Create a process info for the timer evaluation method.
-        auto proc_info = digsim::get_or_create_process(this, &Timer::evaluate, "start");
+        auto proc_info = simcore::get_or_create_process(this, &Timer::evaluate, "start");
         // Schedule the first evaluation of the timer signal.
-        digsim::scheduler.schedule_after(proc_info, period);
+        simcore::scheduler.schedule_after(proc_info, period);
     }
 
 private:
-    digsim::discrete_time_t period; ///< Time interval between triggers.
+    simcore::discrete_time_t period; ///< Time interval between triggers.
 
     void evaluate()
     {
@@ -37,24 +37,24 @@ private:
         trigger.set(trigger.get() ? false : true);
 
         // Create the process info for the next evaluation.
-        auto proc_info = digsim::get_or_create_process(this, &Timer::evaluate, "evaluate");
+        auto proc_info = simcore::get_or_create_process(this, &Timer::evaluate, "evaluate");
         // Schedule the next evaluation of the timer signal.
-        digsim::scheduler.schedule_after(proc_info, period);
+        simcore::scheduler.schedule_after(proc_info, period);
     }
 };
 
 /// @brief Environment module that simulates temperature changes over time.
-class Environment : public digsim::module_t
+class Environment : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> trigger;        ///< Timer trigger input to drive temperature changes.
-    digsim::input_t<double> heater_heat;  ///< Heat input from heater.
-    digsim::input_t<double> cooler_heat;  ///< Cooling input from cooler.
-    digsim::input_t<double> outside_temp; ///< Outside temperature affecting heat transfer with environment.
-    digsim::output_t<double> temperature; ///< Current temperature output.
+    simcore::input_t<bool> trigger;        ///< Timer trigger input to drive temperature changes.
+    simcore::input_t<double> heater_heat;  ///< Heat input from heater.
+    simcore::input_t<double> cooler_heat;  ///< Cooling input from cooler.
+    simcore::input_t<double> outside_temp; ///< Outside temperature affecting heat transfer with environment.
+    simcore::output_t<double> temperature; ///< Current temperature output.
 
     Environment(const std::string &_name)
-        : digsim::module_t(_name)
+        : simcore::module_t(_name)
         , trigger("trigger", this)
         , heater_heat("heater_heat", this)
         , cooler_heat("cooler_heat", this)
@@ -94,19 +94,19 @@ private:
         ss << "heating: +" << heating_effect << "°C, ";
         ss << "AC: " << cooling_effect << "°C, ";
         ss << "outdoor: " << outdoor_temp << "°C)";
-        digsim::info(get_name(), ss.str());
+        simcore::info(get_name(), ss.str());
     }
 };
 
 /// @brief Thermostat module that controls the heater based on temperature and setpoint.
-class Thermostat : public digsim::module_t
+class Thermostat : public simcore::module_t
 {
 public:
-    digsim::input_t<double> temperature;  ///< Current temperature input.
-    digsim::input_t<double> setpoint;     ///< Desired temperature setpoint.
-    digsim::output_t<bool> heater_on;     ///< Control signal for heater.
-    digsim::output_t<bool> cooler_on;     ///< Control signal for cooler.
-    digsim::output_t<double> energy_used; ///< Energy consumption tracking.
+    simcore::input_t<double> temperature;  ///< Current temperature input.
+    simcore::input_t<double> setpoint;     ///< Desired temperature setpoint.
+    simcore::output_t<bool> heater_on;     ///< Control signal for heater.
+    simcore::output_t<bool> cooler_on;     ///< Control signal for cooler.
+    simcore::output_t<double> energy_used; ///< Energy consumption tracking.
 
     enum Mode {
         HEAT,
@@ -132,7 +132,7 @@ public:
     }
 
     Thermostat(const std::string &_name, Mode initial_mode = HEAT)
-        : digsim::module_t(_name)
+        : simcore::module_t(_name)
         , temperature("temperature", this)
         , setpoint("setpoint", this)
         , heater_on("heater_on", this)
@@ -239,19 +239,19 @@ private:
         ss << "Heater: " << (heat_control ? "ON" : "OFF") << ", ";
         ss << "Cooler: " << (cool_control ? "ON" : "OFF") << ", ";
         ss << "Energy: " << total_energy << " units";
-        digsim::info(get_name(), ss.str());
+        simcore::info(get_name(), ss.str());
     }
 };
 
 /// @brief Heater module that increases temperature when activated.
-class Heater : public digsim::module_t
+class Heater : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> control;        ///< Control signal from thermostat.
-    digsim::output_t<double> heat_output; ///< Heat contribution to environment.
+    simcore::input_t<bool> control;        ///< Control signal from thermostat.
+    simcore::output_t<double> heat_output; ///< Heat contribution to environment.
 
     Heater(const std::string &_name)
-        : digsim::module_t(_name)
+        : simcore::module_t(_name)
         , control("control", this)
         , heat_output("heat_output", this)
     {
@@ -268,19 +268,19 @@ private:
         std::stringstream ss;
         ss << std::fixed << std::setprecision(2);
         ss << "Heater is " << (is_on ? "ON" : "OFF") << " (output: " << heat << "°C)";
-        digsim::info(get_name(), ss.str());
+        simcore::info(get_name(), ss.str());
     }
 };
 
 /// @brief Cooler module that decreases temperature when activated.
-class Cooler : public digsim::module_t
+class Cooler : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> control;        ///< Control signal from thermostat.
-    digsim::output_t<double> cool_output; ///< Cooling contribution to environment.
+    simcore::input_t<bool> control;        ///< Control signal from thermostat.
+    simcore::output_t<double> cool_output; ///< Cooling contribution to environment.
 
     Cooler(const std::string &_name)
-        : digsim::module_t(_name)
+        : simcore::module_t(_name)
         , control("control", this)
         , cool_output("cool_output", this)
     {
@@ -297,26 +297,26 @@ private:
         std::stringstream ss;
         ss << std::fixed << std::setprecision(2);
         ss << "Cooler is " << (is_on ? "ON" : "OFF") << " (output: " << cooling << "°C)";
-        digsim::info(get_name(), ss.str());
+        simcore::info(get_name(), ss.str());
     }
 };
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::info);
+    simcore::logger.set_level(simcore::log_level_t::info);
 
     // Create signals
-    digsim::signal_t<bool> timer_trigger("timer_trigger", false);
-    digsim::signal_t<double> temperature("temperature", 25.0, 1); // Start warmer to test cooling
-    digsim::signal_t<double> setpoint_signal("setpoint", 21.0);
-    digsim::signal_t<bool> heater_control("heater_control", false);
-    digsim::signal_t<double> heater_output("heater_output", 0.0);
-    digsim::signal_t<bool> cooler_control("cooler_control", false);
-    digsim::signal_t<double> cooler_output("cooler_output", 0.0);
-    digsim::signal_t<double> outside_temp_signal("outside_temp", 15.0);
-    digsim::signal_t<double> energy_used_signal("energy_used", 0.0);
+    simcore::signal_t<bool> timer_trigger("timer_trigger", false);
+    simcore::signal_t<double> temperature("temperature", 25.0, 1); // Start warmer to test cooling
+    simcore::signal_t<double> setpoint_signal("setpoint", 21.0);
+    simcore::signal_t<bool> heater_control("heater_control", false);
+    simcore::signal_t<double> heater_output("heater_output", 0.0);
+    simcore::signal_t<bool> cooler_control("cooler_control", false);
+    simcore::signal_t<double> cooler_output("cooler_output", 0.0);
+    simcore::signal_t<double> outside_temp_signal("outside_temp", 15.0);
+    simcore::signal_t<double> energy_used_signal("energy_used", 0.0);
 
-    Timer timer("timer", digsim::nanoseconds(10));
+    Timer timer("timer", simcore::nanoseconds(10));
     timer.trigger(timer_trigger);
 
     // Create modules
@@ -343,54 +343,54 @@ int main()
     cooler.cool_output(cooler_output);
 
     // Export dependency graph for visualization
-    digsim::dependency_graph.export_dot("thermostat_example.dot");
+    simcore::dependency_graph.export_dot("thermostat_example.dot");
 
-    digsim::info("Main", "");
-    digsim::info("Main", "=== Initializing thermostat simulation ===");
-    digsim::info("Main", "");
+    simcore::info("Main", "");
+    simcore::info("Main", "=== Initializing thermostat simulation ===");
+    simcore::info("Main", "");
 
-    digsim::scheduler.initialize();
+    simcore::scheduler.initialize();
 
-    digsim::info("Main", "");
-    digsim::info("Main", "=== Running simulation for 120 seconds ===");
-    digsim::info("Main", "");
+    simcore::info("Main", "");
+    simcore::info("Main", "=== Running simulation for 120 seconds ===");
+    simcore::info("Main", "");
 
     // Run simulation for 120 seconds with mode changes
     for (int time = 0; time < 120; ++time) {
         // Change modes at different times to demonstrate functionality
         if (time == 20) {
             thermo.set_mode(Thermostat::HEAT);
-            digsim::info("Main", "");
-            digsim::info("Main", "=== Switching to HEAT mode ===");
-            digsim::info("Main", "");
+            simcore::info("Main", "");
+            simcore::info("Main", "=== Switching to HEAT mode ===");
+            simcore::info("Main", "");
         } else if (time == 50) {
             thermo.set_mode(Thermostat::AUTO);
-            digsim::info("Main", "");
-            digsim::info("Main", "=== Switching to AUTO mode ===");
-            digsim::info("Main", "");
+            simcore::info("Main", "");
+            simcore::info("Main", "=== Switching to AUTO mode ===");
+            simcore::info("Main", "");
         } else if (time == 80) {
             thermo.set_mode(Thermostat::OFF);
             outside_temp_signal.set(24);
-            digsim::info("Main", "");
-            digsim::info("Main", "=== Switching to OFF mode ===");
-            digsim::info("Main", "");
-            digsim::info("Main", "=== Setting outside temperature to 24°C ===");
-            digsim::info("Main", "");
+            simcore::info("Main", "");
+            simcore::info("Main", "=== Switching to OFF mode ===");
+            simcore::info("Main", "");
+            simcore::info("Main", "=== Setting outside temperature to 24°C ===");
+            simcore::info("Main", "");
 
         } else if (time == 100) {
             thermo.set_mode(Thermostat::COOL);
-            digsim::info("Main", "");
-            digsim::info("Main", "=== Switching back to COOL mode ===");
-            digsim::info("Main", "");
+            simcore::info("Main", "");
+            simcore::info("Main", "=== Switching back to COOL mode ===");
+            simcore::info("Main", "");
         }
 
-        digsim::scheduler.run(1); // Run one time unit at a time
+        simcore::scheduler.run(1); // Run one time unit at a time
     }
 
-    digsim::info("Main", "");
-    digsim::info("Main", "=== Simulation finished ===");
-    digsim::info("Main", "");
-    digsim::info("Main", "Total energy consumed: " + std::to_string(energy_used_signal.get()) + " units");
+    simcore::info("Main", "");
+    simcore::info("Main", "=== Simulation finished ===");
+    simcore::info("Main", "");
+    simcore::info("Main", "Total energy consumed: " + std::to_string(energy_used_signal.get()) + " units");
 
     return 0;
 }

@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include "digsim/isignal.hpp"
-#include "digsim/logger.hpp"
-#include "digsim/scheduler.hpp"
+#include "simcore/isignal.hpp"
+#include "simcore/logger.hpp"
+#include "simcore/scheduler.hpp"
 
 #include <cmath>
 #include <limits>
 #include <type_traits>
 #include <unordered_set>
 
-namespace digsim
+namespace simcore
 {
 
 /// @brief The signal_t class represents a signal in a digital simulation.
@@ -152,10 +152,10 @@ template <typename T> inline void signal_t<T>::subscribe(const process_info_t &p
         throw std::runtime_error("Cannot subscribe a process with a null key to signal `" + get_name() + "`.");
     }
     if (processes.find(proc_info) != processes.end()) {
-        digsim::trace("input_t", "Process already subscribed for signal `{}`", get_name());
+        simcore::trace("input_t", "Process already subscribed for signal `{}`", get_name());
         return;
     }
-    digsim::trace("signal_t", "Subscribing process `{}` for signal `{}`", proc_info.to_string(), get_name());
+    simcore::trace("signal_t", "Subscribing process `{}` for signal `{}`", proc_info.to_string(), get_name());
     processes.insert(proc_info);
 }
 
@@ -184,25 +184,25 @@ template <typename T> inline void signal_t<T>::set_now(T new_value)
         last_value = value;
         // Update the value to the new value.
         value      = new_value;
-        digsim::trace("signal_t", "{}: {} -> {} (now)", get_name(), last_value, value);
+        simcore::trace("signal_t", "{}: {} -> {} (now)", get_name(), last_value, value);
         for (auto &proc_info : processes) {
             // Schedule the process to be executed immediately.
-            digsim::scheduler.schedule_now(proc_info);
+            simcore::scheduler.schedule_now(proc_info);
         }
     }
 }
 
 template <typename T> inline void signal_t<T>::set_delayed(T new_value, discrete_time_t _delay)
 {
-    digsim::trace("signal_t", "{}: {} -> {} (delayed by {})", get_name(), value, new_value, _delay);
+    simcore::trace("signal_t", "{}: {} -> {} (delayed by {})", get_name(), value, new_value, _delay);
     // Store the new value to be applied after the delay.
     stored_value = new_value;
     // Create a process that will apply the stored value after the delay.
-    auto process = digsim::get_or_create_process(this, &signal_t::apply_stored, "delayed");
+    auto process = simcore::get_or_create_process(this, &signal_t::apply_stored, "delayed");
     // Schedule the process to be executed after the specified delay.
-    digsim::scheduler.schedule_after(process, _delay);
+    simcore::scheduler.schedule_after(process, _delay);
 }
 
 template <typename T> inline void signal_t<T>::apply_stored() { this->set_now(stored_value); }
 
-} // namespace digsim
+} // namespace simcore

@@ -1,15 +1,15 @@
 /// @file example15.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "cpu/cpu_defines.hpp"
 #include "cpu/multiplexer.hpp"
 
 struct multipleser_env_t {
-    digsim::signal_t<bs_data_t> a{"a", 0, 0};
-    digsim::signal_t<bs_data_t> b{"b", 0, 0};
-    digsim::signal_t<bool> sel{"sel", 0, 0};
-    digsim::signal_t<bs_data_t> out{"out", 0, 0};
+    simcore::signal_t<bs_data_t> a{"a", 0, 0};
+    simcore::signal_t<bs_data_t> b{"b", 0, 0};
+    simcore::signal_t<bool> sel{"sel", 0, 0};
+    simcore::signal_t<bs_data_t> out{"out", 0, 0};
 
     multiplexer_t<bs_data_t> mux{"mux"};
 
@@ -30,7 +30,7 @@ struct multipleser_env_t {
         sel.set(sel_val);
     }
 
-    void execute_cycle() { digsim::scheduler.run(); }
+    void execute_cycle() { simcore::scheduler.run(); }
 
     void run_test(uint16_t a_val, uint16_t b_val, bool sel_val, bs_data_t expected_out)
     {
@@ -50,7 +50,7 @@ struct multipleser_env_t {
         auto got_out = out.get().to_ulong();
         auto exp_out = expected_out.to_ulong();
         if (got_out != exp_out) {
-            digsim::error("Test", "MUX FAILED: a=0x{:04X}, b=0x{:04X}, sel={} -> expected 0x{:04X}, got 0x{:04X}", a_val, b_val, sel_val, exp_out, got_out);
+            simcore::error("Test", "MUX FAILED: a=0x{:04X}, b=0x{:04X}, sel={} -> expected 0x{:04X}, got 0x{:04X}", a_val, b_val, sel_val, exp_out, got_out);
             test_result = 1;
         }
     }
@@ -58,11 +58,11 @@ struct multipleser_env_t {
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
     multipleser_env_t env;
 
-    digsim::scheduler.initialize();
+    simcore::scheduler.initialize();
 
     env.run_test(0x1234, 0xABCD, false, 0x1234);
     env.run_test(0x1234, 0xABCD, true, 0xABCD);
@@ -79,9 +79,9 @@ int main()
     env.a.set(0xAAAA);
     env.b.set(0xBBBB);
     env.sel.set(false);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
     env.a.set(0xCCCC);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
     env.validate_output(0xCCCC);
 
     // --------------------------------------------------
@@ -90,9 +90,9 @@ int main()
     env.a.set(0x1111);
     env.b.set(0x2222);
     env.sel.set(true);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
     env.b.set(0x3333);
-    digsim::scheduler.run();
+    simcore::scheduler.run();
     env.validate_output(0x3333);
 
     return 0;

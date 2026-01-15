@@ -7,9 +7,9 @@
 
 /// @brief Holds the full environment to test a CPU program.
 struct cpu_env_t {
-    digsim::signal_t<bool> clk{"clk", false, 1UL};
-    digsim::signal_t<bool> reset{"reset"};
-    digsim::signal_t<bool> halted{"halted"};
+    simcore::signal_t<bool> clk{"clk", false, 1UL};
+    simcore::signal_t<bool> reset{"reset"};
+    simcore::signal_t<bool> halted{"halted"};
     cpu_t cpu;
 
     int test_result = 0;
@@ -20,7 +20,7 @@ struct cpu_env_t {
         cpu.clk(clk);
         cpu.reset(reset);
         cpu.halted(halted);
-        digsim::scheduler.initialize();
+        simcore::scheduler.initialize();
         toggle_clock();
         reset_pc();
     }
@@ -28,9 +28,9 @@ struct cpu_env_t {
     void toggle_clock()
     {
         clk.set(false);
-        digsim::scheduler.run();
+        simcore::scheduler.run();
         clk.set(true);
-        digsim::scheduler.run();
+        simcore::scheduler.run();
     }
 
     void run_instruction()
@@ -39,18 +39,18 @@ struct cpu_env_t {
         uint8_t op, rs, rt, flag;
         decode_instruction(instruction, op, rs, rt, flag);
 
-        digsim::debug("Test", "");
-        digsim::debug("Test", "==============================================================================");
-        digsim::debug("Test", "Executing instruction at PC: 0x{:04X}", cpu.pc.addr.get().to_ulong());
-        digsim::debug("Test", "Instruction: 0x{:04X}", instruction);
-        digsim::debug(
+        simcore::debug("Test", "");
+        simcore::debug("Test", "==============================================================================");
+        simcore::debug("Test", "Executing instruction at PC: 0x{:04X}", cpu.pc.addr.get().to_ulong());
+        simcore::debug("Test", "Instruction: 0x{:04X}", instruction);
+        simcore::debug(
             "Test", "OP: 0x{:04X}, RS: 0x{:04X}, RT: 0x{:04X}, FLAG: 0x{:04X} ({})", op, rs, rt, flag,
             opcode_to_string(op));
-        digsim::debug("Test", "Snapshot before instruction:");
+        simcore::debug("Test", "Snapshot before instruction:");
         print_registers();
         for (std::size_t i = 0; i < NUM_PHASES; ++i) {
-            digsim::debug("Test", "");
-            digsim::debug("Test", "----- Phase {} -----", i);
+            simcore::debug("Test", "");
+            simcore::debug("Test", "----- Phase {} -----", i);
             toggle_clock();
         }
     }
@@ -59,10 +59,10 @@ struct cpu_env_t {
     {
         reset.set(true);
         clk.set(true);
-        digsim::scheduler.run();
+        simcore::scheduler.run();
         reset.set(false);
         clk.set(false);
-        digsim::scheduler.run();
+        simcore::scheduler.run();
     }
 
     void set_register(uint8_t reg, uint16_t value) { cpu.reg.debug_write(reg, value); }
@@ -85,17 +85,17 @@ struct cpu_env_t {
         std::stringstream ss;
         for (uint8_t i = 0; i < NUM_REGS; ++i)
             ss << std::hex << std::setw(4) << std::setfill('0') << cpu.reg.debug_read(i) << " ";
-        digsim::info("Test", "REGS : {}", ss.str());
+        simcore::info("Test", "REGS : {}", ss.str());
     }
 
     void check_reg(uint8_t reg, uint16_t expected, const std::string &msg)
     {
         uint16_t value = read_register(reg);
         if (value == expected) {
-            digsim::info("Test", "OK [{:24}]: r{} = 0x{:04X}", msg, reg, value);
+            simcore::info("Test", "OK [{:24}]: r{} = 0x{:04X}", msg, reg, value);
         } else {
-            digsim::error("Test", "NO [{:24}]: Expected r{} = 0x{:04X}, got 0x{:04X}", msg, reg, expected, value);
-            digsim::info("Test", "Snapshot after failed test:");
+            simcore::error("Test", "NO [{:24}]: Expected r{} = 0x{:04X}, got 0x{:04X}", msg, reg, expected, value);
+            simcore::info("Test", "Snapshot after failed test:");
             print_registers();
             test_result = 1;
         }
@@ -105,11 +105,11 @@ struct cpu_env_t {
     {
         uint16_t value = read_memory(addr);
         if (value == expected) {
-            digsim::info("Test", "OK [{:24}]: mem[0x{:04X}] = 0x{:04X}", msg, addr, value);
+            simcore::info("Test", "OK [{:24}]: mem[0x{:04X}] = 0x{:04X}", msg, addr, value);
         } else {
-            digsim::error(
+            simcore::error(
                 "Test", "NO [{:24}]: Expected mem[0x{:04X}] = 0x{:04X}, got 0x{:04X}", msg, addr, expected, value);
-            digsim::info("Test", "Snapshot after failed test:");
+            simcore::info("Test", "Snapshot after failed test:");
             print_registers();
             test_result = 1;
         }
@@ -118,8 +118,8 @@ struct cpu_env_t {
 
 int test_01()
 {
-    digsim::info("Test", "=========================");
-    digsim::info("Test", "Test 01: ALU and Memory Operations");
+    simcore::info("Test", "=========================");
+    simcore::info("Test", "Test 01: ALU and Memory Operations");
 
     std::vector<uint16_t> program = {
         encode_instruction(opcode_t::ALU_ADD, 1, 2),     // r1 = r1 + r2 (5 + 7 = 12)
@@ -234,8 +234,8 @@ int test_01()
 
 int test_02()
 {
-    digsim::info("Test", "=========================");
-    digsim::info("Test", "Test 02: Branching");
+    simcore::info("Test", "=========================");
+    simcore::info("Test", "Test 02: Branching");
 
     // Program layout:
     // [0] NOP
@@ -276,8 +276,8 @@ int test_02()
 
 int test_jmp()
 {
-    digsim::info("Test", "=========================");
-    digsim::info("Test", "Test 03: Unconditional Jump");
+    simcore::info("Test", "=========================");
+    simcore::info("Test", "Test 03: Unconditional Jump");
 
     // Program layout:
     // [0] NOP
@@ -316,8 +316,8 @@ int test_jmp()
 
 int test_halt()
 {
-    digsim::info("Test", "=========================");
-    digsim::info("Test", "Test HALT");
+    simcore::info("Test", "=========================");
+    simcore::info("Test", "Test HALT");
 
     std::vector<uint16_t> program = {
         encode_instruction(opcode_t::SYS_NOP, 0, 0),  // [0] NOP
@@ -339,23 +339,23 @@ int test_halt()
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::info);
+    simcore::logger.set_level(simcore::log_level_t::info);
 
     int result = 0;
     if (test_01() != 0) {
-        digsim::error("Test", "Test 01 failed.");
+        simcore::error("Test", "Test 01 failed.");
         result = 1;
     }
     if (test_02() != 0) {
-        digsim::error("Test", "Test 02 failed.");
+        simcore::error("Test", "Test 02 failed.");
         result = 1;
     }
     if (test_jmp() != 0) {
-        digsim::error("Test", "Test 03 failed.");
+        simcore::error("Test", "Test 03 failed.");
         result = 1;
     }
     if (test_halt() != 0) {
-        digsim::error("Test", "Test 04 failed.");
+        simcore::error("Test", "Test 04 failed.");
         result = 1;
     }
     return result;

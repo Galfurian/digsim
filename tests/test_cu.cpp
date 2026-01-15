@@ -7,15 +7,15 @@
 #include <vector>
 
 struct cu_env_t {
-    digsim::signal_t<bs_opcode_t> opcode{"opcode", 0, 0};
-    digsim::signal_t<bs_phase_t> phase{"phase", static_cast<uint16_t>(phase_t::EXECUTE), 0};
-    digsim::signal_t<bool> reg_write{"reg_write", 0, 0};
-    digsim::signal_t<bool> mem_write{"mem_write", 0, 0};
-    digsim::signal_t<bool> mem_to_reg{"mem_to_reg", 0, 0};
-    digsim::signal_t<bool> rt_as_dest{"rt_as_dest", 0, 0};
-    digsim::signal_t<bool> jump_enable{"jump_enable", 0, 0};
-    digsim::signal_t<bool> branch_enable{"branch_enable", 0, 0};
-    digsim::signal_t<bool> halt{"halt", 0, 0};
+    simcore::signal_t<bs_opcode_t> opcode{"opcode", 0, 0};
+    simcore::signal_t<bs_phase_t> phase{"phase", static_cast<uint16_t>(phase_t::EXECUTE), 0};
+    simcore::signal_t<bool> reg_write{"reg_write", 0, 0};
+    simcore::signal_t<bool> mem_write{"mem_write", 0, 0};
+    simcore::signal_t<bool> mem_to_reg{"mem_to_reg", 0, 0};
+    simcore::signal_t<bool> rt_as_dest{"rt_as_dest", 0, 0};
+    simcore::signal_t<bool> jump_enable{"jump_enable", 0, 0};
+    simcore::signal_t<bool> branch_enable{"branch_enable", 0, 0};
+    simcore::signal_t<bool> halt{"halt", 0, 0};
 
     control_unit_t cu{"cu"};
 
@@ -40,7 +40,7 @@ struct cu_env_t {
         phase.set(static_cast<uint8_t>(phase_val));
     }
 
-    void execute_cycle() { digsim::scheduler.run(); }
+    void execute_cycle() { simcore::scheduler.run(); }
 
     void run_test(
         opcode_t opcode_val,
@@ -59,27 +59,27 @@ struct cu_env_t {
         execute_cycle();
 
         if (reg_write.get() != expected_reg_write) {
-            digsim::error("Test", "reg_write mismatch  : expected {}, got {}", expected_reg_write, reg_write.get());
+            simcore::error("Test", "reg_write mismatch  : expected {}, got {}", expected_reg_write, reg_write.get());
             test_result = 1;
         }
         if (mem_write.get() != expected_mem_write) {
-            digsim::error("Test", "mem_write mismatch  : expected {}, got {}", expected_mem_write, mem_write.get());
+            simcore::error("Test", "mem_write mismatch  : expected {}, got {}", expected_mem_write, mem_write.get());
             test_result = 1;
         }
         if (mem_to_reg.get() != expected_mem_to_reg) {
-            digsim::error("Test", "mem_to_reg mismatch : expected {}, got {}", expected_mem_to_reg, mem_to_reg.get());
+            simcore::error("Test", "mem_to_reg mismatch : expected {}, got {}", expected_mem_to_reg, mem_to_reg.get());
             test_result = 1;
         }
         if (rt_as_dest.get() != expected_rt_as_dest) {
-            digsim::error("Test", "rt_as_dest mismatch : expected {}, got {}", expected_rt_as_dest, rt_as_dest.get());
+            simcore::error("Test", "rt_as_dest mismatch : expected {}, got {}", expected_rt_as_dest, rt_as_dest.get());
             test_result = 1;
         }
         if (jump_enable.get() != expected_jump_enable) {
-            digsim::error("Test", "jump_enable mismatch: expected {}, got {}", expected_jump_enable, jump_enable.get());
+            simcore::error("Test", "jump_enable mismatch: expected {}, got {}", expected_jump_enable, jump_enable.get());
             test_result = 1;
         }
         if (branch_enable.get() != expected_branch_enable) {
-            digsim::error(
+            simcore::error(
                 "Test", "branch_enable mismatch: expected {}, got {}", expected_branch_enable, branch_enable.get());
             test_result = 1;
         }
@@ -88,11 +88,11 @@ struct cu_env_t {
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
     cu_env_t env;
 
-    digsim::scheduler.initialize();
+    simcore::scheduler.initialize();
 
     // List of test cases: (opcode_t, reg_write, mem_write, mem_to_reg, rt_as_dest, jump_enable, branch_enable)
     std::vector<std::tuple<opcode_t, bool, bool, bool, bool, bool, bool>> test_cases = {

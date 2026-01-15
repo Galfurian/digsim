@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include "cpu_defines.hpp"
 
@@ -11,18 +11,18 @@
 #include <iomanip>
 #include <sstream>
 
-class decoder_t : public digsim::module_t
+class decoder_t : public simcore::module_t
 {
 public:
-    digsim::input_t<bs_instruction_t> instruction; ///< Raw instruction input.
-    digsim::input_t<bs_phase_t> phase;             ///< Phase of execution.
-    digsim::output_t<bs_opcode_t> opcode;          ///< Output: decoded opcode.
-    digsim::output_t<bs_register_t> rs;            ///< Output: source register A.
-    digsim::output_t<bs_register_t> rt;            ///< Output: source register B.
-    digsim::output_t<bool> flag;                   ///< Output: flag register.
+    simcore::input_t<bs_instruction_t> instruction; ///< Raw instruction input.
+    simcore::input_t<bs_phase_t> phase;             ///< Phase of execution.
+    simcore::output_t<bs_opcode_t> opcode;          ///< Output: decoded opcode.
+    simcore::output_t<bs_register_t> rs;            ///< Output: source register A.
+    simcore::output_t<bs_register_t> rt;            ///< Output: source register B.
+    simcore::output_t<bool> flag;                   ///< Output: flag register.
 
     decoder_t(const std::string &_name)
-        : digsim::module_t(_name)
+        : simcore::module_t(_name)
         , instruction("instruction", this)
         , phase("phase", this)
         , opcode("opcode", this)
@@ -59,7 +59,7 @@ private:
         rt.set(rt_val);
         flag.set(flag_val);
 
-        digsim::debug(
+        simcore::debug(
             get_name(),
             "0x{:04X} -> opcode: 0x{:04X} [{:16}], rs: 0x{:04X}, rt: 0x{:04X}, flag: 0x{:01X}", raw,
             opcode_val, opcode_to_string(opcode_val), rs_val, rt_val, flag_val);

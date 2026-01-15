@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "digsim/isignal.hpp"
+#include "simcore/isignal.hpp"
 
-namespace digsim
+namespace simcore
 {
 
 /// @brief The input_t class represents an input signal in a digital simulation.
@@ -91,23 +91,23 @@ template <typename T> inline void input_t<T>::subscribe(const process_info_t &pr
         throw std::runtime_error("Cannot subscribe a process with a null key to input `" + get_name() + "`.");
     }
     if (processes.find(proc_info) != processes.end()) {
-        digsim::trace("input_t", "Process already subscribed for input `{}`", get_name());
+        simcore::trace("input_t", "Process already subscribed for input `{}`", get_name());
         return;
     }
-    digsim::trace("input_t", "Subscribing process `{}` for input `{}`", proc_info.to_string(), get_name());
+    simcore::trace("input_t", "Subscribing process `{}` for input `{}`", proc_info.to_string(), get_name());
     processes.insert(proc_info);
 }
 
 template <typename T> void input_t<T>::operator()(isignal_t &binding)
 {
     if (auto *input = dynamic_cast<input_t<T> *>(&binding)) {
-        digsim::trace(
+        simcore::trace(
             "input_t", "Binding input  `{}` to input `{}`", get_signal_location_string(this),
             get_signal_location_string(input));
         // Add this child to our list of sub-inputs.
         input->sub_inputs.insert(this);
     } else if (auto *signal = dynamic_cast<signal_t<T> *>(&binding)) {
-        digsim::trace(
+        simcore::trace(
             "input_t", "Binding input  `{}` to signal `{}`", get_signal_location_string(this), signal->get_name());
         // Set the bound signal.
         bound_signal = signal;
@@ -161,4 +161,4 @@ template <typename T> inline std::ostream &operator<<(std::ostream &os, const si
     return os;
 }
 
-} // namespace digsim
+} // namespace simcore

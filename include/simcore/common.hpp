@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "digsim/named_object.hpp"
+#include "simcore/named_object.hpp"
 
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
 
-namespace digsim
+namespace simcore
 {
 
 /// @brief Type of the simulation time.
@@ -145,7 +145,7 @@ template <typename Object>
 process_info_t get_or_create_process(Object *obj, void (Object::*method)(), const std::string &name = "")
 {
     static std::unordered_map<std::uintptr_t, process_info_t> method_cache;
-    auto key = digsim::get_method_key(obj, method);
+    auto key = simcore::get_method_key(obj, method);
     if (!key) {
         throw std::runtime_error("Failed to generate method key.");
     }
@@ -159,4 +159,4 @@ process_info_t get_or_create_process(Object *obj, void (Object::*method)(), cons
     return info;
 }
 
-} // namespace digsim
+} // namespace simcore

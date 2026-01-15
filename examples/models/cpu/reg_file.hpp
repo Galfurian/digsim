@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include "cpu_defines.hpp"
 
@@ -13,19 +13,19 @@
 #include <sstream>
 
 /// @brief Register module with phase awareness.
-class reg_file_t : public digsim::module_t
+class reg_file_t : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> clk;             ///< Clock signal.
-    digsim::input_t<bool> reset;           ///< Reset signal.
-    digsim::input_t<bs_phase_t> phase;     ///< CPU execution phase.
-    digsim::input_t<bs_register_t> addr_a; ///< Address for register A.
-    digsim::input_t<bs_register_t> addr_b; ///< Address for register B.
-    digsim::input_t<bs_register_t> addr_w; ///< Address for writing register.
-    digsim::input_t<bs_data_t> data_in;    ///< Data input to register file.
-    digsim::input_t<bool> write_enable;    ///< Write enable signal.
-    digsim::output_t<bs_data_t> data_a;    ///< Output data from register A.
-    digsim::output_t<bs_data_t> data_b;    ///< Output data from register B.
+    simcore::input_t<bool> clk;             ///< Clock signal.
+    simcore::input_t<bool> reset;           ///< Reset signal.
+    simcore::input_t<bs_phase_t> phase;     ///< CPU execution phase.
+    simcore::input_t<bs_register_t> addr_a; ///< Address for register A.
+    simcore::input_t<bs_register_t> addr_b; ///< Address for register B.
+    simcore::input_t<bs_register_t> addr_w; ///< Address for writing register.
+    simcore::input_t<bs_data_t> data_in;    ///< Data input to register file.
+    simcore::input_t<bool> write_enable;    ///< Write enable signal.
+    simcore::output_t<bs_data_t> data_a;    ///< Output data from register A.
+    simcore::output_t<bs_data_t> data_b;    ///< Output data from register B.
 
     reg_file_t(const std::string &_name)
         : module_t(_name)
@@ -48,7 +48,7 @@ public:
     uint16_t debug_read(std::size_t index) const
     {
         if (index >= regs.size()) {
-            digsim::error(get_name(), "debug_read: out of bounds access to register 0x{:04X}", index);
+            simcore::error(get_name(), "debug_read: out of bounds access to register 0x{:04X}", index);
             return 0;
         }
         return static_cast<uint16_t>(regs[index].to_ulong());
@@ -58,12 +58,12 @@ public:
     void debug_write(std::size_t index, uint16_t value)
     {
         if (index >= regs.size()) {
-            digsim::error(get_name(), "debug_write: out of bounds access to register 0x{:04X}", index);
+            simcore::error(get_name(), "debug_write: out of bounds access to register 0x{:04X}", index);
             return;
         }
         regs[index] = value;
 
-        digsim::debug(
+        simcore::debug(
             get_name(), "debug_write: writing 0x{:04X} to register 0x{:04X}, verify: 0x{:04X}.", value, index,
             regs[index].to_ulong());
     }
@@ -79,7 +79,7 @@ private:
 
         // Handle reset
         if (reset.get()) {
-            digsim::debug(get_name(), "Resetting registers...");
+            simcore::debug(get_name(), "Resetting registers...");
             for (auto &reg : regs) {
                 reg.reset();
             }
@@ -95,15 +95,15 @@ private:
 
         // Check the register addresses.
         if (u_addr_a >= NUM_REGS) {
-            digsim::error(get_name(), "Register A address is out of bounds: 0x{:04X}", u_addr_a);
+            simcore::error(get_name(), "Register A address is out of bounds: 0x{:04X}", u_addr_a);
             return;
         }
         if (u_addr_b >= NUM_REGS) {
-            digsim::error(get_name(), "Register B address is out of bounds: 0x{:04X}", u_addr_b);
+            simcore::error(get_name(), "Register B address is out of bounds: 0x{:04X}", u_addr_b);
             return;
         }
         if (u_addr_w >= NUM_REGS) {
-            digsim::error(get_name(), "Register W address is out of bounds: 0x{:04X}", u_addr_w);
+            simcore::error(get_name(), "Register W address is out of bounds: 0x{:04X}", u_addr_w);
             return;
         }
 
@@ -116,7 +116,7 @@ private:
             regs[u_addr_w] = data_in.get();
         }
 
-        digsim::debug(
+        simcore::debug(
             get_name(),
             "[{:5}] "
             "A: 0x{:04X} (out: 0x{:04X}), "

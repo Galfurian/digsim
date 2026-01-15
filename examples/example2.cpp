@@ -1,6 +1,6 @@
 /// @file example2.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief A simple example of a digital circuit simulation using DigSim.
+/// @brief A simple example of a digital circuit simulation using SimCore.
 
 #include "models/mux2to1.hpp"
 #include "models/gates/not_gate.hpp"
@@ -8,15 +8,15 @@
 
 int main()
 {
-    digsim::logger.set_level(digsim::log_level_t::debug);
+    simcore::logger.set_level(simcore::log_level_t::debug);
 
     // Inputs.
-    digsim::signal_t<bool> a("a");
-    digsim::signal_t<bool> b("b");
-    digsim::signal_t<bool> sel("sel");
-    digsim::signal_t<bool> mux_out("mux_out");
-    digsim::signal_t<bool> inv1_out("inv1_out");
-    digsim::signal_t<bool> inv2_out("inv2_out");
+    simcore::signal_t<bool> a("a");
+    simcore::signal_t<bool> b("b");
+    simcore::signal_t<bool> sel("sel");
+    simcore::signal_t<bool> mux_out("mux_out");
+    simcore::signal_t<bool> inv1_out("inv1_out");
+    simcore::signal_t<bool> inv2_out("inv2_out");
 
     // Models.
     Mux2to1<bool> mux("mux");
@@ -39,24 +39,24 @@ int main()
     Probe<bool> probe1("probe1");
     probe1.in(mux_out);
 
-    digsim::dependency_graph.export_dot("example2.dot");
+    simcore::dependency_graph.export_dot("example2.dot");
 
-    digsim::info("Main", "=== Initializing simulation ===");
+    simcore::info("Main", "=== Initializing simulation ===");
 
-    digsim::scheduler.initialize();
+    simcore::scheduler.initialize();
 
-    digsim::info("Main", "=== Running simulation ===");
+    simcore::info("Main", "=== Running simulation ===");
 
     a.set(0);
     b.set(1);
     sel.set(0); // select 'a' = 0
 
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
     sel.set(1); // select 'b' = 1
 
-    digsim::scheduler.run();
+    simcore::scheduler.run();
 
-    digsim::info("Main", "=== Simulation finished ===");
+    simcore::info("Main", "=== Simulation finished ===");
 }
 

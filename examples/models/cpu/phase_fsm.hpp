@@ -2,7 +2,7 @@
 /// @brief
 /// @copyright Copyright (c) 2025
 
-#include <digsim/digsim.hpp>
+#include <simcore/simcore.hpp>
 
 #include "cpu_defines.hpp"
 
@@ -11,12 +11,12 @@
 #include <sstream>
 
 /// @brief A simple phase FSM for a CPU with 4 stages.
-class phase_fsm_t : public digsim::module_t
+class phase_fsm_t : public simcore::module_t
 {
 public:
-    digsim::input_t<bool> clk;          ///< The clock signal.
-    digsim::input_t<bool> reset;        ///< The reset signal.
-    digsim::output_t<bs_phase_t> phase; ///< Current phase (FETCH, DECODE, etc.).
+    simcore::input_t<bool> clk;          ///< The clock signal.
+    simcore::input_t<bool> reset;        ///< The reset signal.
+    simcore::output_t<bs_phase_t> phase; ///< Current phase (FETCH, DECODE, etc.).
 
     phase_fsm_t(const std::string &_name)
         : module_t(_name)
@@ -43,6 +43,6 @@ private:
             state = static_cast<phase_t>((state + 1) % NUM_PHASES);
         }
         phase.set(state);
-        digsim::debug(get_name(), "Phase changed to [{:2}] {:10}", static_cast<uint8_t>(state), phase_to_string(state));
+        simcore::debug(get_name(), "Phase changed to [{:2}] {:10}", static_cast<uint8_t>(state), phase_to_string(state));
     }
 };
