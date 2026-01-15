@@ -7,30 +7,67 @@
 #include <sstream>
 #include <iomanip>
 
+/// @brief Timer module that generates periodic trigger signals.
+/// @details A simple timer that sets its output to true at regular intervals,
+/// providing a cleaner alternative to the full clock module for periodic events.
+class Timer : public digsim::module_t
+{
+public:
+    digsim::output_t<bool> trigger; ///< Periodic trigger output.
+
+    Timer(const std::string &_name, double period)
+        : digsim::module_t(_name)
+        , trigger("trigger", this)
+        , period(period)
+    {
+        // Register the output signal in the dependency graph.
+        ADD_PRODUCER(Timer, evaluate, trigger);
+        // Create a process info for the timer evaluation method.
+        auto proc_info = digsim::get_or_create_process(this, &Timer::evaluate, "start");
+        // Schedule the first evaluation of the timer signal.
+        digsim::scheduler.schedule_after(proc_info, period);
+    }
+
+private:
+    double period; ///< Time interval between triggers.
+
+    void evaluate()
+    {
+        // Set the trigger to true to signal the environment to evaluate
+        trigger.set(true);
+        digsim::info(get_name(), "Timer triggered at time " + std::to_string(digsim::scheduler.get_current_time()));
+        
+        // Create the process info for the next evaluation.
+        auto proc_info = digsim::get_or_create_process(this, &Timer::evaluate, "evaluate");
+        // Schedule the next evaluation of the timer signal.
+        digsim::scheduler.schedule_after(proc_info, period);
+    }
+};
+
 /// @brief Environment module that simulates temperature changes over time.
 class Environment : public digsim::module_t
 {
 public:
-    digsim::input_t<bool> clk;            ///< Clock input to drive temperature changes.
+    digsim::input_t<bool> trigger;        ///< Timer trigger input to drive temperature changes.
     digsim::input_t<double> heater_heat;  ///< Heat input from heater.
     digsim::input_t<double> outside_temp; ///< Outside temperature affecting heat loss.
     digsim::output_t<double> temperature; ///< Current temperature output.
 
     Environment(const std::string &_name)
         : digsim::module_t(_name)
-        , clk("clk", this)
+        , trigger("trigger", this)
         , heater_heat("heater_heat", this)
         , outside_temp("outside_temp", this)
         , temperature("temperature", this)
     {
-        ADD_SENSITIVITY(Environment, evaluate, clk, heater_heat, outside_temp);
+        ADD_SENSITIVITY(Environment, evaluate, trigger, heater_heat, outside_temp);
         ADD_PRODUCER(Environment, evaluate, temperature);
     }
 
 private:
     void evaluate()
     {
-        if (clk.get()) {
+        if (trigger.get()) {
             double current_temp = temperature.get();
             double heat = heater_heat.get();
             double outdoor_temp = outside_temp.get();
@@ -190,7 +227,7 @@ int main()
     digsim::logger.set_level(digsim::log_level_t::info);
 
     // Create signals
-    digsim::signal_t<bool> clk_signal("clock_signal", false);
+    digsim::signal_t<bool> timer_trigger("timer_trigger", false);
     digsim::signal_t<double> temperature("temperature", 20.0, 1); // delayed
     digsim::signal_t<double> setpoint_signal("setpoint", 21.0);
     digsim::signal_t<bool> heater_control("heater_control", false);
@@ -198,13 +235,13 @@ int main()
     digsim::signal_t<double> outside_temp_signal("outside_temp", 15.0); // Outside temperature
     digsim::signal_t<double> energy_used_signal("energy_used", 0.0);
 
-    // Create clock
-    digsim::clock_t clk("clock", 2.0, 0.5, 0, true);
-    clk.out(clk_signal);
+    // Create timer (triggers every 2.0 time units, same as old clock period)
+    Timer timer("timer", 2.0);
+    timer.trigger(timer_trigger);
 
     // Create modules
     Environment env("environment");
-    env.clk(clk_signal);
+    env.trigger(timer_trigger);
     env.heater_heat(heater_output);
     env.outside_temp(outside_temp_signal);
     env.temperature(temperature);
