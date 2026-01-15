@@ -10,6 +10,9 @@
 #include "digsim/logger.hpp"
 #include "digsim/scheduler.hpp"
 
+#include <cmath>
+#include <limits>
+#include <type_traits>
 #include <unordered_set>
 
 namespace digsim
@@ -121,7 +124,16 @@ template <typename T> inline void signal_t<T>::set(T new_value)
 
 template <typename T> inline T signal_t<T>::get() const { return value; }
 
-template <typename T> inline bool signal_t<T>::has_changed() const { return value != last_value; }
+template <typename T> inline bool signal_t<T>::has_changed() const
+{
+    if constexpr (std::is_floating_point_v<T>) {
+        T diff = std::abs(value - last_value);
+        T scale = std::max(std::abs(value), std::abs(last_value));
+        return diff > std::numeric_limits<T>::epsilon() * (scale > 0 ? scale : 1);
+    } else {
+        return value != last_value;
+    }
+}
 
 template <typename T> inline void signal_t<T>::operator()(isignal_t &_signal)
 {
@@ -157,7 +169,17 @@ template <typename T> inline const char *signal_t<T>::get_type_name() const { re
 
 template <typename T> inline void signal_t<T>::set_now(T new_value)
 {
-    if (new_value != value) {
+    bool has_changed = false;
+    if constexpr (std::is_floating_point_v<T>) {
+        // For floating point types, use epsilon-based comparison to avoid precision issues
+        T diff = std::abs(new_value - value);
+        T scale = std::max(std::abs(value), std::abs(new_value));
+        has_changed = diff > std::numeric_limits<T>::epsilon() * (scale > 0 ? scale : 1);
+    } else {
+        has_changed = (new_value != value);
+    }
+
+    if (has_changed) {
         // Update the last value to the current value before changing it.
         last_value = value;
         // Update the value to the new value.
