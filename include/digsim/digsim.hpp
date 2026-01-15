@@ -26,7 +26,3 @@ enum : unsigned char {
 #include "digsim/output.hpp"
 #include "digsim/scheduler.hpp"
 #include "digsim/signal.hpp"
-
-// Simulation components
-#include "digsim/clock.hpp"
-#include "digsim/probe.hpp"

@@ -2,8 +2,9 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "mux2to1.hpp"
-#include "gates/not_gate.hpp"
+#include "models/mux2to1.hpp"
+#include "models/gates/not_gate.hpp"
+#include "models/probe.hpp"
 
 int main()
 {
@@ -35,7 +36,7 @@ int main()
     inv2.out(inv2_out);
     inv2_out.set_delay(3);
 
-    digsim::probe_t<bool> probe1("probe1");
+    Probe<bool> probe1("probe1");
     probe1.in(mux_out);
 
     digsim::dependency_graph.export_dot("example2.dot");

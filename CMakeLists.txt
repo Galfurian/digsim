@@ -52,7 +52,6 @@ find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 
 # Add the C++ library.
 add_library(${PROJECT_NAME}
-    ${PROJECT_SOURCE_DIR}/src/clock.cpp
     ${PROJECT_SOURCE_DIR}/src/common.cpp
     ${PROJECT_SOURCE_DIR}/src/dependency_graph.cpp
     ${PROJECT_SOURCE_DIR}/src/isignal.cpp
@@ -107,16 +106,16 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Cl
     if(STRICT_WARNINGS)
         # Enable a broad set of warnings to catch common and subtle issues:
         target_compile_options(${PROJECT_NAME} PUBLIC
-            -Wall                # Enable most general-purpose warnings.
-            -Wextra              # Enable extra warnings not included in -Wall.
-            -Wconversion         # Warn about implicit type conversions that may lose data.
-            -pedantic            # Enforce strict compliance with the C++ standard.
-            -Wshadow             # Warn about variable shadowing, which can cause subtle bugs.
-            -Wnon-virtual-dtor   # Warn when a class with virtual functions lacks a virtual destructor.
-            -Wnull-dereference   # Warn about potential null pointer dereferences.
-            -Wformat=2           # Enable strict checks for printf/scanf format strings.
+            -Wall # Enable most general-purpose warnings.
+            -Wextra # Enable extra warnings not included in -Wall.
+            -Wconversion # Warn about implicit type conversions that may lose data.
+            -pedantic # Enforce strict compliance with the C++ standard.
+            -Wshadow # Warn about variable shadowing, which can cause subtle bugs.
+            -Wnon-virtual-dtor # Warn when a class with virtual functions lacks a virtual destructor.
+            -Wnull-dereference # Warn about potential null pointer dereferences.
+            -Wformat=2 # Enable strict checks for printf/scanf format strings.
             -Woverloaded-virtual # Warn when a derived class function hides a base class virtual function.
-            -Wfloat-equal        # Warn about direct comparisons of floating-point values, which can be imprecise.
+            -Wfloat-equal # Warn about direct comparisons of floating-point values, which can be imprecise.
         )
 
     endif()
@@ -127,74 +126,40 @@ endif()
 # -----------------------------------------------------------------------------
 
 if(BUILD_EXAMPLES)
-  
+
     # Add the example.
     add_executable(${PROJECT_NAME}_example1 ${PROJECT_SOURCE_DIR}/examples/example1.cpp)
-    target_include_directories(${PROJECT_NAME}_example1 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example1 PRIVATE ${PROJECT_NAME})
-    
+
     add_executable(${PROJECT_NAME}_example2 ${PROJECT_SOURCE_DIR}/examples/example2.cpp)
-    target_include_directories(${PROJECT_NAME}_example2 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example2 PRIVATE ${PROJECT_NAME})
-    
+
     add_executable(${PROJECT_NAME}_example3 ${PROJECT_SOURCE_DIR}/examples/example3.cpp)
-    target_include_directories(${PROJECT_NAME}_example3 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example3 PRIVATE ${PROJECT_NAME})
-    
+
     add_executable(${PROJECT_NAME}_example4 ${PROJECT_SOURCE_DIR}/examples/example4.cpp)
-    target_include_directories(${PROJECT_NAME}_example4 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example4 PRIVATE ${PROJECT_NAME})
-    
+
     add_executable(${PROJECT_NAME}_example5 ${PROJECT_SOURCE_DIR}/examples/example5.cpp)
-    target_include_directories(${PROJECT_NAME}_example5 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example5 PRIVATE ${PROJECT_NAME})
-    
+
     add_executable(${PROJECT_NAME}_example6 ${PROJECT_SOURCE_DIR}/examples/example6.cpp)
-    target_include_directories(${PROJECT_NAME}_example6 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example6 PRIVATE ${PROJECT_NAME})
-    
+
     add_executable(${PROJECT_NAME}_example7 ${PROJECT_SOURCE_DIR}/examples/example7.cpp)
-    target_include_directories(${PROJECT_NAME}_example7 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example7 PRIVATE ${PROJECT_NAME})
-    
+
     add_executable(${PROJECT_NAME}_example8 ${PROJECT_SOURCE_DIR}/examples/example8.cpp)
-    target_include_directories(${PROJECT_NAME}_example8 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example8 PRIVATE ${PROJECT_NAME})
-    
+
     add_executable(${PROJECT_NAME}_example9 ${PROJECT_SOURCE_DIR}/examples/example9.cpp)
-    target_include_directories(${PROJECT_NAME}_example9 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example9 PRIVATE ${PROJECT_NAME})
-    
+
     add_executable(${PROJECT_NAME}_example10 ${PROJECT_SOURCE_DIR}/examples/example10.cpp)
-    target_include_directories(${PROJECT_NAME}_example10 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example10 PRIVATE ${PROJECT_NAME})
-    
+
     add_executable(${PROJECT_NAME}_thermostat_example ${PROJECT_SOURCE_DIR}/examples/thermostat_example.cpp)
-    target_include_directories(${PROJECT_NAME}_thermostat_example PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_thermostat_example PRIVATE ${PROJECT_NAME})
-    
-    # add_executable(${PROJECT_NAME}_example11 ${PROJECT_SOURCE_DIR}/examples/example11.cpp)
-    # target_include_directories(${PROJECT_NAME}_example1 PRIVATE ${PROJECT_SOURCE_DIR}/models)
-    # target_link_libraries(${PROJECT_NAME}_example11 PRIVATE ${PROJECT_NAME})
-    
-    # add_executable(${PROJECT_NAME}_example12 ${PROJECT_SOURCE_DIR}/examples/example12.cpp)
-    # target_include_directories(${PROJECT_NAME}_example1 PRIVATE ${PROJECT_SOURCE_DIR}/models)
-    # target_link_libraries(${PROJECT_NAME}_example12 PRIVATE ${PROJECT_NAME})
-    
-    # add_executable(${PROJECT_NAME}_example14 ${PROJECT_SOURCE_DIR}/examples/example14.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example14 PRIVATE ${PROJECT_NAME})
-    
-    # add_executable(${PROJECT_NAME}_example15 ${PROJECT_SOURCE_DIR}/examples/example15.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example15 PRIVATE ${PROJECT_NAME})
-    
-    # add_executable(${PROJECT_NAME}_example16 ${PROJECT_SOURCE_DIR}/examples/example16.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example16 PRIVATE ${PROJECT_NAME})
-    
-    # add_executable(${PROJECT_NAME}_example17 ${PROJECT_SOURCE_DIR}/examples/example17.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example17 PRIVATE ${PROJECT_NAME})
-    
-    # add_executable(${PROJECT_NAME}_example18 ${PROJECT_SOURCE_DIR}/examples/example18.cpp)
-    # target_link_libraries(${PROJECT_NAME}_example18 PRIVATE ${PROJECT_NAME})
 
 endif()
 
@@ -209,57 +174,57 @@ if(BUILD_TESTS)
 
     # Add the test.
     add_executable(test_ram ${PROJECT_SOURCE_DIR}/tests/test_ram.cpp)
-    target_include_directories(test_ram PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_ram PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_ram ${PROJECT_NAME})
     add_test(test_ram_run test_ram)
-    
+
     add_executable(test_alu ${PROJECT_SOURCE_DIR}/tests/test_alu.cpp)
-    target_include_directories(test_alu PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_alu PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_alu ${PROJECT_NAME})
     add_test(test_alu_run test_alu)
-    
+
     add_executable(test_pc ${PROJECT_SOURCE_DIR}/tests/test_pc.cpp)
-    target_include_directories(test_pc PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_pc PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_pc ${PROJECT_NAME})
     add_test(test_pc_run test_pc)
-    
+
     add_executable(test_rom ${PROJECT_SOURCE_DIR}/tests/test_rom.cpp)
-    target_include_directories(test_rom PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_rom PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_rom ${PROJECT_NAME})
     add_test(test_rom_run test_rom)
-    
+
     add_executable(test_reg ${PROJECT_SOURCE_DIR}/tests/test_reg.cpp)
-    target_include_directories(test_reg PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_reg PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_reg ${PROJECT_NAME})
     add_test(test_reg_run test_reg)
-    
+
     add_executable(test_cu ${PROJECT_SOURCE_DIR}/tests/test_cu.cpp)
-    target_include_directories(test_cu PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_cu PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_cu ${PROJECT_NAME})
     add_test(test_cu_run test_cu)
-    
+
     add_executable(test_decoder ${PROJECT_SOURCE_DIR}/tests/test_decoder.cpp)
-    target_include_directories(test_decoder PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_decoder PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_decoder ${PROJECT_NAME})
     add_test(test_decoder_run test_decoder)
-    
+
     add_executable(test_multiplexer ${PROJECT_SOURCE_DIR}/tests/test_multiplexer.cpp)
-    target_include_directories(test_multiplexer PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_multiplexer PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_multiplexer ${PROJECT_NAME})
     add_test(test_multiplexer_run test_multiplexer)
-    
+
     add_executable(test_phase_fsm ${PROJECT_SOURCE_DIR}/tests/test_phase_fsm.cpp)
-    target_include_directories(test_phase_fsm PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_phase_fsm PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_phase_fsm ${PROJECT_NAME})
     add_test(test_test_phase_fsm test_phase_fsm)
-    
+
     add_executable(test_cpu ${PROJECT_SOURCE_DIR}/tests/test_cpu.cpp)
-    target_include_directories(test_cpu PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_cpu PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_cpu ${PROJECT_NAME})
     add_test(test_cpu_run test_cpu)
-    
+
     add_executable(test_cpu_support ${PROJECT_SOURCE_DIR}/tests/test_cpu_support.cpp)
-    target_include_directories(test_cpu_support PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_include_directories(test_cpu_support PRIVATE ${PROJECT_SOURCE_DIR}/examples/models)
     target_link_libraries(test_cpu_support ${PROJECT_NAME})
     add_test(test_cpu_support_run test_cpu_support)
 
@@ -359,7 +324,7 @@ if(DOXYGEN_FOUND)
     set(DOXYGEN_WARN_IF_DOC_ERROR YES)
     set(DOXYGEN_WARN_NO_PARAMDOC YES)
     set(DOXYGEN_WARN_AS_ERROR NO)
-   
+
     # Exclude certain files or directories from documentation (if needed)
     set(DOXYGEN_EXCLUDE_PATTERNS "${PROJECT_SOURCE_DIR}/tests/*" "${PROJECT_SOURCE_DIR}/examples/*")
 

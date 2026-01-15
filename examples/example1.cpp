@@ -2,8 +2,9 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "full_adder.hpp"
-#include "gates/not_gate.hpp"
+#include "models/full_adder.hpp"
+#include "models/gates/not_gate.hpp"
+#include "models/probe.hpp"
 
 int main()
 {
@@ -51,10 +52,10 @@ int main()
     not_cout_2.out(cout_out);
 
     // Output probes
-    digsim::probe_t<bool> p1("p1");
+    Probe<bool> p1("p1");
     p1.in(sum_out);
 
-    digsim::probe_t<bool> p2("p2");
+    Probe<bool> p2("p2");
     p2.in(cout_out);
 
     // Export graph.

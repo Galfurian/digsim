@@ -2,8 +2,10 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "gates/and_gate.hpp"
-#include "gates/not_gate.hpp"
+#include "models/clock.hpp"
+#include "models/gates/and_gate.hpp"
+#include "models/gates/not_gate.hpp"
+#include "models/probe.hpp"
 
 int main()
 {
@@ -31,10 +33,10 @@ int main()
     not_out.set_delay(2); // Set a delay of 2 time units for the NOT gate
 
     // Probes
-    digsim::probe_t<bool> probe_and("probe_and");
+    Probe<bool> probe_and("probe_and");
     probe_and.in(and_out);
 
-    digsim::probe_t<bool> probe_not("probe_not");
+    Probe<bool> probe_not("probe_not");
     probe_not.in(not_out);
 
     // Export the dependency graph

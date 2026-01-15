@@ -2,7 +2,9 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "gates/not_gate.hpp"
+#include "models/clock.hpp"
+#include "models/gates/not_gate.hpp"
+#include "models/probe.hpp"
 
 class InnerModule : public digsim::module_t
 {

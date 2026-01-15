@@ -316,7 +316,7 @@ int main()
     digsim::signal_t<double> outside_temp_signal("outside_temp", 15.0);
     digsim::signal_t<double> energy_used_signal("energy_used", 0.0);
 
-    Timer timer("timer", 1);
+    Timer timer("timer", digsim::nanoseconds(10));
     timer.trigger(timer_trigger);
 
     // Create modules

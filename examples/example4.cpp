@@ -2,7 +2,9 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
-#include "d_flip_flop.hpp"
+#include "models/clock.hpp"
+#include "models/d_flip_flop.hpp"
+#include "models/probe.hpp"
 
 int main()
 {
@@ -17,7 +19,7 @@ int main()
     digsim::signal_t<bool> qn("q_not");
 
     // Clock with 2ns period (1ns high, 1ns low)
-    digsim::clock_t clk("clk");
+    Clock clk("clk");
     clk.out(clk_out);
 
     // D Flip-Flop with 1ns delay

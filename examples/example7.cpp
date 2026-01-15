@@ -2,6 +2,9 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
+#include "models/clock.hpp"
+#include "models/probe.hpp"
+
 #include <digsim/digsim.hpp>
 
 class ping_module : public digsim::module_t
@@ -65,14 +68,14 @@ int main()
     digsim::signal_t<bool> clk_out("clk_out");
 
     // === Modules ===
-    digsim::clock_t clock("clock");
+    Clock clock("clock");
     clock.out(clk_out);
 
     ping_module pinger("pinger");
     pinger.trigger(trigger);
     pinger.clk(clk_out);
 
-    digsim::probe_t<bool> clk_probe("clk");
+    Probe<bool> clk_probe("clk");
     clk_probe.in(clk_out);
 
     // === Stimuli ===

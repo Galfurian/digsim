@@ -2,6 +2,9 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief A simple example of a digital circuit simulation using DigSim.
 
+#include "models/clock.hpp"
+#include "models/probe.hpp"
+
 #include <digsim/digsim.hpp>
 
 int main()
@@ -13,10 +16,10 @@ int main()
     digsim::signal_t<bool> clk_out("clk_out");
 
     // Clock: 2ns period (1ns high, 1ns low)
-    digsim::clock_t clk("clk");
+    Clock clk("clk");
     clk.out(clk_out);
 
-    digsim::probe_t<bool> probe("probe");
+    Probe<bool> probe("probe");
     probe.in(clk_out);
 
     digsim::dependency_graph.export_dot("example5.dot");

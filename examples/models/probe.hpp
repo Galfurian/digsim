@@ -8,12 +8,10 @@
 
 #include "digsim/module.hpp"
 
-namespace digsim
-{
-
 /// @brief A support module that probes a signal and calls a callback function.
 /// @tparam T the type of the signal to probe.
-template <typename T> class probe_t : public module_t
+template <typename T>
+class Probe : public digsim::module_t
 {
 public:
     /// @brief A reference to the input signal.
@@ -25,7 +23,7 @@ public:
     /// @brief Constructor for the probe module.
     /// @param _name the name of the module.
     /// @param _callback the callback function to call when the input signal changes.
-    probe_t(const std::string &_name, std::function<void(const digsim::input_t<T> &)> _callback = nullptr)
+    Probe(const std::string &_name, std::function<void(const digsim::input_t<T> &)> _callback = nullptr)
         : module_t(_name, nullptr)
         , in("in")
         , callback(std::move(_callback))
@@ -37,7 +35,7 @@ public:
             callback = [this](const digsim::input_t<T> &sig) { this->default_callback(sig); };
         }
 
-        ADD_SENSITIVITY(probe_t, evaluate, in);
+        ADD_SENSITIVITY(Probe, evaluate, in);
     }
 
 private:
@@ -60,6 +58,3 @@ private:
         }
     }
 };
-
-} // namespace digsim
-
