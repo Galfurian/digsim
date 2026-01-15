@@ -4,6 +4,8 @@
 /// and the heater that affects the environment temperature.
 
 #include <digsim/digsim.hpp>
+#include <sstream>
+#include <iomanip>
 
 /// @brief Environment module that simulates temperature changes over time.
 class Environment : public digsim::module_t
@@ -11,15 +13,17 @@ class Environment : public digsim::module_t
 public:
     digsim::input_t<bool> clk;            ///< Clock input to drive temperature changes.
     digsim::input_t<double> heater_heat;  ///< Heat input from heater.
+    digsim::input_t<double> outside_temp; ///< Outside temperature affecting heat loss.
     digsim::output_t<double> temperature; ///< Current temperature output.
 
     Environment(const std::string &_name)
         : digsim::module_t(_name)
         , clk("clk", this)
         , heater_heat("heater_heat", this)
+        , outside_temp("outside_temp", this)
         , temperature("temperature", this)
     {
-        ADD_SENSITIVITY(Environment, evaluate, clk, heater_heat);
+        ADD_SENSITIVITY(Environment, evaluate, clk, heater_heat, outside_temp);
         ADD_PRODUCER(Environment, evaluate, temperature);
     }
 
@@ -27,15 +31,29 @@ private:
     void evaluate()
     {
         if (clk.get()) {
-            // On clock edge, temperature naturally decreases (cooling effect) and increases with heat.
             double current_temp = temperature.get();
-            double heat         = heater_heat.get();
-            // Cool down by 0.5, heat up by heater amount.
-            double new_temp     = current_temp - 0.5 + heat;
+            double heat = heater_heat.get();
+            double outdoor_temp = outside_temp.get();
+            
+            // More realistic heat transfer: exponential approach to equilibrium
+            // Heat loss coefficient (higher = faster cooling)
+            double heat_loss_coeff = 0.15;
+            // Natural cooling toward outside temperature
+            double natural_cooling = heat_loss_coeff * (current_temp - outdoor_temp);
+            // Heater input
+            double heating_effect = heat;
+            // Small random variation (±0.1°C)
+            double noise = ((rand() % 21) - 10) * 0.01;
+            
+            double new_temp = current_temp - natural_cooling + heating_effect + noise;
             temperature.set(new_temp);
+            
             std::stringstream ss;
             ss << std::fixed << std::setprecision(2);
-            ss << "Temperature updated: " << current_temp << "°C -> " << new_temp << "°C (heat: " << heat << "°C)";
+            ss << "Temperature: " << current_temp << "°C -> " << new_temp << "°C "
+               << "(cooling: -" << std::fixed << std::setprecision(2) << natural_cooling << "°C, "
+               << "heating: +" << heating_effect << "°C, "
+               << "outdoor: " << outdoor_temp << "°C)";
             digsim::info(get_name(), ss.str());
         }
     }
@@ -48,35 +66,92 @@ public:
     digsim::input_t<double> temperature; ///< Current temperature input.
     digsim::input_t<double> setpoint;    ///< Desired temperature setpoint.
     digsim::output_t<bool> heater_on;    ///< Control signal for heater.
+    digsim::output_t<double> energy_used; ///< Energy consumption tracking.
 
-    Thermostat(const std::string &_name)
+    enum Mode { HEAT, COOL, AUTO, OFF };
+    
+    Thermostat(const std::string &_name, Mode initial_mode = HEAT)
         : digsim::module_t(_name)
         , temperature("temperature", this)
         , setpoint("setpoint", this)
         , heater_on("heater_on", this)
+        , energy_used("energy_used", this)
         , heating_state(false)
+        , mode(initial_mode)
+        , total_energy(0.0)
     {
         ADD_SENSITIVITY(Thermostat, evaluate, temperature, setpoint);
-        ADD_PRODUCER(Thermostat, evaluate, heater_on);
+        ADD_PRODUCER(Thermostat, evaluate, heater_on, energy_used);
     }
+
+    void set_mode(Mode new_mode) { mode = new_mode; }
 
 private:
     bool heating_state; ///< Internal state for hysteresis
+    Mode mode;         ///< Current operating mode
+    double total_energy; ///< Total energy consumed
 
     void evaluate()
     {
         double current_temp = temperature.get();
         double target_temp  = setpoint.get();
-        if (!heating_state && current_temp < target_temp - 0.5) {
-            heating_state = true;
-        } else if (heating_state && current_temp > target_temp + 0.5) {
-            heating_state = false;
+        
+        bool should_control = false;
+        
+        switch (mode) {
+            case HEAT:
+                // Heating mode with hysteresis
+                if (!heating_state && current_temp < target_temp - 0.5) {
+                    heating_state = true;
+                } else if (heating_state && current_temp > target_temp + 0.5) {
+                    heating_state = false;
+                }
+                should_control = heating_state;
+                break;
+                
+            case COOL:
+                // Cooling mode (would control AC)
+                if (!heating_state && current_temp > target_temp + 0.5) {
+                    heating_state = true; // Actually cooling
+                } else if (heating_state && current_temp < target_temp - 0.5) {
+                    heating_state = false;
+                }
+                should_control = heating_state;
+                break;
+                
+            case AUTO:
+                // Auto mode: heat or cool as needed
+                if (current_temp < target_temp - 1.0) {
+                    heating_state = true; // Heat
+                } else if (current_temp > target_temp + 1.0) {
+                    heating_state = false; // Cool (not implemented)
+                }
+                should_control = heating_state;
+                break;
+                
+            case OFF:
+                heating_state = false;
+                should_control = false;
+                break;
         }
-        heater_on.set(heating_state);
+        
+        heater_on.set(should_control);
+        
+        // Track energy usage (1.0 energy units per time step when heating)
+        if (should_control) {
+            total_energy += 1.0;
+        }
+        energy_used.set(total_energy);
+        
+        const char* mode_str = (mode == HEAT) ? "HEAT" : 
+                              (mode == COOL) ? "COOL" : 
+                              (mode == AUTO) ? "AUTO" : "OFF";
+        
         std::stringstream ss;
         ss << std::fixed << std::setprecision(2);
-        ss << "Temperature: " << current_temp << "°C, Setpoint: ";
-        ss << target_temp << "°C, Heater: " << (heating_state ? "ON" : "OFF");
+        ss << "Mode: " << mode_str << ", Temperature: " << current_temp << "°C, "
+           << "Setpoint: " << target_temp << "°C, Heater: " << (should_control ? "ON" : "OFF") << ", "
+           << "Energy: " << total_energy << " units";
         digsim::info(get_name(), ss.str());
     }
 };
@@ -120,6 +195,8 @@ int main()
     digsim::signal_t<double> setpoint_signal("setpoint", 21.0);
     digsim::signal_t<bool> heater_control("heater_control", false);
     digsim::signal_t<double> heater_output("heater_output", 0.0);
+    digsim::signal_t<double> outside_temp_signal("outside_temp", 15.0); // Outside temperature
+    digsim::signal_t<double> energy_used_signal("energy_used", 0.0);
 
     // Create clock
     digsim::clock_t clk("clock", 2.0, 0.5, 0, true);
@@ -129,12 +206,14 @@ int main()
     Environment env("environment");
     env.clk(clk_signal);
     env.heater_heat(heater_output);
+    env.outside_temp(outside_temp_signal);
     env.temperature(temperature);
 
-    Thermostat thermo("thermostat");
+    Thermostat thermo("thermostat", Thermostat::HEAT); // Start in HEAT mode
     thermo.temperature(temperature);
     thermo.setpoint(setpoint_signal);
     thermo.heater_on(heater_control);
+    thermo.energy_used(energy_used_signal);
 
     Heater heater("heater");
     heater.control(heater_control);
@@ -147,12 +226,37 @@ int main()
 
     digsim::scheduler.initialize();
 
-    digsim::info("Main", "=== Running simulation for 20 time units ===");
+    digsim::info("Main", "=== Running simulation for 50 time units ===");
 
-    // Run simulation for 20 time units
-    digsim::scheduler.run(20);
+    // Run simulation for 50 time units with mode changes
+    for (int time = 0; time < 50; ++time) {
+        // Change modes at different times to demonstrate functionality
+        if (time == 10) {
+            thermo.set_mode(Thermostat::AUTO);
+            digsim::info("Main", "Switching to AUTO mode");
+        } else if (time == 25) {
+            thermo.set_mode(Thermostat::OFF);
+            digsim::info("Main", "Switching to OFF mode");
+        } else if (time == 35) {
+            thermo.set_mode(Thermostat::HEAT);
+            digsim::info("Main", "Switching back to HEAT mode");
+        }
+        
+        digsim::scheduler.run(1); // Run one time unit at a time
+        
+        // Print status every 5 time units
+        if (time % 5 == 0) {
+            std::stringstream ss;
+            ss << std::fixed << std::setprecision(2);
+            ss << "Time: " << time << ", Temp: " << temperature.get() << "°C, "
+               << "Setpoint: " << setpoint_signal.get() << "°C, "
+               << "Energy Used: " << energy_used_signal.get() << " units";
+            digsim::info("Main", ss.str());
+        }
+    }
 
     digsim::info("Main", "=== Simulation finished ===");
+    digsim::info("Main", "Total energy consumed: " + std::to_string(energy_used_signal.get()) + " units");
 
     return 0;
 }
