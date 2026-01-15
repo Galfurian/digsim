@@ -169,6 +169,10 @@ if(BUILD_EXAMPLES)
     target_include_directories(${PROJECT_NAME}_example10 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     target_link_libraries(${PROJECT_NAME}_example10 PRIVATE ${PROJECT_NAME})
     
+    add_executable(${PROJECT_NAME}_thermostat_example ${PROJECT_SOURCE_DIR}/examples/thermostat_example.cpp)
+    target_include_directories(${PROJECT_NAME}_thermostat_example PRIVATE ${PROJECT_SOURCE_DIR}/models)
+    target_link_libraries(${PROJECT_NAME}_thermostat_example PRIVATE ${PROJECT_NAME})
+    
     # add_executable(${PROJECT_NAME}_example11 ${PROJECT_SOURCE_DIR}/examples/example11.cpp)
     # target_include_directories(${PROJECT_NAME}_example1 PRIVATE ${PROJECT_SOURCE_DIR}/models)
     # target_link_libraries(${PROJECT_NAME}_example11 PRIVATE ${PROJECT_NAME})
