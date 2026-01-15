@@ -19,6 +19,30 @@ namespace digsim
 /// @brief Type of the simulation time.
 using discrete_time_t = uint64_t;
 
+/// @brief Convenience functions for time units.
+/// @details These functions convert time values to nanoseconds, which is the internal
+/// time unit used by the scheduler. This provides a more readable way to specify time values.
+
+/// @brief Create a time value in nanoseconds.
+constexpr discrete_time_t nanoseconds(discrete_time_t ns) { return ns; }
+
+/// @brief Create a time value in microseconds.
+constexpr discrete_time_t microseconds(discrete_time_t us) { return us * 1000ULL; }
+
+/// @brief Create a time value in milliseconds.
+constexpr discrete_time_t milliseconds(discrete_time_t ms) { return ms * 1000000ULL; }
+
+/// @brief Create a time value in seconds.
+constexpr discrete_time_t seconds(discrete_time_t s) { return s * 1000000000ULL; }
+
+/// @brief Create a time value in the base discrete time units (nanoseconds).
+constexpr discrete_time_t time_units(discrete_time_t units) { return units; }
+
+/// @brief Convert nanoseconds to a human-readable time string.
+/// @param nanoseconds The time value in nanoseconds.
+/// @return A string representation using the most appropriate time unit.
+std::string format_time(discrete_time_t nanoseconds);
+
 /// @brief The types of the processes.
 using process_t = std::function<void()>;
 

@@ -6,6 +6,7 @@
 
 #include "digsim/logger.hpp"
 
+#include "digsim/common.hpp"
 #include "digsim/scheduler.hpp"
 
 namespace digsim
@@ -31,7 +32,7 @@ void logger_t::log(log_level_t level, const std::string &source, const std::stri
 {
     if (level <= global_level) {
         std::cout << "[" << level_to_str(level) << "]";
-        std::cout << " [" << std::right << std::setw(4) << scheduler.time() << "]";
+        std::cout << " [" << std::left << std::setw(8) << format_time(scheduler.time()) << "]";
         std::cout << " [" << std::left << std::setw(12) << source << "]";
         std::cout << " " << msg << "\n";
     }

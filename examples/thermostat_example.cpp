@@ -68,35 +68,33 @@ public:
 private:
     void evaluate()
     {
-        if (trigger.get()) {
-            double current_temp = temperature.get();
-            double heat         = heater_heat.get();
-            double cooling      = cooler_heat.get();
-            double outdoor_temp = outside_temp.get();
+        double current_temp = temperature.get();
+        double heat         = heater_heat.get();
+        double cooling      = cooler_heat.get();
+        double outdoor_temp = outside_temp.get();
 
-            // More realistic heat transfer: exponential approach to equilibrium
-            // Heat transfer coefficient (higher = faster heat exchange with outside)
-            double heat_transfer_coeff         = 0.15;
-            // Heat transfer with outside environment (positive = heat loss, negative = heat gain)
-            double environmental_heat_transfer = heat_transfer_coeff * (current_temp - outdoor_temp);
-            // Heater and cooler inputs
-            double heating_effect              = heat;
-            double cooling_effect              = cooling;
-            // Small random variation (±0.1°C)
-            double noise                       = ((rand() % 21) - 10) * 0.01;
+        // More realistic heat transfer: exponential approach to equilibrium
+        // Heat transfer coefficient (higher = faster heat exchange with outside)
+        double heat_transfer_coeff         = 0.15;
+        // Heat transfer with outside environment (positive = heat loss, negative = heat gain)
+        double environmental_heat_transfer = heat_transfer_coeff * (current_temp - outdoor_temp);
+        // Heater and cooler inputs
+        double heating_effect              = heat;
+        double cooling_effect              = cooling;
+        // Small random variation (±0.1°C)
+        double noise                       = ((rand() % 21) - 10) * 0.01;
 
-            double new_temp = current_temp - environmental_heat_transfer + heating_effect + cooling_effect + noise;
-            temperature.set(new_temp);
+        double new_temp = current_temp - environmental_heat_transfer + heating_effect + cooling_effect + noise;
+        temperature.set(new_temp);
 
-            std::stringstream ss;
-            ss << std::fixed << std::setprecision(2);
-            ss << "Temperature: " << current_temp << "°C -> " << new_temp << "°C ";
-            ss << "(env_transfer: " << std::fixed << std::setprecision(2) << environmental_heat_transfer << "°C, ";
-            ss << "heating: +" << heating_effect << "°C, ";
-            ss << "AC: " << cooling_effect << "°C, ";
-            ss << "outdoor: " << outdoor_temp << "°C)";
-            digsim::info(get_name(), ss.str());
-        }
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(2);
+        ss << "Temperature: " << current_temp << "°C -> " << new_temp << "°C ";
+        ss << "(env_transfer: " << std::fixed << std::setprecision(2) << environmental_heat_transfer << "°C, ";
+        ss << "heating: +" << heating_effect << "°C, ";
+        ss << "AC: " << cooling_effect << "°C, ";
+        ss << "outdoor: " << outdoor_temp << "°C)";
+        digsim::info(get_name(), ss.str());
     }
 };
 
@@ -149,7 +147,11 @@ public:
         ADD_PRODUCER(Thermostat, evaluate, heater_on, cooler_on, energy_used);
     }
 
-    void set_mode(Mode new_mode) { mode = new_mode; }
+    void set_mode(Mode new_mode) { 
+        mode = new_mode; 
+        // Manually trigger evaluation when mode changes
+        evaluate();
+    }
 
 private:
     bool heating_state;  ///< Internal state for heating hysteresis
@@ -350,23 +352,23 @@ int main()
     digsim::scheduler.initialize();
 
     digsim::info("Main", "");
-    digsim::info("Main", "=== Running simulation for 60 time units ===");
+    digsim::info("Main", "=== Running simulation for 120 seconds ===");
     digsim::info("Main", "");
 
-    // Run simulation for 60 time units with mode changes
-    for (int time = 0; time < 60; ++time) {
+    // Run simulation for 120 seconds with mode changes
+    for (int time = 0; time < 120; ++time) {
         // Change modes at different times to demonstrate functionality
-        if (time == 10) {
+        if (time == 20) {
             thermo.set_mode(Thermostat::HEAT);
             digsim::info("Main", "");
             digsim::info("Main", "=== Switching to HEAT mode ===");
             digsim::info("Main", "");
-        } else if (time == 25) {
+        } else if (time == 50) {
             thermo.set_mode(Thermostat::AUTO);
             digsim::info("Main", "");
             digsim::info("Main", "=== Switching to AUTO mode ===");
             digsim::info("Main", "");
-        } else if (time == 40) {
+        } else if (time == 80) {
             thermo.set_mode(Thermostat::OFF);
             outside_temp_signal.set(24);
             digsim::info("Main", "");
@@ -375,7 +377,7 @@ int main()
             digsim::info("Main", "=== Setting outside temperature to 24°C ===");
             digsim::info("Main", "");
 
-        } else if (time == 50) {
+        } else if (time == 100) {
             thermo.set_mode(Thermostat::COOL);
             digsim::info("Main", "");
             digsim::info("Main", "=== Switching back to COOL mode ===");
