@@ -3,45 +3,10 @@
 /// @details This example models an environment with temperature, a thermostat that controls a heater,
 /// and the heater that affects the environment temperature.
 
-#include <simcore/simcore.hpp>
 #include <iomanip>
 #include <sstream>
 
-/// @brief Timer module that generates periodic trigger signals.
-/// @details A simple timer that sets its output to true at regular intervals,
-/// providing a cleaner alternative to the full clock module for periodic events.
-class Timer : public simcore::module_t
-{
-public:
-    simcore::output_t<bool> trigger; ///< Periodic trigger output.
-
-    Timer(const std::string &_name, simcore::discrete_time_t period)
-        : simcore::module_t(_name)
-        , trigger("trigger", this)
-        , period(period)
-    {
-        // Register the output signal in the dependency graph.
-        ADD_PRODUCER(Timer, evaluate, trigger);
-        // Create a process info for the timer evaluation method.
-        auto proc_info = simcore::get_or_create_process(this, &Timer::evaluate, "start");
-        // Schedule the first evaluation of the timer signal.
-        simcore::scheduler.schedule_after(proc_info, period);
-    }
-
-private:
-    simcore::discrete_time_t period; ///< Time interval between triggers.
-
-    void evaluate()
-    {
-        // Set the trigger to true to signal the environment to evaluate
-        trigger.set(trigger.get() ? false : true);
-
-        // Create the process info for the next evaluation.
-        auto proc_info = simcore::get_or_create_process(this, &Timer::evaluate, "evaluate");
-        // Schedule the next evaluation of the timer signal.
-        simcore::scheduler.schedule_after(proc_info, period);
-    }
-};
+#include "models/timer.hpp"
 
 /// @brief Environment module that simulates temperature changes over time.
 class Environment : public simcore::module_t
@@ -147,8 +112,9 @@ public:
         ADD_PRODUCER(Thermostat, evaluate, heater_on, cooler_on, energy_used);
     }
 
-    void set_mode(Mode new_mode) { 
-        mode = new_mode; 
+    void set_mode(Mode new_mode)
+    {
+        mode = new_mode;
         // Manually trigger evaluation when mode changes
         evaluate();
     }
@@ -303,7 +269,7 @@ private:
 
 int main()
 {
-    simcore::logger.set_level(simcore::log_level_t::info);
+    simcore::set_log_level(simcore::log_level_t::debug);
 
     // Create signals
     simcore::signal_t<bool> timer_trigger("timer_trigger", false);
@@ -316,7 +282,7 @@ int main()
     simcore::signal_t<double> outside_temp_signal("outside_temp", 15.0);
     simcore::signal_t<double> energy_used_signal("energy_used", 0.0);
 
-    Timer timer("timer", simcore::nanoseconds(10));
+    Timer timer("timer", simcore::nanoseconds(1));
     timer.trigger(timer_trigger);
 
     // Create modules

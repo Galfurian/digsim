@@ -60,7 +60,7 @@ void run_test(decoder_env_t &env, uint16_t instruction)
 
 int main()
 {
-    simcore::logger.set_level(simcore::log_level_t::debug);
+    simcore::set_log_level(simcore::log_level_t::debug);
     simcore::scheduler.initialize();
 
     decoder_env_t env;

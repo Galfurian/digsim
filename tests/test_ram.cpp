@@ -14,7 +14,7 @@ void toggle_clock(simcore::signal_t<bool> &clk)
 
 int main()
 {
-    simcore::logger.set_level(simcore::log_level_t::debug);
+    simcore::set_log_level(simcore::log_level_t::debug);
 
     // Signals.
     simcore::signal_t<bool> clk("clk", 0, 0);

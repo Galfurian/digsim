@@ -339,7 +339,7 @@ int test_halt()
 
 int main()
 {
-    simcore::logger.set_level(simcore::log_level_t::info);
+    simcore::set_log_level(simcore::log_level_t::info);
 
     int result = 0;
     if (test_01() != 0) {

@@ -8,7 +8,7 @@
 
 int main()
 {
-    simcore::logger.set_level(simcore::log_level_t::debug);
+    simcore::set_log_level(simcore::log_level_t::debug);
 
     // Signals
     simcore::signal_t<bool> clk_out("clk_out");

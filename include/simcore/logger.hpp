@@ -14,7 +14,8 @@ namespace std
 {
 /// @brief Custom formatter for std::bitset to allow formatting with std::format.
 /// @tparam N the size of the bitset.
-template <std::size_t N> struct formatter<std::bitset<N>, char> {
+template <std::size_t N>
+struct formatter<std::bitset<N>, char> {
     /// @brief Parses the format string for std::bitset.
     /// @param ctx the format parse context.
     /// @return the beginning of the format string.
@@ -24,7 +25,8 @@ template <std::size_t N> struct formatter<std::bitset<N>, char> {
     /// @param bits the std::bitset to format.
     /// @param ctx the format context.
     /// @return the formatted string.
-    template <typename FormatContext> auto format(const std::bitset<N> &bits, FormatContext &ctx) const
+    template <typename FormatContext>
+    auto format(const std::bitset<N> &bits, FormatContext &ctx) const
     {
         return std::format_to(ctx.out(), "{}", bits.to_string());
     }
@@ -36,11 +38,12 @@ namespace simcore
 
 /// @brief Enumeration for log levels.
 enum class log_level_t {
-    none  = 0, ///< No logging.
-    error = 1, ///< Errors that should be reported to the user.
-    info  = 2, ///< Informational messages that are useful for understanding the program flow.
-    debug = 3, ///< Debug messages that are useful for developers to trace the program execution.
-    trace = 4, ///< Very detailed messages for tracing the program execution, usually only needed during development.
+    none    = 0, ///< No logging.
+    error   = 1, ///< Errors that should be reported to the user.
+    warning = 2, ///< Warnings that indicate potential issues but do not stop execution.
+    info    = 3, ///< Informational messages that are useful for understanding the program flow.
+    debug   = 4, ///< Debug messages that are useful for developers to trace the program execution.
+    trace   = 5, ///< Very detailed messages for tracing the program execution, usually only needed during development.
 };
 
 /// @brief The logger class for handling logging in the application.
@@ -81,16 +84,35 @@ private:
 /// @brief Global logger instance for easy access.
 inline simcore::logger_t &logger = simcore::logger_t::instance();
 
+/// @brief Sets the global log level.
+/// @param level the log level to set.
+inline void set_log_level(simcore::log_level_t level) noexcept
+{
+    simcore::logger.set_level(level);
+}
+
+/// @brief Gets the current global log level.
+/// @return the current global log level.
+inline simcore::log_level_t get_log_level() noexcept
+{
+    return simcore::logger.get_level();
+}
+
 /// @brief Logs a message with the specified log level and source.
 /// @param level the log level of the message.
 /// @param src the source of the log message, typically the name of the module or component.
 /// @param msg the message to log.
-void log(log_level_t level, const std::string &src, const std::string &msg);
+void log(simcore::log_level_t level, const std::string &src, const std::string &msg);
 
 /// @brief Logs an error message with the specified source.
 /// @param src the source of the log message, typically the name of the module or component.
 /// @param msg the message to log.
 void error(const std::string &src, const std::string &msg);
+
+/// @brief Logs a warning message with the specified source.
+/// @param src the source of the log message, typically the name of the module or component.
+/// @param msg the message to log.
+void warning(const std::string &src, const std::string &msg);
 
 /// @brief Logs an informational message with the specified source.
 /// @param src the source of the log message, typically the name of the module or component.
@@ -114,7 +136,7 @@ void trace(const std::string &src, const std::string &msg);
 /// @param fmt the format string for the message.
 /// @param ...args the arguments to format the message.
 template <typename... Args>
-inline void log(log_level_t level, const std::string &source, std::format_string<Args...> fmt, Args &&...args)
+inline void log(simcore::log_level_t level, const std::string &source, std::format_string<Args...> fmt, Args &&...args)
 {
     simcore::log(level, source, std::format(fmt, std::forward<Args>(args)...));
 }
@@ -130,12 +152,24 @@ inline void error(const std::string &source, std::format_string<Args...> fmt, Ar
     simcore::error(source, std::format(fmt, std::forward<Args>(args)...));
 }
 
+/// @brief Logs a warning message with the specified source using a format string.
+/// @tparam ...Args Variadic template arguments for the format string.
+/// @param source the source of the log message, typically the name of the module or component.
+/// @param fmt the format string for the message.
+/// @param ...args the arguments to format the message.
+template <typename... Args>
+inline void warning(const std::string &source, std::format_string<Args...> fmt, Args &&...args)
+{
+    simcore::warning(source, std::format(fmt, std::forward<Args>(args)...));
+}
+
 /// @brief Logs an informational message with the specified source using a format string.
 /// @tparam ...Args Variadic template arguments for the format string.
 /// @param source the source of the log message, typically the name of the module or component.
 /// @param fmt the format string for the message.
 /// @param ...args the arguments to format the message.
-template <typename... Args> inline void info(const std::string &source, std::format_string<Args...> fmt, Args &&...args)
+template <typename... Args>
+inline void info(const std::string &source, std::format_string<Args...> fmt, Args &&...args)
 {
     simcore::info(source, std::format(fmt, std::forward<Args>(args)...));
 }

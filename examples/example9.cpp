@@ -8,7 +8,7 @@
 
 int main()
 {
-    simcore::logger.set_level(simcore::log_level_t::debug);
+    simcore::set_log_level(simcore::log_level_t::debug);
 
     // Create signal for loop
     simcore::signal_t<bool> sig("sig", false, 1);

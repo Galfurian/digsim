@@ -43,6 +43,8 @@ std::string logger_t::level_to_str(log_level_t level) const noexcept
     switch (level) {
     case log_level_t::error:
         return "ERR";
+    case log_level_t::warning:
+        return "WRN";
     case log_level_t::info:
         return "INF";
     case log_level_t::debug:
@@ -57,6 +59,8 @@ std::string logger_t::level_to_str(log_level_t level) const noexcept
 void log(log_level_t level, const std::string &src, const std::string &msg) { simcore::logger.log(level, src, msg); }
 
 void error(const std::string &src, const std::string &msg) { simcore::logger.log(log_level_t::error, src, msg); }
+
+void warning(const std::string &src, const std::string &msg) { simcore::logger.log(log_level_t::warning, src, msg); }
 
 void info(const std::string &src, const std::string &msg) { simcore::logger.log(log_level_t::info, src, msg); }
 

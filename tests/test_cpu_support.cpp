@@ -34,7 +34,7 @@ void test_flat_opcode(opcode_t op, uint8_t rs, uint8_t rt, uint8_t rd)
 
 int main()
 {
-    simcore::logger.set_level(simcore::log_level_t::debug);
+    simcore::set_log_level(simcore::log_level_t::debug);
 
     simcore::info("Encode/Decode Test", "Running flattened opcode tests...");
 

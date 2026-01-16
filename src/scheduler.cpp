@@ -34,7 +34,11 @@ void scheduler_t::schedule_after(const process_info_t &proc_info, discrete_time_
 {
     schedule(event_t{now + delay, proc_info});
     simcore::trace(
-        "scheduler_t", "[#queue = {:-2}] Schedule: {} (+{}t)", event_queue.size(), proc_info.to_string(), delay);
+        "scheduler_t",
+        "[#queue = {:-2}] Schedule: {} (after {})",
+        event_queue.size(),
+        proc_info.to_string(),
+        simcore::format_time(delay));
 }
 
 void scheduler_t::register_initializer(const process_info_t &proc_info) { initializer_queue.insert(proc_info); }

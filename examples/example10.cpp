@@ -59,7 +59,7 @@ public:
 
 int main()
 {
-    simcore::logger.set_level(simcore::log_level_t::trace);
+    simcore::set_log_level(simcore::log_level_t::trace);
 
     simcore::signal_t<bool> s_in("s_in");
     simcore::signal_t<bool> s_out0("s_out0");
